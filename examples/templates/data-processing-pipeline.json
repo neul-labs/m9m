@@ -1,0 +1,482 @@
+{
+  "id": "data-processing-pipeline-001",
+  "name": "CSV Data Processing Pipeline",
+  "description": "A comprehensive data processing template that reads CSV files, transforms data, validates records, and outputs to multiple formats. Includes error handling, data quality checks, and customizable transformation rules.",
+  "version": "1.2.0",
+  "author": "n8n-go Team",
+  "category": "data-processing",
+  "tags": ["csv", "data", "transform", "validation", "etl", "pipeline"],
+  "parameters": {
+    "input_file_path": {
+      "name": "input_file_path",
+      "type": "string",
+      "description": "Path to the input CSV file",
+      "required": true,
+      "placeholder": "/data/input/sales_data.csv",
+      "validation": "value && value.endsWith('.csv')",
+      "group": "Input Configuration"
+    },
+    "output_directory": {
+      "name": "output_directory",
+      "type": "string",
+      "description": "Directory to save processed files",
+      "required": true,
+      "default_value": "/data/output",
+      "group": "Output Configuration"
+    },
+    "output_formats": {
+      "name": "output_formats",
+      "type": "multiselect",
+      "description": "Output formats to generate",
+      "required": true,
+      "default_value": ["csv", "json"],
+      "options": ["csv", "json", "xml", "excel"],
+      "group": "Output Configuration"
+    },
+    "delimiter": {
+      "name": "delimiter",
+      "type": "select",
+      "description": "CSV delimiter character",
+      "required": false,
+      "default_value": ",",
+      "options": [",", ";", "\t", "|"],
+      "group": "Input Configuration"
+    },
+    "has_header": {
+      "name": "has_header",
+      "type": "boolean",
+      "description": "First row contains column headers",
+      "required": false,
+      "default_value": true,
+      "group": "Input Configuration"
+    },
+    "column_mappings": {
+      "name": "column_mappings",
+      "type": "json",
+      "description": "Column name mappings and transformations",
+      "required": false,
+      "default_value": {
+        "customer_name": "customer",
+        "sale_amount": "amount",
+        "sale_date": "date"
+      },
+      "group": "Data Transformation"
+    },
+    "data_validation_rules": {
+      "name": "data_validation_rules",
+      "type": "json",
+      "description": "Validation rules for data quality",
+      "required": false,
+      "default_value": {
+        "amount": "value > 0",
+        "email": "/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(value)",
+        "date": "!isNaN(Date.parse(value))"
+      },
+      "group": "Data Validation"
+    },
+    "filter_conditions": {
+      "name": "filter_conditions",
+      "type": "string",
+      "description": "Expression to filter records",
+      "required": false,
+      "placeholder": "record.amount > 100 && record.status === 'completed'",
+      "group": "Data Transformation"
+    },
+    "aggregation_config": {
+      "name": "aggregation_config",
+      "type": "json",
+      "description": "Aggregation configuration",
+      "required": false,
+      "default_value": {
+        "enabled": false,
+        "group_by": ["category"],
+        "aggregations": {
+          "total_amount": "sum(amount)",
+          "avg_amount": "avg(amount)",
+          "count": "count()"
+        }
+      },
+      "group": "Data Transformation"
+    },
+    "error_handling": {
+      "name": "error_handling",
+      "type": "select",
+      "description": "How to handle invalid records",
+      "required": false,
+      "default_value": "skip",
+      "options": ["skip", "fail", "quarantine"],
+      "group": "Error Handling"
+    },
+    "notification_email": {
+      "name": "notification_email",
+      "type": "string",
+      "description": "Email for processing notifications",
+      "required": false,
+      "validation": "!value || /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(value)",
+      "group": "Notifications"
+    },
+    "workflow_name": {
+      "name": "workflow_name",
+      "type": "string",
+      "description": "Name for the created workflow",
+      "required": false,
+      "default_value": "Data Processing - {{input_file_path | basename}}",
+      "group": "Workflow Settings"
+    }
+  },
+  "workflow": {
+    "id": "{{workflow_name | slugify}}",
+    "name": "{{workflow_name}}",
+    "description": "Data processing pipeline for {{input_file_path}}",
+    "active": true,
+    "nodes": [
+      {
+        "id": "trigger-1",
+        "name": "File Trigger",
+        "type": "file-watcher",
+        "position": [100, 200],
+        "config": {
+          "path": "{{input_file_path | dirname}}",
+          "pattern": "{{input_file_path | basename}}",
+          "event": "created"
+        }
+      },
+      {
+        "id": "read-csv-1",
+        "name": "Read CSV",
+        "type": "csv-reader",
+        "position": [300, 200],
+        "config": {
+          "file_path": "{{input_file_path}}",
+          "delimiter": "{{delimiter}}",
+          "has_header": "{{has_header}}",
+          "encoding": "utf-8"
+        }
+      },
+      {
+        "id": "validate-1",
+        "name": "Validate Data",
+        "type": "data-validator",
+        "position": [500, 200],
+        "config": {
+          "validation_rules": "{{data_validation_rules}}",
+          "error_handling": "{{error_handling}}"
+        }
+      },
+      {
+        "id": "transform-1",
+        "name": "Transform Data",
+        "type": "data-transformer",
+        "position": [700, 200],
+        "config": {
+          "column_mappings": "{{column_mappings}}",
+          "filter_conditions": "{{filter_conditions}}",
+          "transformations": [
+            {
+              "field": "date",
+              "operation": "date_parse",
+              "format": "YYYY-MM-DD"
+            },
+            {
+              "field": "amount",
+              "operation": "number_parse"
+            }
+          ]
+        }
+      },
+      {
+        "id": "condition-aggregation",
+        "name": "Check Aggregation",
+        "type": "condition",
+        "position": [900, 200],
+        "config": {
+          "condition": "{{aggregation_config.enabled}}"
+        }
+      },
+      {
+        "id": "aggregate-1",
+        "name": "Aggregate Data",
+        "type": "data-aggregator",
+        "position": [1100, 150],
+        "config": {
+          "group_by": "{{aggregation_config.group_by}}",
+          "aggregations": "{{aggregation_config.aggregations}}"
+        }
+      },
+      {
+        "id": "output-csv",
+        "name": "Output CSV",
+        "type": "csv-writer",
+        "position": [1300, 100],
+        "config": {
+          "file_path": "{{output_directory}}/processed_{{now | date('YYYY-MM-DD_HH-mm-ss')}}.csv",
+          "delimiter": ",",
+          "include_header": true
+        }
+      },
+      {
+        "id": "output-json",
+        "name": "Output JSON",
+        "type": "json-writer",
+        "position": [1300, 150],
+        "config": {
+          "file_path": "{{output_directory}}/processed_{{now | date('YYYY-MM-DD_HH-mm-ss')}}.json",
+          "pretty": true
+        }
+      },
+      {
+        "id": "output-xml",
+        "name": "Output XML",
+        "type": "xml-writer",
+        "position": [1300, 200],
+        "config": {
+          "file_path": "{{output_directory}}/processed_{{now | date('YYYY-MM-DD_HH-mm-ss')}}.xml",
+          "root_element": "data",
+          "item_element": "record"
+        }
+      },
+      {
+        "id": "output-excel",
+        "name": "Output Excel",
+        "type": "excel-writer",
+        "position": [1300, 250],
+        "config": {
+          "file_path": "{{output_directory}}/processed_{{now | date('YYYY-MM-DD_HH-mm-ss')}}.xlsx",
+          "sheet_name": "ProcessedData"
+        }
+      },
+      {
+        "id": "stats-1",
+        "name": "Generate Statistics",
+        "type": "statistics-generator",
+        "position": [1100, 300],
+        "config": {
+          "metrics": [
+            "total_records",
+            "valid_records",
+            "invalid_records",
+            "processing_time"
+          ]
+        }
+      },
+      {
+        "id": "notification-1",
+        "name": "Send Notification",
+        "type": "email",
+        "position": [1300, 350],
+        "config": {
+          "to": "{{notification_email}}",
+          "subject": "Data Processing Complete - {{workflow_name}}",
+          "body": "Data processing completed successfully.\n\nStatistics:\n- Total Records: {{$node['Generate Statistics'].json.total_records}}\n- Valid Records: {{$node['Generate Statistics'].json.valid_records}}\n- Invalid Records: {{$node['Generate Statistics'].json.invalid_records}}\n- Processing Time: {{$node['Generate Statistics'].json.processing_time}}ms\n\nOutput Files:\n{{#each output_formats}}- {{../output_directory}}/processed_{{now | date('YYYY-MM-DD_HH-mm-ss')}}.{{this}}\n{{/each}}"
+        }
+      },
+      {
+        "id": "error-handler-1",
+        "name": "Error Handler",
+        "type": "error-handler",
+        "position": [700, 400],
+        "config": {
+          "on_error": "email",
+          "email_config": {
+            "to": "{{notification_email}}",
+            "subject": "Data Processing Failed - {{workflow_name}}",
+            "body": "Data processing failed with the following error:\n\n{{$error.message}}\n\nStack Trace:\n{{$error.stack}}"
+          }
+        }
+      }
+    ],
+    "connections": [
+      {
+        "source": "trigger-1",
+        "target": "read-csv-1",
+        "output": "main",
+        "input": "main"
+      },
+      {
+        "source": "read-csv-1",
+        "target": "validate-1",
+        "output": "main",
+        "input": "main"
+      },
+      {
+        "source": "validate-1",
+        "target": "transform-1",
+        "output": "valid",
+        "input": "main"
+      },
+      {
+        "source": "transform-1",
+        "target": "condition-aggregation",
+        "output": "main",
+        "input": "main"
+      },
+      {
+        "source": "condition-aggregation",
+        "target": "aggregate-1",
+        "output": "true",
+        "input": "main"
+      },
+      {
+        "source": "condition-aggregation",
+        "target": "output-csv",
+        "output": "false",
+        "input": "main",
+        "condition": "'csv' in {{output_formats}}"
+      },
+      {
+        "source": "condition-aggregation",
+        "target": "output-json",
+        "output": "false",
+        "input": "main",
+        "condition": "'json' in {{output_formats}}"
+      },
+      {
+        "source": "condition-aggregation",
+        "target": "output-xml",
+        "output": "false",
+        "input": "main",
+        "condition": "'xml' in {{output_formats}}"
+      },
+      {
+        "source": "condition-aggregation",
+        "target": "output-excel",
+        "output": "false",
+        "input": "main",
+        "condition": "'excel' in {{output_formats}}"
+      },
+      {
+        "source": "aggregate-1",
+        "target": "output-csv",
+        "output": "main",
+        "input": "main",
+        "condition": "'csv' in {{output_formats}}"
+      },
+      {
+        "source": "aggregate-1",
+        "target": "output-json",
+        "output": "main",
+        "input": "main",
+        "condition": "'json' in {{output_formats}}"
+      },
+      {
+        "source": "aggregate-1",
+        "target": "output-xml",
+        "output": "main",
+        "input": "main",
+        "condition": "'xml' in {{output_formats}}"
+      },
+      {
+        "source": "aggregate-1",
+        "target": "output-excel",
+        "output": "main",
+        "input": "main",
+        "condition": "'excel' in {{output_formats}}"
+      },
+      {
+        "source": "transform-1",
+        "target": "stats-1",
+        "output": "main",
+        "input": "main"
+      },
+      {
+        "source": "stats-1",
+        "target": "notification-1",
+        "output": "main",
+        "input": "main",
+        "condition": "{{notification_email}}"
+      }
+    ],
+    "error_handling": {
+      "global_handler": "error-handler-1"
+    }
+  },
+  "dependencies": [
+    "file-watcher-node",
+    "csv-reader-node",
+    "data-validator-node",
+    "data-transformer-node",
+    "data-aggregator-node",
+    "csv-writer-node",
+    "json-writer-node",
+    "xml-writer-node",
+    "excel-writer-node",
+    "statistics-generator-node",
+    "email-node",
+    "condition-node",
+    "error-handler-node"
+  ],
+  "requirements": {
+    "min_version": "0.3.0",
+    "required_nodes": [
+      "file-watcher",
+      "csv-reader",
+      "data-validator",
+      "data-transformer",
+      "condition"
+    ],
+    "optional_nodes": [
+      "data-aggregator",
+      "csv-writer",
+      "json-writer",
+      "xml-writer",
+      "excel-writer",
+      "statistics-generator",
+      "email",
+      "error-handler"
+    ],
+    "credentials": [
+      "email-smtp"
+    ],
+    "environment": {
+      "DATA_INPUT_DIR": "Directory for input files",
+      "DATA_OUTPUT_DIR": "Directory for output files",
+      "SMTP_HOST": "SMTP server for notifications (optional)"
+    },
+    "permissions": [
+      "filesystem:read",
+      "filesystem:write",
+      "network:email"
+    ]
+  },
+  "metadata": {
+    "downloads": 892,
+    "rating": 4.6,
+    "reviews": 18,
+    "screenshots": [
+      "screenshots/data-processing-overview.png",
+      "screenshots/data-processing-config.png",
+      "screenshots/data-processing-validation.png"
+    ],
+    "documentation": "https://docs.n8n-go.dev/templates/data-processing-pipeline",
+    "repository": "https://github.com/n8n-go/templates",
+    "license": "MIT",
+    "keywords": [
+      "etl",
+      "data-processing",
+      "csv",
+      "transformation",
+      "validation",
+      "pipeline",
+      "batch-processing",
+      "data-quality"
+    ],
+    "use_cases": [
+      "CSV data transformation",
+      "Data quality validation",
+      "ETL pipeline automation",
+      "Batch data processing",
+      "Data format conversion",
+      "Data aggregation and reporting"
+    ],
+    "industry": [
+      "Data Analytics",
+      "Business Intelligence",
+      "Data Engineering",
+      "Finance",
+      "E-commerce",
+      "Healthcare"
+    ]
+  },
+  "created_at": "2024-12-15T14:30:00Z",
+  "updated_at": "2024-12-20T09:15:00Z"
+}

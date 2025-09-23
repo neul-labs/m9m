@@ -1,0 +1,578 @@
+{
+  "id": "cloud-backup-automation-001",
+  "name": "Multi-Cloud Backup Automation",
+  "description": "Comprehensive backup automation template that synchronizes files across multiple cloud storage providers (AWS S3, Google Cloud Storage, Azure Blob Storage) with encryption, versioning, and automated cleanup policies.",
+  "version": "2.0.0",
+  "author": "n8n-go Team",
+  "category": "integrations",
+  "tags": ["backup", "cloud", "aws", "gcp", "azure", "storage", "sync", "encryption"],
+  "parameters": {
+    "source_directory": {
+      "name": "source_directory",
+      "type": "string",
+      "description": "Local directory to backup",
+      "required": true,
+      "placeholder": "/data/important",
+      "group": "Source Configuration"
+    },
+    "backup_name": {
+      "name": "backup_name",
+      "type": "string",
+      "description": "Base name for backup files",
+      "required": true,
+      "default_value": "automated-backup",
+      "validation": "value && value.length > 0",
+      "group": "Backup Configuration"
+    },
+    "enable_aws_s3": {
+      "name": "enable_aws_s3",
+      "type": "boolean",
+      "description": "Enable AWS S3 backup",
+      "required": false,
+      "default_value": true,
+      "group": "AWS Configuration"
+    },
+    "aws_s3_bucket": {
+      "name": "aws_s3_bucket",
+      "type": "string",
+      "description": "AWS S3 bucket name",
+      "required": false,
+      "placeholder": "my-backup-bucket",
+      "group": "AWS Configuration"
+    },
+    "aws_s3_region": {
+      "name": "aws_s3_region",
+      "type": "select",
+      "description": "AWS S3 region",
+      "required": false,
+      "default_value": "us-east-1",
+      "options": ["us-east-1", "us-west-2", "eu-west-1", "eu-central-1", "ap-southeast-1"],
+      "group": "AWS Configuration"
+    },
+    "enable_gcp_storage": {
+      "name": "enable_gcp_storage",
+      "type": "boolean",
+      "description": "Enable Google Cloud Storage backup",
+      "required": false,
+      "default_value": false,
+      "group": "GCP Configuration"
+    },
+    "gcp_bucket": {
+      "name": "gcp_bucket",
+      "type": "string",
+      "description": "GCP bucket name",
+      "required": false,
+      "placeholder": "my-gcp-backup-bucket",
+      "group": "GCP Configuration"
+    },
+    "enable_azure_storage": {
+      "name": "enable_azure_storage",
+      "type": "boolean",
+      "description": "Enable Azure Blob Storage backup",
+      "required": false,
+      "default_value": false,
+      "group": "Azure Configuration"
+    },
+    "azure_container": {
+      "name": "azure_container",
+      "type": "string",
+      "description": "Azure storage container",
+      "required": false,
+      "placeholder": "backup-container",
+      "group": "Azure Configuration"
+    },
+    "backup_schedule": {
+      "name": "backup_schedule",
+      "type": "select",
+      "description": "Backup frequency",
+      "required": true,
+      "default_value": "daily",
+      "options": ["hourly", "daily", "weekly", "monthly"],
+      "group": "Scheduling"
+    },
+    "backup_time": {
+      "name": "backup_time",
+      "type": "string",
+      "description": "Time to run backup (HH:MM)",
+      "required": false,
+      "default_value": "02:00",
+      "validation": "/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(value)",
+      "group": "Scheduling"
+    },
+    "encryption_enabled": {
+      "name": "encryption_enabled",
+      "type": "boolean",
+      "description": "Enable client-side encryption",
+      "required": false,
+      "default_value": true,
+      "group": "Security"
+    },
+    "encryption_key": {
+      "name": "encryption_key",
+      "type": "credential",
+      "description": "Encryption key credential",
+      "required": false,
+      "group": "Security"
+    },
+    "compression_enabled": {
+      "name": "compression_enabled",
+      "type": "boolean",
+      "description": "Enable backup compression",
+      "required": false,
+      "default_value": true,
+      "group": "Optimization"
+    },
+    "compression_level": {
+      "name": "compression_level",
+      "type": "select",
+      "description": "Compression level",
+      "required": false,
+      "default_value": "6",
+      "options": ["1", "3", "6", "9"],
+      "group": "Optimization"
+    },
+    "retention_days": {
+      "name": "retention_days",
+      "type": "number",
+      "description": "Number of days to keep backups",
+      "required": false,
+      "default_value": 30,
+      "validation": "value > 0 && value <= 365",
+      "group": "Retention Policy"
+    },
+    "max_backup_versions": {
+      "name": "max_backup_versions",
+      "type": "number",
+      "description": "Maximum backup versions to keep",
+      "required": false,
+      "default_value": 10,
+      "validation": "value > 0 && value <= 100",
+      "group": "Retention Policy"
+    },
+    "notification_emails": {
+      "name": "notification_emails",
+      "type": "array",
+      "description": "Email addresses for backup notifications",
+      "required": false,
+      "default_value": [],
+      "group": "Notifications"
+    },
+    "notify_on_success": {
+      "name": "notify_on_success",
+      "type": "boolean",
+      "description": "Send notification on successful backup",
+      "required": false,
+      "default_value": false,
+      "group": "Notifications"
+    },
+    "notify_on_failure": {
+      "name": "notify_on_failure",
+      "type": "boolean",
+      "description": "Send notification on backup failure",
+      "required": false,
+      "default_value": true,
+      "group": "Notifications"
+    },
+    "workflow_name": {
+      "name": "workflow_name",
+      "type": "string",
+      "description": "Name for the created workflow",
+      "required": false,
+      "default_value": "Cloud Backup - {{backup_name}}",
+      "group": "Workflow Settings"
+    }
+  },
+  "workflow": {
+    "id": "{{workflow_name | slugify}}",
+    "name": "{{workflow_name}}",
+    "description": "Automated multi-cloud backup for {{source_directory}}",
+    "active": true,
+    "nodes": [
+      {
+        "id": "trigger-1",
+        "name": "Backup Schedule",
+        "type": "schedule",
+        "position": [100, 200],
+        "config": {
+          "interval": "{{backup_schedule === 'hourly' ? '1h' : backup_schedule === 'daily' ? '1d' : backup_schedule === 'weekly' ? '7d' : '30d'}}",
+          "time": "{{backup_time}}",
+          "timezone": "UTC"
+        }
+      },
+      {
+        "id": "prepare-1",
+        "name": "Prepare Backup",
+        "type": "file-manager",
+        "position": [300, 200],
+        "config": {
+          "operation": "create_archive",
+          "source_path": "{{source_directory}}",
+          "archive_name": "{{backup_name}}_{{now | date('YYYY-MM-DD_HH-mm-ss')}}",
+          "compression": "{{compression_enabled}}",
+          "compression_level": "{{compression_level}}",
+          "encryption": "{{encryption_enabled}}",
+          "encryption_key": "{{encryption_key}}"
+        }
+      },
+      {
+        "id": "condition-aws",
+        "name": "Check AWS Enabled",
+        "type": "condition",
+        "position": [500, 150],
+        "config": {
+          "condition": "{{enable_aws_s3}}"
+        }
+      },
+      {
+        "id": "aws-s3-upload",
+        "name": "Upload to AWS S3",
+        "type": "aws-s3",
+        "position": [700, 100],
+        "config": {
+          "operation": "upload",
+          "bucket": "{{aws_s3_bucket}}",
+          "region": "{{aws_s3_region}}",
+          "key": "backups/{{backup_name}}/{{$node['Prepare Backup'].json.archive_name}}",
+          "file_path": "{{$node['Prepare Backup'].json.archive_path}}",
+          "storage_class": "STANDARD_IA",
+          "server_side_encryption": "AES256",
+          "metadata": {
+            "backup_date": "{{now | date('YYYY-MM-DD')}}",
+            "source": "{{source_directory}}",
+            "compressed": "{{compression_enabled}}",
+            "encrypted": "{{encryption_enabled}}"
+          }
+        }
+      },
+      {
+        "id": "condition-gcp",
+        "name": "Check GCP Enabled",
+        "type": "condition",
+        "position": [500, 200],
+        "config": {
+          "condition": "{{enable_gcp_storage}}"
+        }
+      },
+      {
+        "id": "gcp-storage-upload",
+        "name": "Upload to GCP Storage",
+        "type": "gcp-cloud-storage",
+        "position": [700, 200],
+        "config": {
+          "operation": "upload",
+          "bucket": "{{gcp_bucket}}",
+          "object_name": "backups/{{backup_name}}/{{$node['Prepare Backup'].json.archive_name}}",
+          "file_path": "{{$node['Prepare Backup'].json.archive_path}}",
+          "storage_class": "NEARLINE",
+          "metadata": {
+            "backup_date": "{{now | date('YYYY-MM-DD')}}",
+            "source": "{{source_directory}}",
+            "compressed": "{{compression_enabled}}",
+            "encrypted": "{{encryption_enabled}}"
+          }
+        }
+      },
+      {
+        "id": "condition-azure",
+        "name": "Check Azure Enabled",
+        "type": "condition",
+        "position": [500, 250],
+        "config": {
+          "condition": "{{enable_azure_storage}}"
+        }
+      },
+      {
+        "id": "azure-blob-upload",
+        "name": "Upload to Azure Blob",
+        "type": "azure-blob-storage",
+        "position": [700, 300],
+        "config": {
+          "operation": "upload",
+          "container": "{{azure_container}}",
+          "blob_name": "backups/{{backup_name}}/{{$node['Prepare Backup'].json.archive_name}}",
+          "file_path": "{{$node['Prepare Backup'].json.archive_path}}",
+          "access_tier": "Cool",
+          "metadata": {
+            "backup_date": "{{now | date('YYYY-MM-DD')}}",
+            "source": "{{source_directory}}",
+            "compressed": "{{compression_enabled}}",
+            "encrypted": "{{encryption_enabled}}"
+          }
+        }
+      },
+      {
+        "id": "cleanup-1",
+        "name": "Cleanup Old Backups",
+        "type": "multi-cloud-cleanup",
+        "position": [900, 200],
+        "config": {
+          "aws": {
+            "enabled": "{{enable_aws_s3}}",
+            "bucket": "{{aws_s3_bucket}}",
+            "prefix": "backups/{{backup_name}}/",
+            "retention_days": "{{retention_days}}",
+            "max_versions": "{{max_backup_versions}}"
+          },
+          "gcp": {
+            "enabled": "{{enable_gcp_storage}}",
+            "bucket": "{{gcp_bucket}}",
+            "prefix": "backups/{{backup_name}}/",
+            "retention_days": "{{retention_days}}",
+            "max_versions": "{{max_backup_versions}}"
+          },
+          "azure": {
+            "enabled": "{{enable_azure_storage}}",
+            "container": "{{azure_container}}",
+            "prefix": "backups/{{backup_name}}/",
+            "retention_days": "{{retention_days}}",
+            "max_versions": "{{max_backup_versions}}"
+          }
+        }
+      },
+      {
+        "id": "verify-1",
+        "name": "Verify Backups",
+        "type": "backup-verifier",
+        "position": [1100, 200],
+        "config": {
+          "verification_method": "checksum",
+          "aws_verification": "{{enable_aws_s3}}",
+          "gcp_verification": "{{enable_gcp_storage}}",
+          "azure_verification": "{{enable_azure_storage}}"
+        }
+      },
+      {
+        "id": "stats-1",
+        "name": "Generate Report",
+        "type": "backup-reporter",
+        "position": [1300, 200],
+        "config": {
+          "metrics": [
+            "backup_size",
+            "compression_ratio",
+            "upload_time",
+            "verification_status",
+            "storage_costs"
+          ]
+        }
+      },
+      {
+        "id": "notification-success",
+        "name": "Success Notification",
+        "type": "email",
+        "position": [1500, 150],
+        "config": {
+          "to": "{{notification_emails}}",
+          "subject": "✅ Backup Successful - {{backup_name}}",
+          "body": "Backup completed successfully!\n\nDetails:\n- Source: {{source_directory}}\n- Backup Name: {{$node['Prepare Backup'].json.archive_name}}\n- Size: {{$node['Generate Report'].json.backup_size | formatBytes}}\n- Compression Ratio: {{$node['Generate Report'].json.compression_ratio}}%\n- Upload Time: {{$node['Generate Report'].json.upload_time}}s\n\nStorage Locations:\n{{#if enable_aws_s3}}- AWS S3: {{aws_s3_bucket}}/backups/{{backup_name}}/\n{{/if}}{{#if enable_gcp_storage}}- GCP Storage: {{gcp_bucket}}/backups/{{backup_name}}/\n{{/if}}{{#if enable_azure_storage}}- Azure Blob: {{azure_container}}/backups/{{backup_name}}/\n{{/if}}\nVerification: {{$node['Verify Backups'].json.verification_status}}\nTimestamp: {{now | date('YYYY-MM-DD HH:mm:ss')}}"
+        }
+      },
+      {
+        "id": "notification-failure",
+        "name": "Failure Notification",
+        "type": "email",
+        "position": [1500, 250],
+        "config": {
+          "to": "{{notification_emails}}",
+          "subject": "❌ Backup Failed - {{backup_name}}",
+          "body": "ALERT: Backup process failed!\n\nDetails:\n- Source: {{source_directory}}\n- Backup Name: {{backup_name}}\n- Error: {{$error.message}}\n- Timestamp: {{now | date('YYYY-MM-DD HH:mm:ss')}}\n\nPlease investigate and resolve the issue immediately."
+        }
+      },
+      {
+        "id": "cleanup-local",
+        "name": "Cleanup Local Files",
+        "type": "file-manager",
+        "position": [1300, 300],
+        "config": {
+          "operation": "delete",
+          "file_path": "{{$node['Prepare Backup'].json.archive_path}}"
+        }
+      }
+    ],
+    "connections": [
+      {
+        "source": "trigger-1",
+        "target": "prepare-1",
+        "output": "main",
+        "input": "main"
+      },
+      {
+        "source": "prepare-1",
+        "target": "condition-aws",
+        "output": "main",
+        "input": "main"
+      },
+      {
+        "source": "prepare-1",
+        "target": "condition-gcp",
+        "output": "main",
+        "input": "main"
+      },
+      {
+        "source": "prepare-1",
+        "target": "condition-azure",
+        "output": "main",
+        "input": "main"
+      },
+      {
+        "source": "condition-aws",
+        "target": "aws-s3-upload",
+        "output": "true",
+        "input": "main"
+      },
+      {
+        "source": "condition-gcp",
+        "target": "gcp-storage-upload",
+        "output": "true",
+        "input": "main"
+      },
+      {
+        "source": "condition-azure",
+        "target": "azure-blob-upload",
+        "output": "true",
+        "input": "main"
+      },
+      {
+        "source": "aws-s3-upload",
+        "target": "cleanup-1",
+        "output": "main",
+        "input": "main"
+      },
+      {
+        "source": "gcp-storage-upload",
+        "target": "cleanup-1",
+        "output": "main",
+        "input": "main"
+      },
+      {
+        "source": "azure-blob-upload",
+        "target": "cleanup-1",
+        "output": "main",
+        "input": "main"
+      },
+      {
+        "source": "cleanup-1",
+        "target": "verify-1",
+        "output": "main",
+        "input": "main"
+      },
+      {
+        "source": "verify-1",
+        "target": "stats-1",
+        "output": "main",
+        "input": "main"
+      },
+      {
+        "source": "stats-1",
+        "target": "notification-success",
+        "output": "main",
+        "input": "main",
+        "condition": "{{notify_on_success}} && {{notification_emails.length > 0}}"
+      },
+      {
+        "source": "stats-1",
+        "target": "cleanup-local",
+        "output": "main",
+        "input": "main"
+      }
+    ],
+    "error_handling": {
+      "on_error": "notification-failure",
+      "condition": "{{notify_on_failure}} && {{notification_emails.length > 0}}"
+    }
+  },
+  "dependencies": [
+    "schedule-node",
+    "file-manager-node",
+    "condition-node",
+    "aws-s3-node",
+    "gcp-cloud-storage-node",
+    "azure-blob-storage-node",
+    "multi-cloud-cleanup-node",
+    "backup-verifier-node",
+    "backup-reporter-node",
+    "email-node"
+  ],
+  "requirements": {
+    "min_version": "0.3.0",
+    "required_nodes": [
+      "schedule",
+      "file-manager",
+      "condition"
+    ],
+    "optional_nodes": [
+      "aws-s3",
+      "gcp-cloud-storage",
+      "azure-blob-storage",
+      "multi-cloud-cleanup",
+      "backup-verifier",
+      "backup-reporter",
+      "email"
+    ],
+    "credentials": [
+      "aws-credentials",
+      "gcp-service-account",
+      "azure-storage-account",
+      "email-smtp",
+      "encryption-key"
+    ],
+    "environment": {
+      "AWS_ACCESS_KEY_ID": "AWS access key (if using S3)",
+      "AWS_SECRET_ACCESS_KEY": "AWS secret key (if using S3)",
+      "GOOGLE_APPLICATION_CREDENTIALS": "GCP service account file (if using GCS)",
+      "AZURE_STORAGE_ACCOUNT": "Azure storage account (if using Blob)",
+      "AZURE_STORAGE_KEY": "Azure storage key (if using Blob)",
+      "ENCRYPTION_KEY": "Encryption key for backup files"
+    },
+    "permissions": [
+      "filesystem:read",
+      "network:aws",
+      "network:gcp",
+      "network:azure",
+      "credentials:cloud",
+      "credentials:encryption"
+    ]
+  },
+  "metadata": {
+    "downloads": 654,
+    "rating": 4.8,
+    "reviews": 12,
+    "screenshots": [
+      "screenshots/cloud-backup-overview.png",
+      "screenshots/cloud-backup-config.png",
+      "screenshots/cloud-backup-monitoring.png"
+    ],
+    "documentation": "https://docs.n8n-go.dev/templates/cloud-backup-automation",
+    "repository": "https://github.com/n8n-go/templates",
+    "license": "MIT",
+    "keywords": [
+      "backup",
+      "cloud-storage",
+      "aws-s3",
+      "google-cloud",
+      "azure-blob",
+      "multi-cloud",
+      "encryption",
+      "automation",
+      "data-protection"
+    ],
+    "use_cases": [
+      "Automated file backups",
+      "Multi-cloud data redundancy",
+      "Disaster recovery planning",
+      "Compliance data archiving",
+      "Enterprise data protection",
+      "Cross-cloud data migration"
+    ],
+    "industry": [
+      "Enterprise IT",
+      "Healthcare",
+      "Financial Services",
+      "Government",
+      "Media & Entertainment",
+      "E-commerce"
+    ]
+  },
+  "created_at": "2024-12-10T16:45:00Z",
+  "updated_at": "2024-12-20T11:30:00Z"
+}

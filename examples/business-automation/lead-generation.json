@@ -1,0 +1,328 @@
+{
+  "name": "Lead Generation",
+  "description": "Automated lead capture and qualification workflow with scoring and routing",
+  "category": "business-automation",
+  "difficulty": "intermediate",
+  "estimatedTime": "15 minutes",
+  "prerequisites": ["Business automation concepts", "Lead scoring knowledge"],
+  "learningObjectives": [
+    "Learn lead qualification automation",
+    "Practice lead scoring algorithms",
+    "Understand CRM integration patterns"
+  ],
+  "nodes": [
+    {
+      "parameters": {
+        "path": "/webhook/lead-capture",
+        "httpMethod": "POST",
+        "authentication": "none"
+      },
+      "id": "lead-webhook",
+      "name": "Lead Capture Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "webhookId": "lead-capture"
+    },
+    {
+      "parameters": {
+        "assignments": [
+          {
+            "name": "leadId",
+            "value": "{{ 'LEAD-' + formatDate(now(), 'yyyyMMdd') + '-' + randomString(6) }}"
+          },
+          {
+            "name": "email",
+            "value": "{{ lower(trim($json.body.email || '')) }}"
+          },
+          {
+            "name": "firstName",
+            "value": "{{ trim($json.body.first_name || '') }}"
+          },
+          {
+            "name": "lastName",
+            "value": "{{ trim($json.body.last_name || '') }}"
+          },
+          {
+            "name": "company",
+            "value": "{{ trim($json.body.company || '') }}"
+          },
+          {
+            "name": "jobTitle",
+            "value": "{{ trim($json.body.job_title || '') }}"
+          },
+          {
+            "name": "phone",
+            "value": "{{ trim($json.body.phone || '') }}"
+          },
+          {
+            "name": "website",
+            "value": "{{ trim($json.body.website || '') }}"
+          },
+          {
+            "name": "industry",
+            "value": "{{ trim($json.body.industry || '') }}"
+          },
+          {
+            "name": "companySize",
+            "value": "{{ $json.body.company_size || '' }}"
+          },
+          {
+            "name": "budget",
+            "value": "{{ $json.body.budget || '' }}"
+          },
+          {
+            "name": "source",
+            "value": "{{ $json.body.source || 'website' }}"
+          },
+          {
+            "name": "capturedAt",
+            "value": "{{ formatDate(now(), 'yyyy-MM-dd HH:mm:ss') }}"
+          }
+        ]
+      },
+      "id": "extract-lead-data",
+      "name": "Extract Lead Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "assignments": [
+          {
+            "name": "isValidEmail",
+            "value": "{{ regex($json.email, '^[^@]+@[^@]+\\\\.[^@]+$') }}"
+          },
+          {
+            "name": "hasCompanyInfo",
+            "value": "{{ and(isNotEmpty($json.company), isNotEmpty($json.jobTitle)) }}"
+          },
+          {
+            "name": "hasContactInfo",
+            "value": "{{ and(isNotEmpty($json.firstName), isNotEmpty($json.lastName)) }}"
+          },
+          {
+            "name": "isComplete",
+            "value": "{{ and($json.isValidEmail, $json.hasCompanyInfo, $json.hasContactInfo) }}"
+          }
+        ]
+      },
+      "id": "validate-lead",
+      "name": "Validate Lead",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "assignments": [
+          {
+            "name": "emailScore",
+            "value": "{{ $json.isValidEmail ? 10 : 0 }}"
+          },
+          {
+            "name": "companyScore",
+            "value": "{{ isNotEmpty($json.company) ? 15 : 0 }}"
+          },
+          {
+            "name": "jobTitleScore",
+            "value": "{{ includes(lower($json.jobTitle), 'director') ? 20 : includes(lower($json.jobTitle), 'manager') ? 15 : includes(lower($json.jobTitle), 'vp') ? 25 : includes(lower($json.jobTitle), 'ceo') ? 30 : 5 }}"
+          },
+          {
+            "name": "companySizeScore",
+            "value": "{{ $json.companySize === '500+' ? 25 : $json.companySize === '100-500' ? 20 : $json.companySize === '50-100' ? 15 : $json.companySize === '10-50' ? 10 : 5 }}"
+          },
+          {
+            "name": "budgetScore",
+            "value": "{{ $json.budget === '$50k+' ? 30 : $json.budget === '$25k-50k' ? 20 : $json.budget === '$10k-25k' ? 15 : $json.budget === '$5k-10k' ? 10 : 5 }}"
+          },
+          {
+            "name": "sourceScore",
+            "value": "{{ $json.source === 'referral' ? 20 : $json.source === 'linkedin' ? 15 : $json.source === 'google' ? 10 : $json.source === 'website' ? 5 : 0 }}"
+          }
+        ]
+      },
+      "id": "calculate-scores",
+      "name": "Calculate Scores",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "assignments": [
+          {
+            "name": "totalScore",
+            "value": "{{ add($json.emailScore, $json.companyScore, $json.jobTitleScore, $json.companySizeScore, $json.budgetScore, $json.sourceScore) }}"
+          },
+          {
+            "name": "leadGrade",
+            "value": "{{ if($json.totalScore >= 80, 'A', if($json.totalScore >= 60, 'B', if($json.totalScore >= 40, 'C', 'D'))) }}"
+          },
+          {
+            "name": "leadQuality",
+            "value": "{{ if($json.totalScore >= 80, 'Hot', if($json.totalScore >= 60, 'Warm', if($json.totalScore >= 40, 'Cold', 'Unqualified'))) }}"
+          },
+          {
+            "name": "priority",
+            "value": "{{ if($json.totalScore >= 80, 'High', if($json.totalScore >= 60, 'Medium', 'Low')) }}"
+          }
+        ]
+      },
+      "id": "assign-grade",
+      "name": "Assign Grade",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "conditions": [
+          {
+            "field": "leadGrade",
+            "operation": "equal",
+            "value": "A"
+          }
+        ]
+      },
+      "id": "routing-switch",
+      "name": "Routing Switch",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [1340, 300]
+    },
+    {
+      "parameters": {
+        "assignments": [
+          {
+            "name": "assignedTo",
+            "value": "senior_sales_team"
+          },
+          {
+            "name": "followUpTime",
+            "value": "{{ formatDate(addDays(now(), 1), 'yyyy-MM-dd HH:mm:ss') }}"
+          },
+          {
+            "name": "nextAction",
+            "value": "immediate_call"
+          },
+          {
+            "name": "automatedEmail",
+            "value": "hot_lead_template"
+          }
+        ]
+      },
+      "id": "hot-lead-routing",
+      "name": "Hot Lead Routing",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [1560, 200]
+    },
+    {
+      "parameters": {
+        "assignments": [
+          {
+            "name": "assignedTo",
+            "value": "{{ if($json.leadGrade === 'B', 'junior_sales_team', 'marketing_nurture') }}"
+          },
+          {
+            "name": "followUpTime",
+            "value": "{{ formatDate(addDays(now(), if($json.leadGrade === 'B', 3, 7)), 'yyyy-MM-dd HH:mm:ss') }}"
+          },
+          {
+            "name": "nextAction",
+            "value": "{{ if($json.leadGrade === 'B', 'email_outreach', 'nurture_campaign') }}"
+          },
+          {
+            "name": "automatedEmail",
+            "value": "{{ if($json.leadGrade === 'B', 'warm_lead_template', 'nurture_template') }}"
+          }
+        ]
+      },
+      "id": "standard-lead-routing",
+      "name": "Standard Lead Routing",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [1560, 400]
+    }
+  ],
+  "connections": {
+    "Lead Capture Webhook": {
+      "main": [
+        [
+          {
+            "node": "Extract Lead Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Lead Data": {
+      "main": [
+        [
+          {
+            "node": "Validate Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Lead": {
+      "main": [
+        [
+          {
+            "node": "Calculate Scores",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Scores": {
+      "main": [
+        [
+          {
+            "node": "Assign Grade",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assign Grade": {
+      "main": [
+        [
+          {
+            "node": "Routing Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Routing Switch": {
+      "main": [
+        [
+          {
+            "node": "Hot Lead Routing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Standard Lead Routing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "1"
+}

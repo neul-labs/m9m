@@ -1,0 +1,36 @@
+{
+  "name": "JSON Node Test",
+  "active": true,
+  "nodes": [
+    {
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "parameters": {}
+    },
+    {
+      "name": "JSON Parse",
+      "type": "n8n-nodes-base.json",
+      "typeVersion": 1,
+      "position": [450, 300],
+      "parameters": {
+        "operation": "parse",
+        "jsonPath": "$json.jsonString"
+      }
+    }
+  ],
+  "connections": {
+    "Start": {
+      "Main": [
+        [
+          {
+            "node": "JSON Parse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

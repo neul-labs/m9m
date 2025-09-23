@@ -1,0 +1,21 @@
+{
+  "name": "Simple Expression Test",
+  "active": true,
+  "nodes": [
+    {
+      "name": "Set",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "parameters": {
+        "assignments": [
+          {
+            "name": "greeting",
+            "value": "Hello {{ uppercase('world') }}!"
+          }
+        ]
+      }
+    }
+  ],
+  "connections": {}
+}

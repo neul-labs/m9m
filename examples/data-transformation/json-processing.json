@@ -1,0 +1,180 @@
+{
+  "name": "JSON Processing",
+  "description": "Comprehensive JSON manipulation including parsing, stringifying, and data extraction",
+  "category": "data-transformation",
+  "difficulty": "intermediate",
+  "estimatedTime": "10 minutes",
+  "prerequisites": ["Basic JSON knowledge", "Understanding of expressions"],
+  "learningObjectives": [
+    "Master JSON parsing and stringifying",
+    "Learn complex data extraction",
+    "Practice nested object manipulation"
+  ],
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "start",
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "assignments": [
+          {
+            "name": "rawJsonString",
+            "value": "{\"order\": {\"id\": \"ORD-001\", \"customer\": {\"name\": \"John Doe\", \"email\": \"john@example.com\", \"address\": {\"street\": \"123 Main St\", \"city\": \"New York\", \"zip\": \"10001\"}}, \"items\": [{\"product\": \"Laptop\", \"price\": 999.99, \"quantity\": 1}, {\"product\": \"Mouse\", \"price\": 25.50, \"quantity\": 2}], \"total\": 1050.99, \"status\": \"pending\", \"createdAt\": \"2024-01-15T10:30:00Z\"}}"
+          }
+        ]
+      },
+      "id": "set-raw-data",
+      "name": "Set Raw JSON Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "operation": "parse",
+        "jsonPath": "$json.rawJsonString"
+      },
+      "id": "parse-order",
+      "name": "Parse Order JSON",
+      "type": "n8n-nodes-base.json",
+      "typeVersion": 1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "operation": "extract",
+        "extractionFields": [
+          {
+            "name": "orderId",
+            "path": "$json.data.order.id"
+          },
+          {
+            "name": "customerName",
+            "path": "$json.data.order.customer.name"
+          },
+          {
+            "name": "customerEmail",
+            "path": "$json.data.order.customer.email"
+          },
+          {
+            "name": "shippingAddress",
+            "path": "{{ $json.data.order.customer.address.street + ', ' + $json.data.order.customer.address.city + ', ' + $json.data.order.customer.address.zip }}"
+          },
+          {
+            "name": "itemCount",
+            "path": "{{ length($json.data.order.items) }}"
+          },
+          {
+            "name": "totalQuantity",
+            "path": "{{ sum($json.data.order.items.map(item => item.quantity)) }}"
+          },
+          {
+            "name": "orderTotal",
+            "path": "$json.data.order.total"
+          },
+          {
+            "name": "orderStatus",
+            "path": "$json.data.order.status"
+          }
+        ]
+      },
+      "id": "extract-order-info",
+      "name": "Extract Order Info",
+      "type": "n8n-nodes-base.json",
+      "typeVersion": 1,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "assignments": [
+          {
+            "name": "processedOrder",
+            "value": "{{ {orderId: $json.orderId, customer: {name: $json.customerName, email: $json.customerEmail, address: $json.shippingAddress}, summary: {items: $json.itemCount, quantity: $json.totalQuantity, total: $json.orderTotal}, status: upper($json.orderStatus), processedAt: formatDate(now(), 'yyyy-MM-dd HH:mm:ss')} }}"
+          }
+        ]
+      },
+      "id": "restructure-data",
+      "name": "Restructure Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "operation": "stringify",
+        "dataPath": "$json.processedOrder",
+        "indent": true
+      },
+      "id": "stringify-result",
+      "name": "Stringify Result",
+      "type": "n8n-nodes-base.json",
+      "typeVersion": 1,
+      "position": [1340, 300]
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Set Raw JSON Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Raw JSON Data": {
+      "main": [
+        [
+          {
+            "node": "Parse Order JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Order JSON": {
+      "main": [
+        [
+          {
+            "node": "Extract Order Info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Order Info": {
+      "main": [
+        [
+          {
+            "node": "Restructure Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Restructure Data": {
+      "main": [
+        [
+          {
+            "node": "Stringify Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "1"
+}

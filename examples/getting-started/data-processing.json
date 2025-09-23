@@ -1,0 +1,119 @@
+{
+  "name": "Data Processing",
+  "description": "Basic data transformation workflow showing expression usage and data manipulation",
+  "category": "getting-started",
+  "difficulty": "beginner",
+  "estimatedTime": "5 minutes",
+  "prerequisites": ["Basic n8n knowledge"],
+  "learningObjectives": [
+    "Learn data transformation techniques",
+    "Practice with expressions",
+    "Understand data flow between nodes"
+  ],
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "start",
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "assignments": [
+          {
+            "name": "users",
+            "value": "[{\"id\": 1, \"firstName\": \"John\", \"lastName\": \"Doe\", \"age\": 30, \"email\": \"john@example.com\"}, {\"id\": 2, \"firstName\": \"Jane\", \"lastName\": \"Smith\", \"age\": 25, \"email\": \"jane@example.com\"}, {\"id\": 3, \"firstName\": \"Bob\", \"lastName\": \"Johnson\", \"age\": 35, \"email\": \"bob@example.com\"}]"
+          }
+        ]
+      },
+      "id": "set-sample-data",
+      "name": "Set Sample Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "operation": "parse",
+        "jsonPath": "$json.users",
+        "includeItemIndex": true
+      },
+      "id": "parse-users",
+      "name": "Parse Users",
+      "type": "n8n-nodes-base.json",
+      "typeVersion": 1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "assignments": [
+          {
+            "name": "fullName",
+            "value": "{{ $json.data.firstName + ' ' + $json.data.lastName }}"
+          },
+          {
+            "name": "isAdult",
+            "value": "{{ $json.data.age >= 18 }}"
+          },
+          {
+            "name": "emailDomain",
+            "value": "{{ split($json.data.email, '@')[1] }}"
+          },
+          {
+            "name": "ageCategory",
+            "value": "{{ if($json.data.age < 30, 'young', if($json.data.age < 40, 'middle', 'senior')) }}"
+          },
+          {
+            "name": "processedAt",
+            "value": "{{ formatDate(now(), 'yyyy-MM-dd HH:mm:ss') }}"
+          }
+        ]
+      },
+      "id": "transform-user-data",
+      "name": "Transform User Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [900, 300]
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Set Sample Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Sample Data": {
+      "main": [
+        [
+          {
+            "node": "Parse Users",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Users": {
+      "main": [
+        [
+          {
+            "node": "Transform User Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "1"
+}

@@ -1,0 +1,125 @@
+{
+  "name": "Cross-Node Data Access Test",
+  "active": true,
+  "nodes": [
+    {
+      "name": "Users Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [250, 200],
+      "parameters": {
+        "values": {
+          "object": [
+            {
+              "name": "users",
+              "value": "={{ [{\"id\": 1, \"name\": \"John Doe\", \"department\": \"Engineering\"}, {\"id\": 2, \"name\": \"Jane Smith\", \"department\": \"Marketing\"}] }}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Departments Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [250, 400],
+      "parameters": {
+        "values": {
+          "object": [
+            {
+              "name": "departments",
+              "value": "={{ [{\"name\": \"Engineering\", \"budget\": 100000}, {\"name\": \"Marketing\", \"budget\": 75000}] }}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Merge Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [450, 300],
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "report",
+              "value": "={{ 'Users: ' + join(pluck($node('Users Data').json.users, 'name'), ', ') }}"
+            },
+            {
+              "name": "totalBudget",
+              "value": "={{ 'Total Budget: $' + sum(pluck($node('Departments Data').json.departments, 'budget')) }}"
+            }
+          ],
+          "object": [
+            {
+              "name": "usersWithBudget",
+              "value": "={{ $node('Users Data').json.users.map(user => ({ ...user, budget: $node('Departments Data').json.departments.find(dept => dept.name === user.department)?.budget || 0 })) }}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Calculate Stats",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [650, 300],
+      "parameters": {
+        "values": {
+          "number": [
+            {
+              "name": "userCount",
+              "value": "={{ length($node('Users Data').json.users) }}"
+            },
+            {
+              "name": "avgBudget",
+              "value": "={{ divide(sum(pluck($node('Departments Data').json.departments, 'budget')), length($node('Departments Data').json.departments)) }}"
+            }
+          ],
+          "string": [
+            {
+              "name": "analysis",
+              "value": "={{ 'Analysis: ' + $json.userCount + ' users across ' + length($node('Departments Data').json.departments) + ' departments with average budget of $' + $json.avgBudget }}"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Users Data": {
+      "main": [
+        [
+          {
+            "node": "Merge Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Departments Data": {
+      "main": [
+        [
+          {
+            "node": "Merge Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Data": {
+      "main": [
+        [
+          {
+            "node": "Calculate Stats",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

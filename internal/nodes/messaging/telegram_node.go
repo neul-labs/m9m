@@ -1,0 +1,843 @@
+package messaging
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"fmt"
+	"io"
+	"mime/multipart"
+	"net/http"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/n8n-go/internal/core/base"
+	"github.com/n8n-go/internal/core/interfaces"
+)
+
+// TelegramNode provides Telegram messaging operations
+type TelegramNode struct {
+	*base.BaseNode
+	httpClient *http.Client
+}
+
+// NewTelegramNode creates a new Telegram node
+func NewTelegramNode() *TelegramNode {
+	return &TelegramNode{
+		BaseNode: base.NewBaseNode("Telegram", "Telegram Bot"),
+		httpClient: &http.Client{
+			Timeout: 30 * time.Second,
+		},
+	}
+}
+
+// GetMetadata returns the node metadata
+func (n *TelegramNode) GetMetadata() interfaces.NodeMetadata {
+	return interfaces.NodeMetadata{
+		Name:        "Telegram",
+		DisplayName: "Telegram",
+		Description: "Send messages, manage chats, and interact with Telegram Bot API",
+		Group:       []string{"Communication"},
+		Version:     1,
+		Inputs:      []string{"main"},
+		Outputs:     []string{"main"},
+		Credentials: []interfaces.CredentialType{
+			{
+				Name:        "telegramApi",
+				Required:    true,
+				DisplayName: "Telegram Bot API",
+			},
+		},
+		Properties: []interfaces.NodeProperty{
+			{
+				Name:        "resource",
+				DisplayName: "Resource",
+				Type:        "options",
+				Options: []interfaces.OptionItem{
+					{Name: "Message", Value: "message"},
+					{Name: "Chat", Value: "chat"},
+					{Name: "Callback Query", Value: "callbackQuery"},
+					{Name: "File", Value: "file"},
+					{Name: "Chat Member", Value: "chatMember"},
+				},
+				Default:     "message",
+				Required:    true,
+				Description: "The resource to operate on",
+			},
+			{
+				Name:        "operation",
+				DisplayName: "Operation",
+				Type:        "options",
+				Options: []interfaces.OptionItem{
+					{Name: "Send Message", Value: "sendMessage"},
+					{Name: "Send Photo", Value: "sendPhoto"},
+					{Name: "Send Document", Value: "sendDocument"},
+					{Name: "Send Audio", Value: "sendAudio"},
+					{Name: "Send Video", Value: "sendVideo"},
+					{Name: "Send Location", Value: "sendLocation"},
+					{Name: "Send Contact", Value: "sendContact"},
+					{Name: "Send Sticker", Value: "sendSticker"},
+					{Name: "Edit Message", Value: "editMessageText"},
+					{Name: "Delete Message", Value: "deleteMessage"},
+					{Name: "Pin Message", Value: "pinChatMessage"},
+					{Name: "Unpin Message", Value: "unpinChatMessage"},
+				},
+				Default:     "sendMessage",
+				Required:    true,
+				Description: "The operation to perform",
+				DisplayOptions: map[string]interface{}{
+					"show": map[string]interface{}{
+						"resource": []string{"message"},
+					},
+				},
+			},
+			{
+				Name:        "chatId",
+				DisplayName: "Chat ID",
+				Type:        "string",
+				Default:     "",
+				Required:    true,
+				Description: "Unique identifier for the target chat or username of the target channel",
+			},
+			{
+				Name:        "text",
+				DisplayName: "Text",
+				Type:        "string",
+				TypeOptions: map[string]interface{}{
+					"rows": 5,
+				},
+				Default:     "",
+				Description: "Text of the message to be sent",
+				DisplayOptions: map[string]interface{}{
+					"show": map[string]interface{}{
+						"operation": []string{"sendMessage", "editMessageText"},
+					},
+				},
+			},
+			{
+				Name:        "messageId",
+				DisplayName: "Message ID",
+				Type:        "string",
+				Default:     "",
+				Description: "Identifier of the message",
+				DisplayOptions: map[string]interface{}{
+					"show": map[string]interface{}{
+						"operation": []string{"editMessageText", "deleteMessage", "pinChatMessage", "unpinChatMessage"},
+					},
+				},
+			},
+			{
+				Name:        "parseMode",
+				DisplayName: "Parse Mode",
+				Type:        "options",
+				Options: []interfaces.OptionItem{
+					{Name: "None", Value: ""},
+					{Name: "Markdown", Value: "Markdown"},
+					{Name: "MarkdownV2", Value: "MarkdownV2"},
+					{Name: "HTML", Value: "HTML"},
+				},
+				Default:     "",
+				Description: "Mode for parsing entities in the message text",
+			},
+			{
+				Name:        "replyToMessageId",
+				DisplayName: "Reply To Message ID",
+				Type:        "string",
+				Default:     "",
+				Description: "If the message is a reply, ID of the original message",
+			},
+			{
+				Name:        "disableNotification",
+				DisplayName: "Disable Notification",
+				Type:        "boolean",
+				Default:     false,
+				Description: "Send the message silently",
+			},
+			{
+				Name:        "disableWebPagePreview",
+				DisplayName: "Disable Web Page Preview",
+				Type:        "boolean",
+				Default:     false,
+				Description: "Disable link previews for links in this message",
+			},
+			{
+				Name:        "replyMarkup",
+				DisplayName: "Reply Markup",
+				Type:        "json",
+				Default:     "{}",
+				Description: "Additional interface options (InlineKeyboardMarkup or ReplyKeyboardMarkup)",
+			},
+			{
+				Name:        "photo",
+				DisplayName: "Photo",
+				Type:        "string",
+				Default:     "",
+				Description: "Photo to send (file_id, HTTP URL, or binary data)",
+				DisplayOptions: map[string]interface{}{
+					"show": map[string]interface{}{
+						"operation": []string{"sendPhoto"},
+					},
+				},
+			},
+			{
+				Name:        "document",
+				DisplayName: "Document",
+				Type:        "string",
+				Default:     "",
+				Description: "Document to send (file_id, HTTP URL, or binary data)",
+				DisplayOptions: map[string]interface{}{
+					"show": map[string]interface{}{
+						"operation": []string{"sendDocument"},
+					},
+				},
+			},
+			{
+				Name:        "caption",
+				DisplayName: "Caption",
+				Type:        "string",
+				Default:     "",
+				Description: "Caption for the media",
+				DisplayOptions: map[string]interface{}{
+					"show": map[string]interface{}{
+						"operation": []string{"sendPhoto", "sendDocument", "sendAudio", "sendVideo"},
+					},
+				},
+			},
+			{
+				Name:        "latitude",
+				DisplayName: "Latitude",
+				Type:        "number",
+				Default:     0,
+				Description: "Latitude of the location",
+				DisplayOptions: map[string]interface{}{
+					"show": map[string]interface{}{
+						"operation": []string{"sendLocation"},
+					},
+				},
+			},
+			{
+				Name:        "longitude",
+				DisplayName: "Longitude",
+				Type:        "number",
+				Default:     0,
+				Description: "Longitude of the location",
+				DisplayOptions: map[string]interface{}{
+					"show": map[string]interface{}{
+						"operation": []string{"sendLocation"},
+					},
+				},
+			},
+			{
+				Name:        "phoneNumber",
+				DisplayName: "Phone Number",
+				Type:        "string",
+				Default:     "",
+				Description: "Contact's phone number",
+				DisplayOptions: map[string]interface{}{
+					"show": map[string]interface{}{
+						"operation": []string{"sendContact"},
+					},
+				},
+			},
+			{
+				Name:        "firstName",
+				DisplayName: "First Name",
+				Type:        "string",
+				Default:     "",
+				Description: "Contact's first name",
+				DisplayOptions: map[string]interface{}{
+					"show": map[string]interface{}{
+						"operation": []string{"sendContact"},
+					},
+				},
+			},
+		},
+	}
+}
+
+// Execute runs the Telegram operation
+func (n *TelegramNode) Execute(ctx context.Context, params interfaces.ExecutionParams) (interfaces.NodeOutput, error) {
+	// Get credentials
+	credentials, err := params.GetCredentials("telegramApi")
+	if err != nil {
+		return interfaces.NodeOutput{}, fmt.Errorf("failed to get Telegram credentials: %w", err)
+	}
+
+	botToken, ok := credentials["botToken"].(string)
+	if !ok || botToken == "" {
+		return interfaces.NodeOutput{}, fmt.Errorf("Telegram bot token not found")
+	}
+
+	// Get resource and operation
+	resource := params.GetNodeParameter("resource", "message").(string)
+	operation := params.GetNodeParameter("operation", "sendMessage").(string)
+
+	var result interface{}
+
+	switch resource {
+	case "message":
+		result, err = n.handleMessageResource(botToken, operation, params)
+	case "chat":
+		result, err = n.handleChatResource(botToken, operation, params)
+	case "file":
+		result, err = n.handleFileResource(botToken, operation, params)
+	case "chatMember":
+		result, err = n.handleChatMemberResource(botToken, operation, params)
+	case "callbackQuery":
+		result, err = n.handleCallbackQueryResource(botToken, operation, params)
+	default:
+		err = fmt.Errorf("unsupported resource: %s", resource)
+	}
+
+	if err != nil {
+		return interfaces.NodeOutput{}, err
+	}
+
+	// Format output
+	var outputItems []interfaces.ItemData
+	switch v := result.(type) {
+	case map[string]interface{}:
+		outputItems = append(outputItems, interfaces.ItemData{
+			JSON:  v,
+			Index: 0,
+		})
+	case []interface{}:
+		for i, item := range v {
+			if itemMap, ok := item.(map[string]interface{}); ok {
+				outputItems = append(outputItems, interfaces.ItemData{
+					JSON:  itemMap,
+					Index: i,
+				})
+			}
+		}
+	default:
+		outputItems = append(outputItems, interfaces.ItemData{
+			JSON: map[string]interface{}{
+				"result": result,
+			},
+			Index: 0,
+		})
+	}
+
+	return interfaces.NodeOutput{
+		Items: outputItems,
+	}, nil
+}
+
+// Message resource handlers
+
+func (n *TelegramNode) handleMessageResource(token, operation string, params interfaces.ExecutionParams) (interface{}, error) {
+	chatId := params.GetNodeParameter("chatId", "").(string)
+	if chatId == "" {
+		return nil, fmt.Errorf("chat ID is required")
+	}
+
+	switch operation {
+	case "sendMessage":
+		return n.sendMessage(token, chatId, params)
+	case "sendPhoto":
+		return n.sendPhoto(token, chatId, params)
+	case "sendDocument":
+		return n.sendDocument(token, chatId, params)
+	case "sendAudio":
+		return n.sendAudio(token, chatId, params)
+	case "sendVideo":
+		return n.sendVideo(token, chatId, params)
+	case "sendLocation":
+		return n.sendLocation(token, chatId, params)
+	case "sendContact":
+		return n.sendContact(token, chatId, params)
+	case "sendSticker":
+		return n.sendSticker(token, chatId, params)
+	case "editMessageText":
+		return n.editMessageText(token, chatId, params)
+	case "deleteMessage":
+		return n.deleteMessage(token, chatId, params)
+	case "pinChatMessage":
+		return n.pinChatMessage(token, chatId, params)
+	case "unpinChatMessage":
+		return n.unpinChatMessage(token, chatId, params)
+	default:
+		return nil, fmt.Errorf("unsupported operation: %s", operation)
+	}
+}
+
+func (n *TelegramNode) sendMessage(token, chatId string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+	text := params.GetNodeParameter("text", "").(string)
+	if text == "" {
+		return nil, fmt.Errorf("text is required")
+	}
+
+	body := map[string]interface{}{
+		"chat_id": chatId,
+		"text":    text,
+	}
+
+	// Optional parameters
+	if parseMode := params.GetNodeParameter("parseMode", "").(string); parseMode != "" {
+		body["parse_mode"] = parseMode
+	}
+	if replyToMessageId := params.GetNodeParameter("replyToMessageId", "").(string); replyToMessageId != "" {
+		body["reply_to_message_id"] = replyToMessageId
+	}
+	if disableNotification := params.GetNodeParameter("disableNotification", false).(bool); disableNotification {
+		body["disable_notification"] = true
+	}
+	if disableWebPagePreview := params.GetNodeParameter("disableWebPagePreview", false).(bool); disableWebPagePreview {
+		body["disable_web_page_preview"] = true
+	}
+
+	// Reply markup
+	replyMarkupJSON := params.GetNodeParameter("replyMarkup", "{}").(string)
+	if replyMarkupJSON != "{}" {
+		var replyMarkup interface{}
+		if err := json.Unmarshal([]byte(replyMarkupJSON), &replyMarkup); err == nil {
+			body["reply_markup"] = replyMarkup
+		}
+	}
+
+	return n.makeTelegramRequest("sendMessage", token, body)
+}
+
+func (n *TelegramNode) sendPhoto(token, chatId string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+	photo := params.GetNodeParameter("photo", "").(string)
+	if photo == "" {
+		return nil, fmt.Errorf("photo is required")
+	}
+
+	body := map[string]interface{}{
+		"chat_id": chatId,
+		"photo":   photo,
+	}
+
+	if caption := params.GetNodeParameter("caption", "").(string); caption != "" {
+		body["caption"] = caption
+	}
+	if parseMode := params.GetNodeParameter("parseMode", "").(string); parseMode != "" {
+		body["parse_mode"] = parseMode
+	}
+
+	return n.makeTelegramRequest("sendPhoto", token, body)
+}
+
+func (n *TelegramNode) sendDocument(token, chatId string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+	document := params.GetNodeParameter("document", "").(string)
+	if document == "" {
+		return nil, fmt.Errorf("document is required")
+	}
+
+	body := map[string]interface{}{
+		"chat_id":  chatId,
+		"document": document,
+	}
+
+	if caption := params.GetNodeParameter("caption", "").(string); caption != "" {
+		body["caption"] = caption
+	}
+
+	return n.makeTelegramRequest("sendDocument", token, body)
+}
+
+func (n *TelegramNode) sendAudio(token, chatId string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+	audio := params.GetNodeParameter("audio", "").(string)
+	if audio == "" {
+		return nil, fmt.Errorf("audio is required")
+	}
+
+	body := map[string]interface{}{
+		"chat_id": chatId,
+		"audio":   audio,
+	}
+
+	if caption := params.GetNodeParameter("caption", "").(string); caption != "" {
+		body["caption"] = caption
+	}
+
+	return n.makeTelegramRequest("sendAudio", token, body)
+}
+
+func (n *TelegramNode) sendVideo(token, chatId string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+	video := params.GetNodeParameter("video", "").(string)
+	if video == "" {
+		return nil, fmt.Errorf("video is required")
+	}
+
+	body := map[string]interface{}{
+		"chat_id": chatId,
+		"video":   video,
+	}
+
+	if caption := params.GetNodeParameter("caption", "").(string); caption != "" {
+		body["caption"] = caption
+	}
+
+	return n.makeTelegramRequest("sendVideo", token, body)
+}
+
+func (n *TelegramNode) sendLocation(token, chatId string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+	latitude := params.GetNodeParameter("latitude", 0.0).(float64)
+	longitude := params.GetNodeParameter("longitude", 0.0).(float64)
+
+	body := map[string]interface{}{
+		"chat_id":   chatId,
+		"latitude":  latitude,
+		"longitude": longitude,
+	}
+
+	return n.makeTelegramRequest("sendLocation", token, body)
+}
+
+func (n *TelegramNode) sendContact(token, chatId string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+	phoneNumber := params.GetNodeParameter("phoneNumber", "").(string)
+	firstName := params.GetNodeParameter("firstName", "").(string)
+
+	if phoneNumber == "" || firstName == "" {
+		return nil, fmt.Errorf("phone number and first name are required")
+	}
+
+	body := map[string]interface{}{
+		"chat_id":      chatId,
+		"phone_number": phoneNumber,
+		"first_name":   firstName,
+	}
+
+	if lastName := params.GetNodeParameter("lastName", "").(string); lastName != "" {
+		body["last_name"] = lastName
+	}
+
+	return n.makeTelegramRequest("sendContact", token, body)
+}
+
+func (n *TelegramNode) sendSticker(token, chatId string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+	sticker := params.GetNodeParameter("sticker", "").(string)
+	if sticker == "" {
+		return nil, fmt.Errorf("sticker is required")
+	}
+
+	body := map[string]interface{}{
+		"chat_id": chatId,
+		"sticker": sticker,
+	}
+
+	return n.makeTelegramRequest("sendSticker", token, body)
+}
+
+func (n *TelegramNode) editMessageText(token, chatId string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+	messageId := params.GetNodeParameter("messageId", "").(string)
+	text := params.GetNodeParameter("text", "").(string)
+
+	if messageId == "" || text == "" {
+		return nil, fmt.Errorf("message ID and text are required")
+	}
+
+	messageIdInt, err := strconv.Atoi(messageId)
+	if err != nil {
+		return nil, fmt.Errorf("invalid message ID: %w", err)
+	}
+
+	body := map[string]interface{}{
+		"chat_id":    chatId,
+		"message_id": messageIdInt,
+		"text":       text,
+	}
+
+	if parseMode := params.GetNodeParameter("parseMode", "").(string); parseMode != "" {
+		body["parse_mode"] = parseMode
+	}
+
+	return n.makeTelegramRequest("editMessageText", token, body)
+}
+
+func (n *TelegramNode) deleteMessage(token, chatId string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+	messageId := params.GetNodeParameter("messageId", "").(string)
+	if messageId == "" {
+		return nil, fmt.Errorf("message ID is required")
+	}
+
+	messageIdInt, err := strconv.Atoi(messageId)
+	if err != nil {
+		return nil, fmt.Errorf("invalid message ID: %w", err)
+	}
+
+	body := map[string]interface{}{
+		"chat_id":    chatId,
+		"message_id": messageIdInt,
+	}
+
+	return n.makeTelegramRequest("deleteMessage", token, body)
+}
+
+func (n *TelegramNode) pinChatMessage(token, chatId string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+	messageId := params.GetNodeParameter("messageId", "").(string)
+	if messageId == "" {
+		return nil, fmt.Errorf("message ID is required")
+	}
+
+	messageIdInt, err := strconv.Atoi(messageId)
+	if err != nil {
+		return nil, fmt.Errorf("invalid message ID: %w", err)
+	}
+
+	body := map[string]interface{}{
+		"chat_id":    chatId,
+		"message_id": messageIdInt,
+	}
+
+	if disableNotification := params.GetNodeParameter("disableNotification", false).(bool); disableNotification {
+		body["disable_notification"] = true
+	}
+
+	return n.makeTelegramRequest("pinChatMessage", token, body)
+}
+
+func (n *TelegramNode) unpinChatMessage(token, chatId string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+	messageId := params.GetNodeParameter("messageId", "").(string)
+
+	body := map[string]interface{}{
+		"chat_id": chatId,
+	}
+
+	if messageId != "" {
+		messageIdInt, err := strconv.Atoi(messageId)
+		if err != nil {
+			return nil, fmt.Errorf("invalid message ID: %w", err)
+		}
+		body["message_id"] = messageIdInt
+	}
+
+	return n.makeTelegramRequest("unpinChatMessage", token, body)
+}
+
+// Chat resource handlers
+
+func (n *TelegramNode) handleChatResource(token, operation string, params interfaces.ExecutionParams) (interface{}, error) {
+	chatId := params.GetNodeParameter("chatId", "").(string)
+	if chatId == "" {
+		return nil, fmt.Errorf("chat ID is required")
+	}
+
+	switch operation {
+	case "get":
+		body := map[string]interface{}{
+			"chat_id": chatId,
+		}
+		return n.makeTelegramRequest("getChat", token, body)
+
+	case "leave":
+		body := map[string]interface{}{
+			"chat_id": chatId,
+		}
+		return n.makeTelegramRequest("leaveChat", token, body)
+
+	case "getMembers":
+		body := map[string]interface{}{
+			"chat_id": chatId,
+		}
+		return n.makeTelegramRequest("getChatMembersCount", token, body)
+
+	case "getAdministrators":
+		body := map[string]interface{}{
+			"chat_id": chatId,
+		}
+		return n.makeTelegramRequest("getChatAdministrators", token, body)
+
+	case "setChatTitle":
+		title := params.GetNodeParameter("title", "").(string)
+		if title == "" {
+			return nil, fmt.Errorf("title is required")
+		}
+		body := map[string]interface{}{
+			"chat_id": chatId,
+			"title":   title,
+		}
+		return n.makeTelegramRequest("setChatTitle", token, body)
+
+	case "setChatDescription":
+		description := params.GetNodeParameter("description", "").(string)
+		body := map[string]interface{}{
+			"chat_id":     chatId,
+			"description": description,
+		}
+		return n.makeTelegramRequest("setChatDescription", token, body)
+
+	default:
+		return nil, fmt.Errorf("unsupported operation: %s", operation)
+	}
+}
+
+// File resource handlers
+
+func (n *TelegramNode) handleFileResource(token, operation string, params interfaces.ExecutionParams) (interface{}, error) {
+	switch operation {
+	case "get":
+		fileId := params.GetNodeParameter("fileId", "").(string)
+		if fileId == "" {
+			return nil, fmt.Errorf("file ID is required")
+		}
+		body := map[string]interface{}{
+			"file_id": fileId,
+		}
+		return n.makeTelegramRequest("getFile", token, body)
+
+	default:
+		return nil, fmt.Errorf("unsupported operation: %s", operation)
+	}
+}
+
+// Chat Member resource handlers
+
+func (n *TelegramNode) handleChatMemberResource(token, operation string, params interfaces.ExecutionParams) (interface{}, error) {
+	chatId := params.GetNodeParameter("chatId", "").(string)
+	userId := params.GetNodeParameter("userId", "").(string)
+
+	if chatId == "" || userId == "" {
+		return nil, fmt.Errorf("chat ID and user ID are required")
+	}
+
+	userIdInt, err := strconv.Atoi(userId)
+	if err != nil {
+		return nil, fmt.Errorf("invalid user ID: %w", err)
+	}
+
+	switch operation {
+	case "get":
+		body := map[string]interface{}{
+			"chat_id": chatId,
+			"user_id": userIdInt,
+		}
+		return n.makeTelegramRequest("getChatMember", token, body)
+
+	case "kick":
+		body := map[string]interface{}{
+			"chat_id": chatId,
+			"user_id": userIdInt,
+		}
+		return n.makeTelegramRequest("kickChatMember", token, body)
+
+	case "unban":
+		body := map[string]interface{}{
+			"chat_id":          chatId,
+			"user_id":          userIdInt,
+			"only_if_banned":   true,
+		}
+		return n.makeTelegramRequest("unbanChatMember", token, body)
+
+	case "restrict":
+		permissions := params.GetNodeParameter("permissions", "{}").(string)
+		var perms map[string]interface{}
+		if err := json.Unmarshal([]byte(permissions), &perms); err != nil {
+			return nil, fmt.Errorf("invalid permissions JSON: %w", err)
+		}
+		body := map[string]interface{}{
+			"chat_id":     chatId,
+			"user_id":     userIdInt,
+			"permissions": perms,
+		}
+		return n.makeTelegramRequest("restrictChatMember", token, body)
+
+	case "promote":
+		body := map[string]interface{}{
+			"chat_id":              chatId,
+			"user_id":              userIdInt,
+			"can_change_info":      params.GetNodeParameter("canChangeInfo", false).(bool),
+			"can_post_messages":    params.GetNodeParameter("canPostMessages", false).(bool),
+			"can_edit_messages":    params.GetNodeParameter("canEditMessages", false).(bool),
+			"can_delete_messages":  params.GetNodeParameter("canDeleteMessages", false).(bool),
+			"can_invite_users":     params.GetNodeParameter("canInviteUsers", false).(bool),
+			"can_restrict_members": params.GetNodeParameter("canRestrictMembers", false).(bool),
+			"can_pin_messages":     params.GetNodeParameter("canPinMessages", false).(bool),
+			"can_promote_members":  params.GetNodeParameter("canPromoteMembers", false).(bool),
+		}
+		return n.makeTelegramRequest("promoteChatMember", token, body)
+
+	default:
+		return nil, fmt.Errorf("unsupported operation: %s", operation)
+	}
+}
+
+// Callback Query resource handlers
+
+func (n *TelegramNode) handleCallbackQueryResource(token, operation string, params interfaces.ExecutionParams) (interface{}, error) {
+	callbackQueryId := params.GetNodeParameter("callbackQueryId", "").(string)
+	if callbackQueryId == "" {
+		return nil, fmt.Errorf("callback query ID is required")
+	}
+
+	switch operation {
+	case "answer":
+		body := map[string]interface{}{
+			"callback_query_id": callbackQueryId,
+		}
+		if text := params.GetNodeParameter("text", "").(string); text != "" {
+			body["text"] = text
+		}
+		if showAlert := params.GetNodeParameter("showAlert", false).(bool); showAlert {
+			body["show_alert"] = true
+		}
+		return n.makeTelegramRequest("answerCallbackQuery", token, body)
+
+	default:
+		return nil, fmt.Errorf("unsupported operation: %s", operation)
+	}
+}
+
+// Helper method for making Telegram API requests
+
+func (n *TelegramNode) makeTelegramRequest(method, token string, body map[string]interface{}) (map[string]interface{}, error) {
+	url := fmt.Sprintf("https://api.telegram.org/bot%s/%s", token, method)
+
+	jsonBody, err := json.Marshal(body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal request body: %w", err)
+	}
+
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonBody))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := n.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to make request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	var result map[string]interface{}
+	if err := json.Unmarshal(respBody, &result); err != nil {
+		return nil, fmt.Errorf("failed to parse response: %w", err)
+	}
+
+	// Check for Telegram API errors
+	if ok, exists := result["ok"].(bool); exists && !ok {
+		if description, exists := result["description"].(string); exists {
+			return nil, fmt.Errorf("Telegram API error: %s", description)
+		}
+		return nil, fmt.Errorf("Telegram API error: unknown error")
+	}
+
+	// Return the result field if it exists, otherwise return the whole response
+	if resultData, exists := result["result"]; exists {
+		if resultMap, ok := resultData.(map[string]interface{}); ok {
+			return resultMap, nil
+		}
+		return map[string]interface{}{"result": resultData}, nil
+	}
+
+	return result, nil
+}
+
+// Clone creates a copy of the node
+func (n *TelegramNode) Clone() interfaces.Node {
+	return &TelegramNode{
+		BaseNode:   n.BaseNode.Clone(),
+		httpClient: n.httpClient,
+	}
+}

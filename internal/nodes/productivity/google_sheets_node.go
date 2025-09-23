@@ -1,0 +1,973 @@
+package productivity
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/url"
+	"strings"
+	"time"
+
+	"github.com/yourusername/n8n-go/internal/interfaces"
+	"github.com/yourusername/n8n-go/internal/nodes/base"
+)
+
+// GoogleSheetsNode provides Google Sheets API integration
+type GoogleSheetsNode struct {
+	*base.BaseNode
+	httpClient *http.Client
+}
+
+// NewGoogleSheetsNode creates a new Google Sheets node
+func NewGoogleSheetsNode() interfaces.Node {
+	return &GoogleSheetsNode{
+		BaseNode: base.NewBaseNode("GoogleSheets"),
+		httpClient: &http.Client{
+			Timeout: 30 * time.Second,
+		},
+	}
+}
+
+// GetMetadata returns node metadata
+func (n *GoogleSheetsNode) GetMetadata() interfaces.NodeMetadata {
+	return interfaces.NodeMetadata{
+		Name:        "Google Sheets",
+		Version:     "1.0.0",
+		Description: "Read, write, and manipulate Google Sheets data",
+		Icon:        "google-sheets",
+		Category:    "Productivity",
+		Credentials: []interfaces.CredentialType{
+			{
+				Name: "googleSheetsOAuth2Api",
+				Type: "oauth2",
+			},
+			{
+				Name: "googleSheetsServiceAccountApi",
+				Type: "serviceAccount",
+			},
+		},
+		Properties: []interfaces.NodeProperty{
+			{
+				Name:        "resource",
+				Type:        "options",
+				DisplayName: "Resource",
+				Description: "The resource to operate on",
+				Options: []interfaces.PropertyOption{
+					{Name: "Sheet", Value: "sheet"},
+					{Name: "Spreadsheet", Value: "spreadsheet"},
+				},
+				Default:  "sheet",
+				Required: true,
+			},
+		},
+	}
+}
+
+// Execute runs the node
+func (n *GoogleSheetsNode) Execute(ctx context.Context, params interfaces.ExecutionParams) (interfaces.NodeOutput, error) {
+	resource := params.GetString("resource")
+	if resource == "" {
+		resource = "sheet"
+	}
+
+	var result interface{}
+	var err error
+
+	switch resource {
+	case "sheet":
+		result, err = n.handleSheetResource(ctx, params)
+	case "spreadsheet":
+		result, err = n.handleSpreadsheetResource(ctx, params)
+	default:
+		return nil, fmt.Errorf("unsupported resource: %s", resource)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &base.NodeOutput{
+		Data: result,
+	}, nil
+}
+
+func (n *GoogleSheetsNode) handleSheetResource(ctx context.Context, params interfaces.ExecutionParams) (interface{}, error) {
+	operation := params.GetString("operation")
+	if operation == "" {
+		operation = "read"
+	}
+
+	// Get access token from credentials
+	accessToken, err := n.getAccessToken(params)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get access token: %w", err)
+	}
+
+	switch operation {
+	case "append":
+		return n.appendData(ctx, accessToken, params)
+	case "clear":
+		return n.clearData(ctx, accessToken, params)
+	case "delete":
+		return n.deleteRows(ctx, accessToken, params)
+	case "read":
+		return n.readData(ctx, accessToken, params)
+	case "update":
+		return n.updateData(ctx, accessToken, params)
+	case "batchGet":
+		return n.batchGet(ctx, accessToken, params)
+	case "batchUpdate":
+		return n.batchUpdate(ctx, accessToken, params)
+	default:
+		return nil, fmt.Errorf("unsupported sheet operation: %s", operation)
+	}
+}
+
+func (n *GoogleSheetsNode) handleSpreadsheetResource(ctx context.Context, params interfaces.ExecutionParams) (interface{}, error) {
+	operation := params.GetString("operation")
+	if operation == "" {
+		operation = "get"
+	}
+
+	accessToken, err := n.getAccessToken(params)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get access token: %w", err)
+	}
+
+	switch operation {
+	case "create":
+		return n.createSpreadsheet(ctx, accessToken, params)
+	case "get":
+		return n.getSpreadsheet(ctx, accessToken, params)
+	case "copy":
+		return n.copySpreadsheet(ctx, accessToken, params)
+	case "addSheet":
+		return n.addSheet(ctx, accessToken, params)
+	case "deleteSheet":
+		return n.deleteSheet(ctx, accessToken, params)
+	case "duplicateSheet":
+		return n.duplicateSheet(ctx, accessToken, params)
+	default:
+		return nil, fmt.Errorf("unsupported spreadsheet operation: %s", operation)
+	}
+}
+
+func (n *GoogleSheetsNode) getAccessToken(params interfaces.ExecutionParams) (string, error) {
+	// Check for OAuth2 credentials
+	if token := params.GetString("credentials.oauthToken"); token != "" {
+		return token, nil
+	}
+
+	// Check for service account credentials
+	if serviceAccount := params.GetString("credentials.serviceAccount"); serviceAccount != "" {
+		// In a real implementation, this would generate a JWT and exchange it for an access token
+		return n.getServiceAccountToken(serviceAccount)
+	}
+
+	return "", fmt.Errorf("no valid credentials provided")
+}
+
+func (n *GoogleSheetsNode) getServiceAccountToken(serviceAccount string) (string, error) {
+	// This would implement the OAuth2 JWT Bearer grant type for service accounts
+	// For now, return a placeholder
+	return "service-account-token", nil
+}
+
+// Sheet operations
+
+func (n *GoogleSheetsNode) readData(ctx context.Context, token string, params interfaces.ExecutionParams) (interface{}, error) {
+	spreadsheetId := params.GetString("spreadsheetId")
+	if spreadsheetId == "" {
+		return nil, fmt.Errorf("spreadsheetId is required")
+	}
+
+	sheetRange := params.GetString("range")
+	if sheetRange == "" {
+		sheetRange = "A:Z" // Default to all columns
+	}
+
+	// Build query parameters
+	queryParams := url.Values{}
+	if majorDimension := params.GetString("majorDimension"); majorDimension != "" {
+		queryParams.Set("majorDimension", majorDimension)
+	}
+	if valueRenderOption := params.GetString("valueRenderOption"); valueRenderOption != "" {
+		queryParams.Set("valueRenderOption", valueRenderOption)
+	}
+	if dateTimeRenderOption := params.GetString("dateTimeRenderOption"); dateTimeRenderOption != "" {
+		queryParams.Set("dateTimeRenderOption", dateTimeRenderOption)
+	}
+
+	url := fmt.Sprintf(
+		"https://sheets.googleapis.com/v4/spreadsheets/%s/values/%s?%s",
+		spreadsheetId,
+		url.QueryEscape(sheetRange),
+		queryParams.Encode(),
+	)
+
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	resp, err := n.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		var errorResp map[string]interface{}
+		json.NewDecoder(resp.Body).Decode(&errorResp)
+		return nil, fmt.Errorf("Google Sheets API error: %v", errorResp)
+	}
+
+	var result map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+
+	// Convert to structured data if requested
+	if params.GetBool("returnAsArray") {
+		return n.convertToArray(result), nil
+	}
+
+	return result, nil
+}
+
+func (n *GoogleSheetsNode) appendData(ctx context.Context, token string, params interfaces.ExecutionParams) (interface{}, error) {
+	spreadsheetId := params.GetString("spreadsheetId")
+	if spreadsheetId == "" {
+		return nil, fmt.Errorf("spreadsheetId is required")
+	}
+
+	sheetRange := params.GetString("range")
+	if sheetRange == "" {
+		sheetRange = "A:Z"
+	}
+
+	values := params.Get("values")
+	if values == nil {
+		return nil, fmt.Errorf("values are required")
+	}
+
+	queryParams := url.Values{
+		"valueInputOption":    {params.GetString("valueInputOption", "USER_ENTERED")},
+		"insertDataOption":    {params.GetString("insertDataOption", "INSERT_ROWS")},
+		"includeValuesInResponse": {"true"},
+	}
+
+	url := fmt.Sprintf(
+		"https://sheets.googleapis.com/v4/spreadsheets/%s/values/%s:append?%s",
+		spreadsheetId,
+		url.QueryEscape(sheetRange),
+		queryParams.Encode(),
+	)
+
+	body := map[string]interface{}{
+		"values":         values,
+		"majorDimension": params.GetString("majorDimension", "ROWS"),
+	}
+
+	jsonBody, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(jsonBody))
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := n.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		var errorResp map[string]interface{}
+		json.NewDecoder(resp.Body).Decode(&errorResp)
+		return nil, fmt.Errorf("Google Sheets API error: %v", errorResp)
+	}
+
+	var result map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func (n *GoogleSheetsNode) updateData(ctx context.Context, token string, params interfaces.ExecutionParams) (interface{}, error) {
+	spreadsheetId := params.GetString("spreadsheetId")
+	if spreadsheetId == "" {
+		return nil, fmt.Errorf("spreadsheetId is required")
+	}
+
+	sheetRange := params.GetString("range")
+	if sheetRange == "" {
+		return nil, fmt.Errorf("range is required for update")
+	}
+
+	values := params.Get("values")
+	if values == nil {
+		return nil, fmt.Errorf("values are required")
+	}
+
+	queryParams := url.Values{
+		"valueInputOption":    {params.GetString("valueInputOption", "USER_ENTERED")},
+		"includeValuesInResponse": {"true"},
+	}
+
+	url := fmt.Sprintf(
+		"https://sheets.googleapis.com/v4/spreadsheets/%s/values/%s?%s",
+		spreadsheetId,
+		url.QueryEscape(sheetRange),
+		queryParams.Encode(),
+	)
+
+	body := map[string]interface{}{
+		"values":         values,
+		"majorDimension": params.GetString("majorDimension", "ROWS"),
+	}
+
+	jsonBody, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "PUT", url, bytes.NewReader(jsonBody))
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := n.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		var errorResp map[string]interface{}
+		json.NewDecoder(resp.Body).Decode(&errorResp)
+		return nil, fmt.Errorf("Google Sheets API error: %v", errorResp)
+	}
+
+	var result map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func (n *GoogleSheetsNode) clearData(ctx context.Context, token string, params interfaces.ExecutionParams) (interface{}, error) {
+	spreadsheetId := params.GetString("spreadsheetId")
+	if spreadsheetId == "" {
+		return nil, fmt.Errorf("spreadsheetId is required")
+	}
+
+	sheetRange := params.GetString("range")
+	if sheetRange == "" {
+		return nil, fmt.Errorf("range is required for clear")
+	}
+
+	url := fmt.Sprintf(
+		"https://sheets.googleapis.com/v4/spreadsheets/%s/values/%s:clear",
+		spreadsheetId,
+		url.QueryEscape(sheetRange),
+	)
+
+	req, err := http.NewRequestWithContext(ctx, "POST", url, strings.NewReader("{}"))
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := n.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		var errorResp map[string]interface{}
+		json.NewDecoder(resp.Body).Decode(&errorResp)
+		return nil, fmt.Errorf("Google Sheets API error: %v", errorResp)
+	}
+
+	var result map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func (n *GoogleSheetsNode) deleteRows(ctx context.Context, token string, params interfaces.ExecutionParams) (interface{}, error) {
+	spreadsheetId := params.GetString("spreadsheetId")
+	if spreadsheetId == "" {
+		return nil, fmt.Errorf("spreadsheetId is required")
+	}
+
+	sheetId := params.GetInt("sheetId")
+	startIndex := params.GetInt("startIndex")
+	endIndex := params.GetInt("endIndex")
+
+	if endIndex <= startIndex {
+		return nil, fmt.Errorf("endIndex must be greater than startIndex")
+	}
+
+	requests := []map[string]interface{}{
+		{
+			"deleteDimension": map[string]interface{}{
+				"range": map[string]interface{}{
+					"sheetId":    sheetId,
+					"dimension":  "ROWS",
+					"startIndex": startIndex,
+					"endIndex":   endIndex,
+				},
+			},
+		},
+	}
+
+	body := map[string]interface{}{
+		"requests": requests,
+	}
+
+	jsonBody, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+
+	url := fmt.Sprintf(
+		"https://sheets.googleapis.com/v4/spreadsheets/%s:batchUpdate",
+		spreadsheetId,
+	)
+
+	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(jsonBody))
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := n.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		var errorResp map[string]interface{}
+		json.NewDecoder(resp.Body).Decode(&errorResp)
+		return nil, fmt.Errorf("Google Sheets API error: %v", errorResp)
+	}
+
+	var result map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func (n *GoogleSheetsNode) batchGet(ctx context.Context, token string, params interfaces.ExecutionParams) (interface{}, error) {
+	spreadsheetId := params.GetString("spreadsheetId")
+	if spreadsheetId == "" {
+		return nil, fmt.Errorf("spreadsheetId is required")
+	}
+
+	ranges := params.GetStringSlice("ranges")
+	if len(ranges) == 0 {
+		return nil, fmt.Errorf("at least one range is required")
+	}
+
+	queryParams := url.Values{}
+	for _, r := range ranges {
+		queryParams.Add("ranges", r)
+	}
+	if majorDimension := params.GetString("majorDimension"); majorDimension != "" {
+		queryParams.Set("majorDimension", majorDimension)
+	}
+	if valueRenderOption := params.GetString("valueRenderOption"); valueRenderOption != "" {
+		queryParams.Set("valueRenderOption", valueRenderOption)
+	}
+
+	url := fmt.Sprintf(
+		"https://sheets.googleapis.com/v4/spreadsheets/%s/values:batchGet?%s",
+		spreadsheetId,
+		queryParams.Encode(),
+	)
+
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	resp, err := n.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		var errorResp map[string]interface{}
+		json.NewDecoder(resp.Body).Decode(&errorResp)
+		return nil, fmt.Errorf("Google Sheets API error: %v", errorResp)
+	}
+
+	var result map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func (n *GoogleSheetsNode) batchUpdate(ctx context.Context, token string, params interfaces.ExecutionParams) (interface{}, error) {
+	spreadsheetId := params.GetString("spreadsheetId")
+	if spreadsheetId == "" {
+		return nil, fmt.Errorf("spreadsheetId is required")
+	}
+
+	data := params.GetSlice("data")
+	if len(data) == 0 {
+		return nil, fmt.Errorf("at least one data entry is required")
+	}
+
+	body := map[string]interface{}{
+		"data":                data,
+		"valueInputOption":    params.GetString("valueInputOption", "USER_ENTERED"),
+		"includeValuesInResponse": true,
+	}
+
+	jsonBody, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+
+	url := fmt.Sprintf(
+		"https://sheets.googleapis.com/v4/spreadsheets/%s/values:batchUpdate",
+		spreadsheetId,
+	)
+
+	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(jsonBody))
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := n.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		var errorResp map[string]interface{}
+		json.NewDecoder(resp.Body).Decode(&errorResp)
+		return nil, fmt.Errorf("Google Sheets API error: %v", errorResp)
+	}
+
+	var result map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+// Spreadsheet operations
+
+func (n *GoogleSheetsNode) createSpreadsheet(ctx context.Context, token string, params interfaces.ExecutionParams) (interface{}, error) {
+	title := params.GetString("title")
+	if title == "" {
+		title = "New Spreadsheet"
+	}
+
+	body := map[string]interface{}{
+		"properties": map[string]interface{}{
+			"title": title,
+		},
+	}
+
+	// Add sheets if specified
+	if sheets := params.GetSlice("sheets"); len(sheets) > 0 {
+		body["sheets"] = sheets
+	}
+
+	jsonBody, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "POST", "https://sheets.googleapis.com/v4/spreadsheets", bytes.NewReader(jsonBody))
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := n.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		var errorResp map[string]interface{}
+		json.NewDecoder(resp.Body).Decode(&errorResp)
+		return nil, fmt.Errorf("Google Sheets API error: %v", errorResp)
+	}
+
+	var result map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func (n *GoogleSheetsNode) getSpreadsheet(ctx context.Context, token string, params interfaces.ExecutionParams) (interface{}, error) {
+	spreadsheetId := params.GetString("spreadsheetId")
+	if spreadsheetId == "" {
+		return nil, fmt.Errorf("spreadsheetId is required")
+	}
+
+	queryParams := url.Values{}
+	if includeGridData := params.GetBool("includeGridData"); includeGridData {
+		queryParams.Set("includeGridData", "true")
+	}
+	if ranges := params.GetStringSlice("ranges"); len(ranges) > 0 {
+		for _, r := range ranges {
+			queryParams.Add("ranges", r)
+		}
+	}
+
+	url := fmt.Sprintf(
+		"https://sheets.googleapis.com/v4/spreadsheets/%s?%s",
+		spreadsheetId,
+		queryParams.Encode(),
+	)
+
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	resp, err := n.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		var errorResp map[string]interface{}
+		json.NewDecoder(resp.Body).Decode(&errorResp)
+		return nil, fmt.Errorf("Google Sheets API error: %v", errorResp)
+	}
+
+	var result map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func (n *GoogleSheetsNode) copySpreadsheet(ctx context.Context, token string, params interfaces.ExecutionParams) (interface{}, error) {
+	spreadsheetId := params.GetString("spreadsheetId")
+	if spreadsheetId == "" {
+		return nil, fmt.Errorf("spreadsheetId is required")
+	}
+
+	sheetId := params.GetInt("sheetId")
+	destinationId := params.GetString("destinationSpreadsheetId")
+	if destinationId == "" {
+		return nil, fmt.Errorf("destinationSpreadsheetId is required")
+	}
+
+	body := map[string]interface{}{
+		"destinationSpreadsheetId": destinationId,
+	}
+
+	jsonBody, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+
+	url := fmt.Sprintf(
+		"https://sheets.googleapis.com/v4/spreadsheets/%s/sheets/%d:copyTo",
+		spreadsheetId,
+		sheetId,
+	)
+
+	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(jsonBody))
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := n.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		var errorResp map[string]interface{}
+		json.NewDecoder(resp.Body).Decode(&errorResp)
+		return nil, fmt.Errorf("Google Sheets API error: %v", errorResp)
+	}
+
+	var result map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func (n *GoogleSheetsNode) addSheet(ctx context.Context, token string, params interfaces.ExecutionParams) (interface{}, error) {
+	spreadsheetId := params.GetString("spreadsheetId")
+	if spreadsheetId == "" {
+		return nil, fmt.Errorf("spreadsheetId is required")
+	}
+
+	title := params.GetString("title")
+	if title == "" {
+		title = "New Sheet"
+	}
+
+	requests := []map[string]interface{}{
+		{
+			"addSheet": map[string]interface{}{
+				"properties": map[string]interface{}{
+					"title":     title,
+					"gridProperties": map[string]interface{}{
+						"rowCount":    params.GetInt("rowCount", 1000),
+						"columnCount": params.GetInt("columnCount", 26),
+					},
+				},
+			},
+		},
+	}
+
+	body := map[string]interface{}{
+		"requests": requests,
+	}
+
+	jsonBody, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+
+	url := fmt.Sprintf(
+		"https://sheets.googleapis.com/v4/spreadsheets/%s:batchUpdate",
+		spreadsheetId,
+	)
+
+	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(jsonBody))
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := n.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		var errorResp map[string]interface{}
+		json.NewDecoder(resp.Body).Decode(&errorResp)
+		return nil, fmt.Errorf("Google Sheets API error: %v", errorResp)
+	}
+
+	var result map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func (n *GoogleSheetsNode) deleteSheet(ctx context.Context, token string, params interfaces.ExecutionParams) (interface{}, error) {
+	spreadsheetId := params.GetString("spreadsheetId")
+	if spreadsheetId == "" {
+		return nil, fmt.Errorf("spreadsheetId is required")
+	}
+
+	sheetId := params.GetInt("sheetId")
+
+	requests := []map[string]interface{}{
+		{
+			"deleteSheet": map[string]interface{}{
+				"sheetId": sheetId,
+			},
+		},
+	}
+
+	body := map[string]interface{}{
+		"requests": requests,
+	}
+
+	jsonBody, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+
+	url := fmt.Sprintf(
+		"https://sheets.googleapis.com/v4/spreadsheets/%s:batchUpdate",
+		spreadsheetId,
+	)
+
+	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(jsonBody))
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := n.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		var errorResp map[string]interface{}
+		json.NewDecoder(resp.Body).Decode(&errorResp)
+		return nil, fmt.Errorf("Google Sheets API error: %v", errorResp)
+	}
+
+	var result map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func (n *GoogleSheetsNode) duplicateSheet(ctx context.Context, token string, params interfaces.ExecutionParams) (interface{}, error) {
+	spreadsheetId := params.GetString("spreadsheetId")
+	if spreadsheetId == "" {
+		return nil, fmt.Errorf("spreadsheetId is required")
+	}
+
+	sourceSheetId := params.GetInt("sourceSheetId")
+	newSheetName := params.GetString("newSheetName")
+	if newSheetName == "" {
+		newSheetName = "Copy of Sheet"
+	}
+
+	requests := []map[string]interface{}{
+		{
+			"duplicateSheet": map[string]interface{}{
+				"sourceSheetId": sourceSheetId,
+				"insertSheetIndex": params.GetInt("insertSheetIndex", 1),
+				"newSheetName":  newSheetName,
+			},
+		},
+	}
+
+	body := map[string]interface{}{
+		"requests": requests,
+	}
+
+	jsonBody, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+
+	url := fmt.Sprintf(
+		"https://sheets.googleapis.com/v4/spreadsheets/%s:batchUpdate",
+		spreadsheetId,
+	)
+
+	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(jsonBody))
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := n.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		var errorResp map[string]interface{}
+		json.NewDecoder(resp.Body).Decode(&errorResp)
+		return nil, fmt.Errorf("Google Sheets API error: %v", errorResp)
+	}
+
+	var result map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+// Helper functions
+
+func (n *GoogleSheetsNode) convertToArray(data map[string]interface{}) []map[string]interface{} {
+	if values, ok := data["values"].([]interface{}); ok && len(values) > 0 {
+		// Get headers from first row
+		headers := []string{}
+		if firstRow, ok := values[0].([]interface{}); ok {
+			for _, h := range firstRow {
+				headers = append(headers, fmt.Sprintf("%v", h))
+			}
+		}
+
+		// Convert remaining rows to objects
+		result := []map[string]interface{}{}
+		for i := 1; i < len(values); i++ {
+			if row, ok := values[i].([]interface{}); ok {
+				obj := make(map[string]interface{})
+				for j, value := range row {
+					if j < len(headers) {
+						obj[headers[j]] = value
+					}
+				}
+				result = append(result, obj)
+			}
+		}
+		return result
+	}
+
+	return []map[string]interface{}{}
+}

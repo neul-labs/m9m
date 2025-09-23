@@ -1,0 +1,62 @@
+{
+  "name": "Hello World",
+  "description": "A simple hello world workflow demonstrating basic n8n-go structure",
+  "category": "getting-started",
+  "difficulty": "beginner",
+  "estimatedTime": "2 minutes",
+  "prerequisites": [],
+  "learningObjectives": [
+    "Understand basic workflow structure",
+    "Learn about Start and Set nodes",
+    "Practice with simple expressions"
+  ],
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "start",
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "assignments": [
+          {
+            "name": "message",
+            "value": "Hello, n8n-go World!"
+          },
+          {
+            "name": "timestamp",
+            "value": "{{ formatDate(now(), 'yyyy-MM-dd HH:mm:ss') }}"
+          },
+          {
+            "name": "version",
+            "value": "1.0.0"
+          }
+        ]
+      },
+      "id": "set-welcome",
+      "name": "Set Welcome Message",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [460, 300]
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Set Welcome Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "1"
+}

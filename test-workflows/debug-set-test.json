@@ -1,0 +1,44 @@
+{
+  "name": "Debug Set Test",
+  "active": true,
+  "nodes": [
+    {
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "parameters": {}
+    },
+    {
+      "name": "Simple Set",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [450, 300],
+      "parameters": {
+        "assignments": [
+          {
+            "name": "staticValue",
+            "value": "Hello World"
+          },
+          {
+            "name": "dynamicValue",
+            "value": "{{ $json.firstName }}"
+          }
+        ]
+      }
+    }
+  ],
+  "connections": {
+    "Start": {
+      "Main": [
+        [
+          {
+            "node": "Simple Set",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

@@ -1,0 +1,281 @@
+{
+  "name": "Built-in Functions Showcase",
+  "active": true,
+  "nodes": [
+    {
+      "name": "Sample Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "text",
+              "value": "  Hello World with Special Characters & Symbols!  "
+            },
+            {
+              "name": "email",
+              "value": "user@example.com"
+            },
+            {
+              "name": "html",
+              "value": "<script>alert('test')</script>Safe content"
+            }
+          ],
+          "number": [
+            {
+              "name": "price",
+              "value": 123.456
+            },
+            {
+              "name": "quantity",
+              "value": 5
+            }
+          ],
+          "object": [
+            {
+              "name": "items",
+              "value": "{{ [\"apple\", \"banana\", \"cherry\", \"apple\", \"date\"] }}"
+            },
+            {
+              "name": "numbers",
+              "value": "{{ [10, 5, 8, 3, 12, 7] }}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "String Functions",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [450, 200],
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "cleaned",
+              "value": "={{ trim($json.text) }}"
+            },
+            {
+              "name": "uppercase",
+              "value": "={{ upper($json.cleaned) }}"
+            },
+            {
+              "name": "lowercase",
+              "value": "={{ lower($json.cleaned) }}"
+            },
+            {
+              "name": "firstWord",
+              "value": "={{ first(split($json.cleaned, ' ')) }}"
+            },
+            {
+              "name": "initials",
+              "value": "={{ join(pluck(split($json.cleaned, ' '), 0), '.') }}"
+            },
+            {
+              "name": "encoded",
+              "value": "={{ base64Encode($json.text) }}"
+            },
+            {
+              "name": "hashed",
+              "value": "={{ md5($json.email) }}"
+            },
+            {
+              "name": "escaped",
+              "value": "={{ escapeHtml($json.html) }}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Math Functions",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [450, 400],
+      "parameters": {
+        "values": {
+          "number": [
+            {
+              "name": "total",
+              "value": "={{ multiply($json.price, $json.quantity) }}"
+            },
+            {
+              "name": "rounded",
+              "value": "={{ round($json.price, 2) }}"
+            },
+            {
+              "name": "power",
+              "value": "={{ pow($json.quantity, 2) }}"
+            },
+            {
+              "name": "squareRoot",
+              "value": "={{ sqrt($json.total) }}"
+            },
+            {
+              "name": "absolute",
+              "value": "={{ abs(subtract($json.price, 200)) }}"
+            }
+          ],
+          "string": [
+            {
+              "name": "mathSummary",
+              "value": "={{ 'Price: $' + $json.rounded + ' x ' + $json.quantity + ' = $' + round($json.total, 2) }}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Array Functions",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [650, 300],
+      "parameters": {
+        "values": {
+          "object": [
+            {
+              "name": "uniqueItems",
+              "value": "={{ unique($json.items) }}"
+            },
+            {
+              "name": "sortedNumbers",
+              "value": "={{ sort($json.numbers) }}"
+            }
+          ],
+          "string": [
+            {
+              "name": "firstItem",
+              "value": "={{ first($json.items) }}"
+            },
+            {
+              "name": "lastItem",
+              "value": "={{ last($json.items) }}"
+            },
+            {
+              "name": "randomItem",
+              "value": "={{ randomItem($json.items) }}"
+            },
+            {
+              "name": "itemsJoined",
+              "value": "={{ join($json.uniqueItems, ' | ') }}"
+            }
+          ],
+          "number": [
+            {
+              "name": "itemCount",
+              "value": "={{ length($json.items) }}"
+            },
+            {
+              "name": "uniqueCount",
+              "value": "={{ length($json.uniqueItems) }}"
+            },
+            {
+              "name": "maxNumber",
+              "value": "={{ max($json.numbers) }}"
+            },
+            {
+              "name": "minNumber",
+              "value": "={{ min($json.numbers) }}"
+            },
+            {
+              "name": "sumNumbers",
+              "value": "={{ sum($json.numbers) }}"
+            },
+            {
+              "name": "avgNumber",
+              "value": "={{ divide($json.sumNumbers, length($json.numbers)) }}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Date Functions",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [850, 300],
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "currentTime",
+              "value": "={{ formatDate(now(), 'yyyy-MM-dd HH:mm:ss') }}"
+            },
+            {
+              "name": "futureDate",
+              "value": "={{ formatDate(addDays(now(), 30), 'yyyy-MM-dd') }}"
+            },
+            {
+              "name": "pastDate",
+              "value": "={{ formatDate(subtractDays(now(), 7), 'yyyy-MM-dd') }}"
+            }
+          ],
+          "number": [
+            {
+              "name": "timestamp",
+              "value": "={{ now() }}"
+            },
+            {
+              "name": "daysDiff",
+              "value": "={{ diffDays(addDays(now(), 30), now()) }}"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Sample Data": {
+      "main": [
+        [
+          {
+            "node": "String Functions",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Math Functions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "String Functions": {
+      "main": [
+        [
+          {
+            "node": "Array Functions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Math Functions": {
+      "main": [
+        [
+          {
+            "node": "Array Functions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Array Functions": {
+      "main": [
+        [
+          {
+            "node": "Date Functions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

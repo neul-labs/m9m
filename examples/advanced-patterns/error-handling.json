@@ -1,0 +1,289 @@
+{
+  "name": "Error Handling",
+  "description": "Comprehensive error handling patterns for robust workflow execution",
+  "category": "advanced-patterns",
+  "difficulty": "advanced",
+  "estimatedTime": "20 minutes",
+  "prerequisites": ["Advanced n8n knowledge", "Error handling concepts"],
+  "learningObjectives": [
+    "Master error handling techniques",
+    "Learn retry patterns",
+    "Practice graceful degradation"
+  ],
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "start",
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "assignments": [
+          {
+            "name": "apiEndpoints",
+            "value": "[\"https://jsonplaceholder.typicode.com/users\", \"https://httpstat.us/500\", \"https://api.github.com/users/octocat\", \"https://invalid-url-that-will-fail.com/api\"]"
+          }
+        ]
+      },
+      "id": "set-test-endpoints",
+      "name": "Set Test Endpoints",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "operation": "parse",
+        "jsonPath": "$json.apiEndpoints",
+        "includeItemIndex": true
+      },
+      "id": "split-endpoints",
+      "name": "Split Endpoints",
+      "type": "n8n-nodes-base.json",
+      "typeVersion": 1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "url": "{{ $json.data }}",
+        "method": "GET",
+        "options": {
+          "timeout": 5000,
+          "retry": {
+            "enabled": true,
+            "maxRetries": 3,
+            "retryDelay": 1000
+          }
+        }
+      },
+      "id": "api-request",
+      "name": "API Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [900, 300],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": [
+          {
+            "field": "error",
+            "operation": "exists",
+            "value": false
+          }
+        ]
+      },
+      "id": "check-success",
+      "name": "Check Success",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "assignments": [
+          {
+            "name": "status",
+            "value": "success"
+          },
+          {
+            "name": "endpoint",
+            "value": "{{ $node('Split Endpoints').json.data }}"
+          },
+          {
+            "name": "responseSize",
+            "value": "{{ length(JSON.stringify($json)) }}"
+          },
+          {
+            "name": "processedAt",
+            "value": "{{ formatDate(now(), 'yyyy-MM-dd HH:mm:ss') }}"
+          }
+        ]
+      },
+      "id": "handle-success",
+      "name": "Handle Success",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [1340, 200]
+    },
+    {
+      "parameters": {
+        "assignments": [
+          {
+            "name": "status",
+            "value": "error"
+          },
+          {
+            "name": "endpoint",
+            "value": "{{ $node('Split Endpoints').json.data }}"
+          },
+          {
+            "name": "errorType",
+            "value": "{{ $json.error ? $json.error.name : 'Unknown' }}"
+          },
+          {
+            "name": "errorMessage",
+            "value": "{{ $json.error ? $json.error.message : 'Request failed' }}"
+          },
+          {
+            "name": "httpStatus",
+            "value": "{{ $json.error && $json.error.httpCode ? $json.error.httpCode : 'N/A' }}"
+          },
+          {
+            "name": "failedAt",
+            "value": "{{ formatDate(now(), 'yyyy-MM-dd HH:mm:ss') }}"
+          },
+          {
+            "name": "retryable",
+            "value": "{{ $json.error && $json.error.httpCode && $json.error.httpCode >= 500 }}"
+          }
+        ]
+      },
+      "id": "handle-error",
+      "name": "Handle Error",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [1340, 400]
+    },
+    {
+      "parameters": {
+        "operation": "merge",
+        "mergeSources": [
+          "$node('Handle Success').json",
+          "$node('Handle Error').json"
+        ]
+      },
+      "id": "merge-results",
+      "name": "Merge Results",
+      "type": "n8n-nodes-base.json",
+      "typeVersion": 1,
+      "position": [1560, 300]
+    },
+    {
+      "parameters": {
+        "assignments": [
+          {
+            "name": "summary",
+            "value": "{{ {totalRequests: length($input.all()), successCount: length($input.all().filter(item => item.status === 'success')), errorCount: length($input.all().filter(item => item.status === 'error')), retryableErrors: length($input.all().filter(item => item.retryable === true))} }}"
+          },
+          {
+            "name": "successRate",
+            "value": "{{ round((length($input.all().filter(item => item.status === 'success')) / length($input.all())) * 100, 2) }}"
+          },
+          {
+            "name": "reportGenerated",
+            "value": "{{ formatDate(now(), 'yyyy-MM-dd HH:mm:ss') }}"
+          }
+        ]
+      },
+      "id": "generate-summary",
+      "name": "Generate Summary",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [1780, 300]
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Set Test Endpoints",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Test Endpoints": {
+      "main": [
+        [
+          {
+            "node": "Split Endpoints",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Endpoints": {
+      "main": [
+        [
+          {
+            "node": "API Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "API Request": {
+      "main": [
+        [
+          {
+            "node": "Check Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Success": {
+      "main": [
+        [
+          {
+            "node": "Handle Success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Handle Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Handle Success": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Handle Error": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Results": {
+      "main": [
+        [
+          {
+            "node": "Generate Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "1"
+}

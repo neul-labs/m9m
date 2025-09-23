@@ -1,0 +1,95 @@
+{
+  "name": "Data Transformation Workflow",
+  "active": true,
+  "nodes": [
+    {
+      "name": "Initial Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "parameters": {
+        "assignments": [
+          {
+            "name": "users",
+            "value": [
+              {"name": "Alice", "age": 30},
+              {"name": "Bob", "age": 25},
+              {"name": "Charlie", "age": 35}
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "Process Users",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 1,
+      "position": [450, 300],
+      "parameters": {
+        "mode": "split"
+      }
+    },
+    {
+      "name": "Transform User",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [650, 300],
+      "parameters": {
+        "assignments": [
+          {
+            "name": "processedName",
+            "value": "={{ uppercase($json.name) }}"
+          },
+          {
+            "name": "isAdult",
+            "value": "={{ $json.age >= 18 }}"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Combine Results",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 1,
+      "position": [850, 300],
+      "parameters": {
+        "mode": "combine"
+      }
+    }
+  ],
+  "connections": {
+    "Initial Data": {
+      "main": [
+        [
+          {
+            "node": "Process Users",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Users": {
+      "main": [
+        [
+          {
+            "node": "Transform User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transform User": {
+      "main": [
+        [
+          {
+            "node": "Combine Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

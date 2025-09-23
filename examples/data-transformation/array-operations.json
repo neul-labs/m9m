@@ -1,0 +1,232 @@
+{
+  "name": "Array Operations",
+  "description": "Advanced array manipulation including filtering, mapping, sorting, and aggregation",
+  "category": "data-transformation",
+  "difficulty": "intermediate",
+  "estimatedTime": "15 minutes",
+  "prerequisites": ["Understanding of arrays", "Basic expression knowledge"],
+  "learningObjectives": [
+    "Master array manipulation functions",
+    "Learn filtering and mapping techniques",
+    "Practice aggregation operations"
+  ],
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "start",
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "assignments": [
+          {
+            "name": "products",
+            "value": "[{\"id\": 1, \"name\": \"Laptop\", \"category\": \"Electronics\", \"price\": 999.99, \"stock\": 15, \"rating\": 4.5, \"tags\": [\"computer\", \"portable\", \"business\"]}, {\"id\": 2, \"name\": \"Smartphone\", \"category\": \"Electronics\", \"price\": 699.99, \"stock\": 25, \"rating\": 4.2, \"tags\": [\"mobile\", \"communication\", \"portable\"]}, {\"id\": 3, \"name\": \"Coffee Maker\", \"category\": \"Appliances\", \"price\": 89.99, \"stock\": 8, \"rating\": 4.0, \"tags\": [\"kitchen\", \"coffee\", \"appliance\"]}, {\"id\": 4, \"name\": \"Desk Chair\", \"category\": \"Furniture\", \"price\": 199.99, \"stock\": 12, \"rating\": 4.3, \"tags\": [\"office\", \"seating\", \"ergonomic\"]}, {\"id\": 5, \"name\": \"Tablet\", \"category\": \"Electronics\", \"price\": 329.99, \"stock\": 20, \"rating\": 4.1, \"tags\": [\"portable\", \"touchscreen\", \"entertainment\"]}]"
+          }
+        ]
+      },
+      "id": "set-product-data",
+      "name": "Set Product Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "operation": "parse",
+        "jsonPath": "$json.products"
+      },
+      "id": "parse-products",
+      "name": "Parse Products",
+      "type": "n8n-nodes-base.json",
+      "typeVersion": 1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "assignments": [
+          {
+            "name": "highValueProducts",
+            "value": "{{ $json.data.filter(product => product.price > 300) }}"
+          },
+          {
+            "name": "electronicsCount",
+            "value": "{{ length($json.data.filter(product => product.category === 'Electronics')) }}"
+          },
+          {
+            "name": "averagePrice",
+            "value": "{{ round(sum($json.data.map(product => product.price)) / length($json.data), 2) }}"
+          },
+          {
+            "name": "averageRating",
+            "value": "{{ round(sum($json.data.map(product => product.rating)) / length($json.data), 2) }}"
+          },
+          {
+            "name": "totalStock",
+            "value": "{{ sum($json.data.map(product => product.stock)) }}"
+          },
+          {
+            "name": "maxPrice",
+            "value": "{{ max($json.data.map(product => product.price)) }}"
+          },
+          {
+            "name": "minPrice",
+            "value": "{{ min($json.data.map(product => product.price)) }}"
+          }
+        ]
+      },
+      "id": "calculate-aggregates",
+      "name": "Calculate Aggregates",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [900, 200]
+    },
+    {
+      "parameters": {
+        "assignments": [
+          {
+            "name": "productsByPrice",
+            "value": "{{ $json.data.sort((a, b) => b.price - a.price) }}"
+          },
+          {
+            "name": "productsByRating",
+            "value": "{{ $json.data.sort((a, b) => b.rating - a.rating) }}"
+          },
+          {
+            "name": "lowStockProducts",
+            "value": "{{ $json.data.filter(product => product.stock < 10) }}"
+          },
+          {
+            "name": "categories",
+            "value": "{{ unique($json.data.map(product => product.category)) }}"
+          },
+          {
+            "name": "allTags",
+            "value": "{{ unique($json.data.flatMap(product => product.tags)) }}"
+          }
+        ]
+      },
+      "id": "sort-and-filter",
+      "name": "Sort and Filter",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [900, 400]
+    },
+    {
+      "parameters": {
+        "operation": "merge",
+        "mergeSources": [
+          "$node('Calculate Aggregates').json",
+          "$node('Sort and Filter').json"
+        ]
+      },
+      "id": "merge-analysis",
+      "name": "Merge Analysis",
+      "type": "n8n-nodes-base.json",
+      "typeVersion": 1,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "assignments": [
+          {
+            "name": "summary",
+            "value": "{{ 'Analyzed ' + length($node('Parse Products').json.data) + ' products across ' + length($json.categories) + ' categories with average price $' + $json.averagePrice }}"
+          },
+          {
+            "name": "insights",
+            "value": "{{ {highValueCount: length($json.highValueProducts), lowStockCount: length($json.lowStockProducts), priceRange: {min: $json.minPrice, max: $json.maxPrice}, stockStatus: $json.totalStock > 50 ? 'Good' : 'Low'} }}"
+          },
+          {
+            "name": "reportGenerated",
+            "value": "{{ formatDate(now(), 'yyyy-MM-dd HH:mm:ss') }}"
+          }
+        ]
+      },
+      "id": "generate-report",
+      "name": "Generate Report",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [1340, 300]
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Set Product Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Product Data": {
+      "main": [
+        [
+          {
+            "node": "Parse Products",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Products": {
+      "main": [
+        [
+          {
+            "node": "Calculate Aggregates",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Sort and Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Aggregates": {
+      "main": [
+        [
+          {
+            "node": "Merge Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sort and Filter": {
+      "main": [
+        [
+          {
+            "node": "Merge Analysis",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Analysis": {
+      "main": [
+        [
+          {
+            "node": "Generate Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "1"
+}

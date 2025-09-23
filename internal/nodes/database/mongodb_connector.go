@@ -1,0 +1,796 @@
+package database
+
+import (
+	"context"
+	"fmt"
+	"strings"
+	"time"
+
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+
+	"github.com/n8n-go/n8n-go/internal/expressions"
+	"github.com/n8n-go/n8n-go/internal/model"
+	"github.com/n8n-go/n8n-go/internal/nodes/base"
+)
+
+// MongoDBConnectorNode provides MongoDB database connectivity
+type MongoDBConnectorNode struct {
+	*base.BaseNode
+	evaluator *expressions.GojaExpressionEvaluator
+	client    *mongo.Client
+	database  *mongo.Database
+	config    *MongoDBConfig
+}
+
+// MongoDBConfig holds MongoDB connection configuration
+type MongoDBConfig struct {
+	URI        string `json:"uri"`
+	Host       string `json:"host"`
+	Port       int    `json:"port"`
+	Database   string `json:"database"`
+	Username   string `json:"username"`
+	Password   string `json:"password"`
+	AuthSource string `json:"authSource,omitempty"`
+	TLS        bool   `json:"tls"`
+	Options    map[string]string `json:"options,omitempty"`
+}
+
+// MongoDBResult represents the result of a MongoDB operation
+type MongoDBResult struct {
+	Documents     []map[string]interface{} `json:"documents,omitempty"`
+	DocumentCount int                      `json:"documentCount"`
+	InsertedID    interface{}              `json:"insertedId,omitempty"`
+	InsertedIDs   []interface{}            `json:"insertedIds,omitempty"`
+	ModifiedCount int64                    `json:"modifiedCount,omitempty"`
+	DeletedCount  int64                    `json:"deletedCount,omitempty"`
+	UpsertedID    interface{}              `json:"upsertedId,omitempty"`
+	ExecutionTime time.Duration            `json:"executionTime"`
+	Operation     string                   `json:"operation"`
+}
+
+// NewMongoDBConnectorNode creates a new MongoDB connector node
+func NewMongoDBConnectorNode() *MongoDBConnectorNode {
+	return &MongoDBConnectorNode{
+		BaseNode:  base.NewBaseNode("MongoDB", "n8n-nodes-base.mongoDb"),
+		evaluator: expressions.NewGojaExpressionEvaluator(),
+	}
+}
+
+// Execute performs MongoDB operations based on the operation type
+func (n *MongoDBConnectorNode) Execute(inputData []model.DataItem, nodeParams map[string]interface{}) ([]model.DataItem, error) {
+	var results []model.DataItem
+
+	// Get MongoDB configuration
+	config, err := n.parseMongoConfig(nodeParams)
+	if err != nil {
+		return nil, n.CreateError("invalid MongoDB configuration", map[string]interface{}{
+			"error": err.Error(),
+		})
+	}
+
+	// Connect to MongoDB if not already connected
+	if n.client == nil || n.config == nil || !n.isSameConfig(config) {
+		if err := n.connect(config); err != nil {
+			return nil, n.CreateError("failed to connect to MongoDB", map[string]interface{}{
+				"error": err.Error(),
+			})
+		}
+	}
+
+	// Get operation type
+	operation, _ := nodeParams["operation"].(string)
+	if operation == "" {
+		operation = "find" // Default operation
+	}
+
+	// Get collection name
+	collection, ok := nodeParams["collection"].(string)
+	if !ok {
+		return nil, n.CreateError("collection parameter is required", map[string]interface{}{
+			"nodeParams": nodeParams,
+		})
+	}
+
+	coll := n.database.Collection(collection)
+
+	for index, item := range inputData {
+		// Create expression context
+		context := &expressions.ExpressionContext{
+			ActiveNodeName:      "MongoDB",
+			RunIndex:           0,
+			ItemIndex:          index,
+			Mode:               expressions.ModeManual,
+			ConnectionInputData: []model.DataItem{item},
+			AdditionalKeys:     make(map[string]interface{}),
+		}
+
+		var result *MongoDBResult
+		switch strings.ToLower(operation) {
+		case "find", "findone":
+			result, err = n.executeFind(coll, nodeParams, context, operation == "findone")
+		case "insert", "insertone":
+			result, err = n.executeInsertOne(coll, item, nodeParams, context)
+		case "insertmany":
+			result, err = n.executeInsertMany(coll, inputData, nodeParams, context)
+		case "update", "updateone":
+			result, err = n.executeUpdateOne(coll, item, nodeParams, context)
+		case "updatemany":
+			result, err = n.executeUpdateMany(coll, item, nodeParams, context)
+		case "delete", "deleteone":
+			result, err = n.executeDeleteOne(coll, nodeParams, context)
+		case "deletemany":
+			result, err = n.executeDeleteMany(coll, nodeParams, context)
+		case "aggregate":
+			result, err = n.executeAggregate(coll, nodeParams, context)
+		case "count":
+			result, err = n.executeCount(coll, nodeParams, context)
+		default:
+			return nil, n.CreateError("unsupported operation", map[string]interface{}{
+				"operation": operation,
+			})
+		}
+
+		if err != nil {
+			return nil, n.CreateError("MongoDB operation failed", map[string]interface{}{
+				"operation": operation,
+				"error":     err.Error(),
+			})
+		}
+
+		// Create result items
+		if operation == "find" || operation == "aggregate" {
+			// For find/aggregate operations, create one item per document
+			for _, doc := range result.Documents {
+				resultItem := model.DataItem{
+					JSON: doc,
+				}
+				results = append(results, resultItem)
+			}
+		} else if operation == "findone" {
+			// For findOne, create a single item with the document
+			if len(result.Documents) > 0 {
+				resultItem := model.DataItem{
+					JSON: result.Documents[0],
+				}
+				results = append(results, resultItem)
+			}
+		} else {
+			// For other operations, create a single result item with operation metadata
+			resultItem := model.DataItem{
+				JSON: map[string]interface{}{
+					"success":        true,
+					"operation":      result.Operation,
+					"insertedId":     result.InsertedID,
+					"insertedIds":    result.InsertedIDs,
+					"modifiedCount":  result.ModifiedCount,
+					"deletedCount":   result.DeletedCount,
+					"upsertedId":     result.UpsertedID,
+					"documentCount":  result.DocumentCount,
+					"executionTime":  result.ExecutionTime.String(),
+				},
+			}
+			results = append(results, resultItem)
+		}
+	}
+
+	return results, nil
+}
+
+// executeFind performs find operations
+func (n *MongoDBConnectorNode) executeFind(coll *mongo.Collection, nodeParams map[string]interface{}, context *expressions.ExpressionContext, findOne bool) (*MongoDBResult, error) {
+	startTime := time.Now()
+
+	// Parse filter
+	filter, err := n.parseFilter(nodeParams, context)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse filter: %w", err)
+	}
+
+	// Parse options
+	opts := options.Find()
+	if projection, err := n.parseProjection(nodeParams, context); err == nil && projection != nil {
+		opts.SetProjection(projection)
+	}
+
+	if sort, err := n.parseSort(nodeParams, context); err == nil && sort != nil {
+		opts.SetSort(sort)
+	}
+
+	if limit, ok := nodeParams["limit"].(int); ok && limit > 0 {
+		opts.SetLimit(int64(limit))
+	}
+
+	if skip, ok := nodeParams["skip"].(int); ok && skip > 0 {
+		opts.SetSkip(int64(skip))
+	}
+
+	var documents []map[string]interface{}
+
+	if findOne {
+		// Find one document
+		var doc bson.M
+		err := coll.FindOne(context.TODO(), filter, options.FindOne().SetProjection(opts.Projection).SetSort(opts.Sort)).Decode(&doc)
+		if err != nil && err != mongo.ErrNoDocuments {
+			return nil, fmt.Errorf("findOne operation failed: %w", err)
+		}
+		if err != mongo.ErrNoDocuments {
+			documents = append(documents, n.convertBSONToMap(doc))
+		}
+	} else {
+		// Find multiple documents
+		cursor, err := coll.Find(context.TODO(), filter, opts)
+		if err != nil {
+			return nil, fmt.Errorf("find operation failed: %w", err)
+		}
+		defer cursor.Close(context.TODO())
+
+		for cursor.Next(context.TODO()) {
+			var doc bson.M
+			if err := cursor.Decode(&doc); err != nil {
+				return nil, fmt.Errorf("failed to decode document: %w", err)
+			}
+			documents = append(documents, n.convertBSONToMap(doc))
+		}
+
+		if err := cursor.Err(); err != nil {
+			return nil, fmt.Errorf("cursor error: %w", err)
+		}
+	}
+
+	operation := "find"
+	if findOne {
+		operation = "findone"
+	}
+
+	return &MongoDBResult{
+		Documents:     documents,
+		DocumentCount: len(documents),
+		ExecutionTime: time.Since(startTime),
+		Operation:     operation,
+	}, nil
+}
+
+// executeInsertOne performs insert one operation
+func (n *MongoDBConnectorNode) executeInsertOne(coll *mongo.Collection, item model.DataItem, nodeParams map[string]interface{}, context *expressions.ExpressionContext) (*MongoDBResult, error) {
+	startTime := time.Now()
+
+	// Get document to insert
+	document, err := n.parseDocument(item, nodeParams, context)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse document: %w", err)
+	}
+
+	// Insert document
+	result, err := coll.InsertOne(context.TODO(), document)
+	if err != nil {
+		return nil, fmt.Errorf("insertOne operation failed: %w", err)
+	}
+
+	return &MongoDBResult{
+		InsertedID:    result.InsertedID,
+		DocumentCount: 1,
+		ExecutionTime: time.Since(startTime),
+		Operation:     "insertone",
+	}, nil
+}
+
+// executeInsertMany performs insert many operation
+func (n *MongoDBConnectorNode) executeInsertMany(coll *mongo.Collection, inputData []model.DataItem, nodeParams map[string]interface{}, context *expressions.ExpressionContext) (*MongoDBResult, error) {
+	startTime := time.Now()
+
+	var documents []interface{}
+	for _, item := range inputData {
+		document, err := n.parseDocument(item, nodeParams, context)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse document: %w", err)
+		}
+		documents = append(documents, document)
+	}
+
+	// Insert documents
+	result, err := coll.InsertMany(context.TODO(), documents)
+	if err != nil {
+		return nil, fmt.Errorf("insertMany operation failed: %w", err)
+	}
+
+	return &MongoDBResult{
+		InsertedIDs:   result.InsertedIDs,
+		DocumentCount: len(result.InsertedIDs),
+		ExecutionTime: time.Since(startTime),
+		Operation:     "insertmany",
+	}, nil
+}
+
+// executeUpdateOne performs update one operation
+func (n *MongoDBConnectorNode) executeUpdateOne(coll *mongo.Collection, item model.DataItem, nodeParams map[string]interface{}, context *expressions.ExpressionContext) (*MongoDBResult, error) {
+	startTime := time.Now()
+
+	// Parse filter
+	filter, err := n.parseFilter(nodeParams, context)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse filter: %w", err)
+	}
+
+	// Parse update document
+	update, err := n.parseUpdate(item, nodeParams, context)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse update: %w", err)
+	}
+
+	// Parse options
+	opts := options.Update()
+	if upsert, ok := nodeParams["upsert"].(bool); ok {
+		opts.SetUpsert(upsert)
+	}
+
+	// Update document
+	result, err := coll.UpdateOne(context.TODO(), filter, update, opts)
+	if err != nil {
+		return nil, fmt.Errorf("updateOne operation failed: %w", err)
+	}
+
+	return &MongoDBResult{
+		ModifiedCount: result.ModifiedCount,
+		UpsertedID:    result.UpsertedID,
+		ExecutionTime: time.Since(startTime),
+		Operation:     "updateone",
+	}, nil
+}
+
+// executeUpdateMany performs update many operation
+func (n *MongoDBConnectorNode) executeUpdateMany(coll *mongo.Collection, item model.DataItem, nodeParams map[string]interface{}, context *expressions.ExpressionContext) (*MongoDBResult, error) {
+	startTime := time.Now()
+
+	// Parse filter
+	filter, err := n.parseFilter(nodeParams, context)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse filter: %w", err)
+	}
+
+	// Parse update document
+	update, err := n.parseUpdate(item, nodeParams, context)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse update: %w", err)
+	}
+
+	// Parse options
+	opts := options.Update()
+	if upsert, ok := nodeParams["upsert"].(bool); ok {
+		opts.SetUpsert(upsert)
+	}
+
+	// Update documents
+	result, err := coll.UpdateMany(context.TODO(), filter, update, opts)
+	if err != nil {
+		return nil, fmt.Errorf("updateMany operation failed: %w", err)
+	}
+
+	return &MongoDBResult{
+		ModifiedCount: result.ModifiedCount,
+		UpsertedID:    result.UpsertedID,
+		ExecutionTime: time.Since(startTime),
+		Operation:     "updatemany",
+	}, nil
+}
+
+// executeDeleteOne performs delete one operation
+func (n *MongoDBConnectorNode) executeDeleteOne(coll *mongo.Collection, nodeParams map[string]interface{}, context *expressions.ExpressionContext) (*MongoDBResult, error) {
+	startTime := time.Now()
+
+	// Parse filter
+	filter, err := n.parseFilter(nodeParams, context)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse filter: %w", err)
+	}
+
+	// Delete document
+	result, err := coll.DeleteOne(context.TODO(), filter)
+	if err != nil {
+		return nil, fmt.Errorf("deleteOne operation failed: %w", err)
+	}
+
+	return &MongoDBResult{
+		DeletedCount:  result.DeletedCount,
+		ExecutionTime: time.Since(startTime),
+		Operation:     "deleteone",
+	}, nil
+}
+
+// executeDeleteMany performs delete many operation
+func (n *MongoDBConnectorNode) executeDeleteMany(coll *mongo.Collection, nodeParams map[string]interface{}, context *expressions.ExpressionContext) (*MongoDBResult, error) {
+	startTime := time.Now()
+
+	// Parse filter
+	filter, err := n.parseFilter(nodeParams, context)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse filter: %w", err)
+	}
+
+	// Delete documents
+	result, err := coll.DeleteMany(context.TODO(), filter)
+	if err != nil {
+		return nil, fmt.Errorf("deleteMany operation failed: %w", err)
+	}
+
+	return &MongoDBResult{
+		DeletedCount:  result.DeletedCount,
+		ExecutionTime: time.Since(startTime),
+		Operation:     "deletemany",
+	}, nil
+}
+
+// executeAggregate performs aggregation pipeline
+func (n *MongoDBConnectorNode) executeAggregate(coll *mongo.Collection, nodeParams map[string]interface{}, context *expressions.ExpressionContext) (*MongoDBResult, error) {
+	startTime := time.Now()
+
+	// Parse pipeline
+	pipeline, err := n.parsePipeline(nodeParams, context)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse pipeline: %w", err)
+	}
+
+	// Execute aggregation
+	cursor, err := coll.Aggregate(context.TODO(), pipeline)
+	if err != nil {
+		return nil, fmt.Errorf("aggregate operation failed: %w", err)
+	}
+	defer cursor.Close(context.TODO())
+
+	var documents []map[string]interface{}
+	for cursor.Next(context.TODO()) {
+		var doc bson.M
+		if err := cursor.Decode(&doc); err != nil {
+			return nil, fmt.Errorf("failed to decode document: %w", err)
+		}
+		documents = append(documents, n.convertBSONToMap(doc))
+	}
+
+	if err := cursor.Err(); err != nil {
+		return nil, fmt.Errorf("cursor error: %w", err)
+	}
+
+	return &MongoDBResult{
+		Documents:     documents,
+		DocumentCount: len(documents),
+		ExecutionTime: time.Since(startTime),
+		Operation:     "aggregate",
+	}, nil
+}
+
+// executeCount performs count operation
+func (n *MongoDBConnectorNode) executeCount(coll *mongo.Collection, nodeParams map[string]interface{}, context *expressions.ExpressionContext) (*MongoDBResult, error) {
+	startTime := time.Now()
+
+	// Parse filter
+	filter, err := n.parseFilter(nodeParams, context)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse filter: %w", err)
+	}
+
+	// Count documents
+	count, err := coll.CountDocuments(context.TODO(), filter)
+	if err != nil {
+		return nil, fmt.Errorf("count operation failed: %w", err)
+	}
+
+	return &MongoDBResult{
+		DocumentCount: int(count),
+		ExecutionTime: time.Since(startTime),
+		Operation:     "count",
+	}, nil
+}
+
+// Helper methods for parsing MongoDB-specific parameters
+
+func (n *MongoDBConnectorNode) parseFilter(nodeParams map[string]interface{}, context *expressions.ExpressionContext) (bson.M, error) {
+	if filterExpr, ok := nodeParams["filter"].(string); ok && filterExpr != "" {
+		filterValue, err := n.evaluator.EvaluateExpression(filterExpr, context)
+		if err != nil {
+			return nil, err
+		}
+
+		if filterMap, ok := filterValue.(map[string]interface{}); ok {
+			return bson.M(filterMap), nil
+		}
+	}
+
+	return bson.M{}, nil
+}
+
+func (n *MongoDBConnectorNode) parseProjection(nodeParams map[string]interface{}, context *expressions.ExpressionContext) (bson.M, error) {
+	if projectionExpr, ok := nodeParams["projection"].(string); ok && projectionExpr != "" {
+		projectionValue, err := n.evaluator.EvaluateExpression(projectionExpr, context)
+		if err != nil {
+			return nil, err
+		}
+
+		if projectionMap, ok := projectionValue.(map[string]interface{}); ok {
+			return bson.M(projectionMap), nil
+		}
+	}
+
+	return nil, nil
+}
+
+func (n *MongoDBConnectorNode) parseSort(nodeParams map[string]interface{}, context *expressions.ExpressionContext) (bson.M, error) {
+	if sortExpr, ok := nodeParams["sort"].(string); ok && sortExpr != "" {
+		sortValue, err := n.evaluator.EvaluateExpression(sortExpr, context)
+		if err != nil {
+			return nil, err
+		}
+
+		if sortMap, ok := sortValue.(map[string]interface{}); ok {
+			return bson.M(sortMap), nil
+		}
+	}
+
+	return nil, nil
+}
+
+func (n *MongoDBConnectorNode) parseDocument(item model.DataItem, nodeParams map[string]interface{}, context *expressions.ExpressionContext) (bson.M, error) {
+	if documentExpr, ok := nodeParams["document"].(string); ok && documentExpr != "" {
+		documentValue, err := n.evaluator.EvaluateExpression(documentExpr, context)
+		if err != nil {
+			return nil, err
+		}
+
+		if documentMap, ok := documentValue.(map[string]interface{}); ok {
+			return bson.M(documentMap), nil
+		}
+	}
+
+	// Use the item's JSON data as the document
+	return bson.M(item.JSON), nil
+}
+
+func (n *MongoDBConnectorNode) parseUpdate(item model.DataItem, nodeParams map[string]interface{}, context *expressions.ExpressionContext) (bson.M, error) {
+	if updateExpr, ok := nodeParams["update"].(string); ok && updateExpr != "" {
+		updateValue, err := n.evaluator.EvaluateExpression(updateExpr, context)
+		if err != nil {
+			return nil, err
+		}
+
+		if updateMap, ok := updateValue.(map[string]interface{}); ok {
+			return bson.M(updateMap), nil
+		}
+	}
+
+	// Default to $set operation with item's JSON data
+	return bson.M{"$set": item.JSON}, nil
+}
+
+func (n *MongoDBConnectorNode) parsePipeline(nodeParams map[string]interface{}, context *expressions.ExpressionContext) ([]bson.M, error) {
+	if pipelineExpr, ok := nodeParams["pipeline"].(string); ok && pipelineExpr != "" {
+		pipelineValue, err := n.evaluator.EvaluateExpression(pipelineExpr, context)
+		if err != nil {
+			return nil, err
+		}
+
+		if pipelineSlice, ok := pipelineValue.([]interface{}); ok {
+			var pipeline []bson.M
+			for _, stage := range pipelineSlice {
+				if stageMap, ok := stage.(map[string]interface{}); ok {
+					pipeline = append(pipeline, bson.M(stageMap))
+				}
+			}
+			return pipeline, nil
+		}
+	}
+
+	return nil, fmt.Errorf("pipeline is required for aggregation")
+}
+
+func (n *MongoDBConnectorNode) convertBSONToMap(doc bson.M) map[string]interface{} {
+	result := make(map[string]interface{})
+	for key, value := range doc {
+		result[key] = n.convertBSONValue(value)
+	}
+	return result
+}
+
+func (n *MongoDBConnectorNode) convertBSONValue(value interface{}) interface{} {
+	switch v := value.(type) {
+	case primitive.ObjectID:
+		return v.Hex()
+	case primitive.DateTime:
+		return time.Unix(int64(v)/1000, (int64(v)%1000)*1000000).Format(time.RFC3339)
+	case bson.M:
+		return n.convertBSONToMap(v)
+	case []interface{}:
+		result := make([]interface{}, len(v))
+		for i, item := range v {
+			result[i] = n.convertBSONValue(item)
+		}
+		return result
+	default:
+		return v
+	}
+}
+
+// Connection management methods
+
+func (n *MongoDBConnectorNode) connect(config *MongoDBConfig) error {
+	// Close existing connection if any
+	if n.client != nil {
+		n.client.Disconnect(context.TODO())
+	}
+
+	// Build connection URI
+	uri, err := n.buildMongoURI(config)
+	if err != nil {
+		return fmt.Errorf("failed to build URI: %w", err)
+	}
+
+	// Create client options
+	clientOptions := options.Client().ApplyURI(uri)
+
+	// Set connection timeout
+	clientOptions.SetConnectTimeout(10 * time.Second)
+	clientOptions.SetSocketTimeout(30 * time.Second)
+
+	// Connect to MongoDB
+	client, err := mongo.Connect(context.TODO(), clientOptions)
+	if err != nil {
+		return fmt.Errorf("failed to connect to MongoDB: %w", err)
+	}
+
+	// Test connection
+	if err := client.Ping(context.TODO(), nil); err != nil {
+		client.Disconnect(context.TODO())
+		return fmt.Errorf("failed to ping MongoDB: %w", err)
+	}
+
+	n.client = client
+	n.database = client.Database(config.Database)
+	n.config = config
+
+	return nil
+}
+
+func (n *MongoDBConnectorNode) buildMongoURI(config *MongoDBConfig) (string, error) {
+	if config.URI != "" {
+		return config.URI, nil
+	}
+
+	// Build URI from components
+	uri := "mongodb://"
+
+	if config.Username != "" && config.Password != "" {
+		uri += fmt.Sprintf("%s:%s@", config.Username, config.Password)
+	}
+
+	if config.Host == "" {
+		config.Host = "localhost"
+	}
+	if config.Port == 0 {
+		config.Port = 27017
+	}
+
+	uri += fmt.Sprintf("%s:%d", config.Host, config.Port)
+
+	// Add database
+	if config.Database != "" {
+		uri += "/" + config.Database
+	}
+
+	// Add options
+	options := make([]string, 0)
+	if config.AuthSource != "" {
+		options = append(options, "authSource="+config.AuthSource)
+	}
+	if config.TLS {
+		options = append(options, "ssl=true")
+	}
+
+	for key, value := range config.Options {
+		options = append(options, fmt.Sprintf("%s=%s", key, value))
+	}
+
+	if len(options) > 0 {
+		uri += "?" + strings.Join(options, "&")
+	}
+
+	return uri, nil
+}
+
+func (n *MongoDBConnectorNode) parseMongoConfig(nodeParams map[string]interface{}) (*MongoDBConfig, error) {
+	config := &MongoDBConfig{
+		Options: make(map[string]string),
+	}
+
+	// Parse connection parameters
+	if uri, ok := nodeParams["uri"].(string); ok {
+		config.URI = uri
+	}
+
+	if host, ok := nodeParams["host"].(string); ok {
+		config.Host = host
+	}
+
+	if port, ok := nodeParams["port"].(int); ok {
+		config.Port = port
+	}
+
+	if database, ok := nodeParams["database"].(string); ok {
+		config.Database = database
+	}
+
+	if username, ok := nodeParams["username"].(string); ok {
+		config.Username = username
+	}
+
+	if password, ok := nodeParams["password"].(string); ok {
+		config.Password = password
+	}
+
+	if authSource, ok := nodeParams["authSource"].(string); ok {
+		config.AuthSource = authSource
+	}
+
+	if tls, ok := nodeParams["tls"].(bool); ok {
+		config.TLS = tls
+	}
+
+	// Validate required fields
+	if config.URI == "" && config.Database == "" {
+		return nil, fmt.Errorf("either URI or database name is required")
+	}
+
+	return config, nil
+}
+
+func (n *MongoDBConnectorNode) isSameConfig(config *MongoDBConfig) bool {
+	if n.config == nil {
+		return false
+	}
+
+	return n.config.URI == config.URI &&
+		n.config.Host == config.Host &&
+		n.config.Port == config.Port &&
+		n.config.Database == config.Database &&
+		n.config.Username == config.Username &&
+		n.config.Password == config.Password
+}
+
+// ValidateParameters validates the node parameters
+func (n *MongoDBConnectorNode) ValidateParameters(params map[string]interface{}) error {
+	// Validate MongoDB configuration
+	_, err := n.parseMongoConfig(params)
+	if err != nil {
+		return fmt.Errorf("invalid MongoDB configuration: %w", err)
+	}
+
+	// Validate operation
+	operation, _ := params["operation"].(string)
+	validOperations := []string{"find", "findone", "insert", "insertone", "insertmany", "update", "updateone", "updatemany", "delete", "deleteone", "deletemany", "aggregate", "count"}
+	if operation != "" {
+		valid := false
+		for _, validOp := range validOperations {
+			if operation == validOp {
+				valid = true
+				break
+			}
+		}
+		if !valid {
+			return fmt.Errorf("invalid operation: %s. Valid operations: %v", operation, validOperations)
+		}
+	}
+
+	// Check collection parameter
+	if _, ok := params["collection"]; !ok {
+		return fmt.Errorf("collection parameter is required")
+	}
+
+	return nil
+}
+
+// Close closes the MongoDB connection
+func (n *MongoDBConnectorNode) Close() error {
+	if n.client != nil {
+		return n.client.Disconnect(context.TODO())
+	}
+	return nil
+}

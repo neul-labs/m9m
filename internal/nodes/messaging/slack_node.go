@@ -1,0 +1,923 @@
+package messaging
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"fmt"
+	"io"
+	"mime/multipart"
+	"net/http"
+	"strings"
+	"time"
+
+	"github.com/n8n-go/internal/core/base"
+	"github.com/n8n-go/internal/core/interfaces"
+)
+
+// SlackNode provides Slack messaging operations
+type SlackNode struct {
+	*base.BaseNode
+	httpClient *http.Client
+}
+
+// NewSlackNode creates a new Slack node
+func NewSlackNode() *SlackNode {
+	return &SlackNode{
+		BaseNode: base.NewBaseNode("Slack", "Slack Messaging"),
+		httpClient: &http.Client{
+			Timeout: 30 * time.Second,
+		},
+	}
+}
+
+// GetMetadata returns the node metadata
+func (n *SlackNode) GetMetadata() interfaces.NodeMetadata {
+	return interfaces.NodeMetadata{
+		Name:        "Slack",
+		DisplayName: "Slack",
+		Description: "Send messages, manage channels, and interact with Slack",
+		Group:       []string{"Communication"},
+		Version:     1,
+		Inputs:      []string{"main"},
+		Outputs:     []string{"main"},
+		Credentials: []interfaces.CredentialType{
+			{
+				Name:        "slackApi",
+				Required:    true,
+				DisplayName: "Slack API",
+			},
+		},
+		Properties: []interfaces.NodeProperty{
+			{
+				Name:        "resource",
+				DisplayName: "Resource",
+				Type:        "options",
+				Options: []interfaces.OptionItem{
+					{Name: "Message", Value: "message"},
+					{Name: "Channel", Value: "channel"},
+					{Name: "User", Value: "user"},
+					{Name: "File", Value: "file"},
+					{Name: "Reaction", Value: "reaction"},
+				},
+				Default:     "message",
+				Required:    true,
+				Description: "The resource to operate on",
+			},
+			{
+				Name:        "operation",
+				DisplayName: "Operation",
+				Type:        "options",
+				Default:     "send",
+				Required:    true,
+				Description: "The operation to perform",
+				DisplayOptions: map[string]interface{}{
+					"show": map[string]interface{}{
+						"resource": []string{"message"},
+					},
+				},
+				Options: []interfaces.OptionItem{
+					{Name: "Send", Value: "send"},
+					{Name: "Update", Value: "update"},
+					{Name: "Delete", Value: "delete"},
+					{Name: "Get Permalink", Value: "getPermalink"},
+					{Name: "Search", Value: "search"},
+				},
+			},
+			{
+				Name:        "channelOperation",
+				DisplayName: "Operation",
+				Type:        "options",
+				Default:     "create",
+				Required:    true,
+				Description: "The operation to perform",
+				DisplayOptions: map[string]interface{}{
+					"show": map[string]interface{}{
+						"resource": []string{"channel"},
+					},
+				},
+				Options: []interfaces.OptionItem{
+					{Name: "Create", Value: "create"},
+					{Name: "Get", Value: "get"},
+					{Name: "Get Many", Value: "getMany"},
+					{Name: "Join", Value: "join"},
+					{Name: "Leave", Value: "leave"},
+					{Name: "Archive", Value: "archive"},
+					{Name: "Unarchive", Value: "unarchive"},
+					{Name: "Invite", Value: "invite"},
+					{Name: "Kick", Value: "kick"},
+				},
+			},
+			{
+				Name:        "channel",
+				DisplayName: "Channel",
+				Type:        "string",
+				Default:     "",
+				Description: "Channel name (e.g., #general) or ID",
+				DisplayOptions: map[string]interface{}{
+					"show": map[string]interface{}{
+						"resource": []string{"message", "channel"},
+					},
+				},
+			},
+			{
+				Name:        "text",
+				DisplayName: "Message Text",
+				Type:        "string",
+				TypeOptions: map[string]interface{}{
+					"rows": 3,
+				},
+				Default:     "",
+				Description: "The message text to send",
+				DisplayOptions: map[string]interface{}{
+					"show": map[string]interface{}{
+						"resource":  []string{"message"},
+						"operation": []string{"send", "update"},
+					},
+				},
+			},
+			{
+				Name:        "username",
+				DisplayName: "Bot Username",
+				Type:        "string",
+				Default:     "",
+				Description: "Bot username to display",
+				DisplayOptions: map[string]interface{}{
+					"show": map[string]interface{}{
+						"resource":  []string{"message"},
+						"operation": []string{"send"},
+					},
+				},
+			},
+			{
+				Name:        "threadTs",
+				DisplayName: "Thread Timestamp",
+				Type:        "string",
+				Default:     "",
+				Description: "Send message as reply in thread",
+				DisplayOptions: map[string]interface{}{
+					"show": map[string]interface{}{
+						"resource":  []string{"message"},
+						"operation": []string{"send"},
+					},
+				},
+			},
+			{
+				Name:        "blocks",
+				DisplayName: "Blocks",
+				Type:        "json",
+				Default:     "[]",
+				Description: "Slack Block Kit blocks",
+				DisplayOptions: map[string]interface{}{
+					"show": map[string]interface{}{
+						"resource":  []string{"message"},
+						"operation": []string{"send", "update"},
+					},
+				},
+			},
+			{
+				Name:        "attachments",
+				DisplayName: "Attachments",
+				Type:        "json",
+				Default:     "[]",
+				Description: "Message attachments",
+				DisplayOptions: map[string]interface{}{
+					"show": map[string]interface{}{
+						"resource":  []string{"message"},
+						"operation": []string{"send", "update"},
+					},
+				},
+			},
+			{
+				Name:        "emoji",
+				DisplayName: "Icon Emoji",
+				Type:        "string",
+				Default:     ":robot_face:",
+				Description: "Emoji to use as the icon",
+				DisplayOptions: map[string]interface{}{
+					"show": map[string]interface{}{
+						"resource":  []string{"message"},
+						"operation": []string{"send"},
+					},
+				},
+			},
+			{
+				Name:        "messageTs",
+				DisplayName: "Message Timestamp",
+				Type:        "string",
+				Default:     "",
+				Description: "Timestamp of the message to update or delete",
+				DisplayOptions: map[string]interface{}{
+					"show": map[string]interface{}{
+						"resource":  []string{"message"},
+						"operation": []string{"update", "delete", "getPermalink"},
+					},
+				},
+			},
+			{
+				Name:        "userId",
+				DisplayName: "User ID",
+				Type:        "string",
+				Default:     "",
+				Description: "Slack user ID",
+				DisplayOptions: map[string]interface{}{
+					"show": map[string]interface{}{
+						"resource": []string{"user"},
+					},
+				},
+			},
+			{
+				Name:        "limit",
+				DisplayName: "Limit",
+				Type:        "number",
+				Default:     50,
+				Description: "How many results to return",
+			},
+		},
+	}
+}
+
+// Execute runs the Slack operation
+func (n *SlackNode) Execute(ctx context.Context, params interfaces.ExecutionParams) (interfaces.NodeOutput, error) {
+	// Get credentials
+	credentials, err := params.GetCredentials("slackApi")
+	if err != nil {
+		return interfaces.NodeOutput{}, fmt.Errorf("failed to get Slack credentials: %w", err)
+	}
+
+	accessToken, ok := credentials["accessToken"].(string)
+	if !ok || accessToken == "" {
+		return interfaces.NodeOutput{}, fmt.Errorf("Slack access token not found")
+	}
+
+	// Get resource and operation
+	resource := params.GetNodeParameter("resource", "message").(string)
+
+	var result interface{}
+	switch resource {
+	case "message":
+		result, err = n.handleMessageResource(accessToken, params)
+	case "channel":
+		result, err = n.handleChannelResource(accessToken, params)
+	case "user":
+		result, err = n.handleUserResource(accessToken, params)
+	case "file":
+		result, err = n.handleFileResource(accessToken, params)
+	case "reaction":
+		result, err = n.handleReactionResource(accessToken, params)
+	default:
+		err = fmt.Errorf("unsupported resource: %s", resource)
+	}
+
+	if err != nil {
+		return interfaces.NodeOutput{}, err
+	}
+
+	// Format output
+	var outputItems []interfaces.ItemData
+	switch v := result.(type) {
+	case []interface{}:
+		for i, item := range v {
+			if itemMap, ok := item.(map[string]interface{}); ok {
+				outputItems = append(outputItems, interfaces.ItemData{
+					JSON:  itemMap,
+					Index: i,
+				})
+			}
+		}
+	case map[string]interface{}:
+		outputItems = append(outputItems, interfaces.ItemData{
+			JSON:  v,
+			Index: 0,
+		})
+	default:
+		outputItems = append(outputItems, interfaces.ItemData{
+			JSON: map[string]interface{}{
+				"result": result,
+			},
+			Index: 0,
+		})
+	}
+
+	return interfaces.NodeOutput{
+		Items: outputItems,
+	}, nil
+}
+
+// Message resource handlers
+
+func (n *SlackNode) handleMessageResource(token string, params interfaces.ExecutionParams) (interface{}, error) {
+	operation := params.GetNodeParameter("operation", "send").(string)
+
+	switch operation {
+	case "send":
+		return n.sendMessage(token, params)
+	case "update":
+		return n.updateMessage(token, params)
+	case "delete":
+		return n.deleteMessage(token, params)
+	case "getPermalink":
+		return n.getMessagePermalink(token, params)
+	case "search":
+		return n.searchMessages(token, params)
+	default:
+		return nil, fmt.Errorf("unsupported message operation: %s", operation)
+	}
+}
+
+func (n *SlackNode) sendMessage(token string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+	channel := params.GetNodeParameter("channel", "").(string)
+	text := params.GetNodeParameter("text", "").(string)
+	username := params.GetNodeParameter("username", "").(string)
+	threadTs := params.GetNodeParameter("threadTs", "").(string)
+	emoji := params.GetNodeParameter("emoji", ":robot_face:").(string)
+
+	if channel == "" {
+		return nil, fmt.Errorf("channel is required")
+	}
+
+	// Resolve channel ID if name is provided
+	if strings.HasPrefix(channel, "#") {
+		channel = strings.TrimPrefix(channel, "#")
+		channelID, err := n.getChannelID(token, channel)
+		if err == nil && channelID != "" {
+			channel = channelID
+		}
+	}
+
+	// Build request body
+	body := map[string]interface{}{
+		"channel": channel,
+		"text":    text,
+	}
+
+	if username != "" {
+		body["username"] = username
+	}
+	if threadTs != "" {
+		body["thread_ts"] = threadTs
+	}
+	if emoji != "" {
+		body["icon_emoji"] = emoji
+	}
+
+	// Add blocks if provided
+	blocksJSON := params.GetNodeParameter("blocks", "[]").(string)
+	if blocksJSON != "[]" {
+		var blocks []interface{}
+		if err := json.Unmarshal([]byte(blocksJSON), &blocks); err == nil && len(blocks) > 0 {
+			body["blocks"] = blocks
+		}
+	}
+
+	// Add attachments if provided
+	attachmentsJSON := params.GetNodeParameter("attachments", "[]").(string)
+	if attachmentsJSON != "[]" {
+		var attachments []interface{}
+		if err := json.Unmarshal([]byte(attachmentsJSON), &attachments); err == nil && len(attachments) > 0 {
+			body["attachments"] = attachments
+		}
+	}
+
+	return n.makeSlackAPICall("chat.postMessage", token, body)
+}
+
+func (n *SlackNode) updateMessage(token string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+	channel := params.GetNodeParameter("channel", "").(string)
+	messageTs := params.GetNodeParameter("messageTs", "").(string)
+	text := params.GetNodeParameter("text", "").(string)
+
+	if channel == "" || messageTs == "" {
+		return nil, fmt.Errorf("channel and messageTs are required")
+	}
+
+	body := map[string]interface{}{
+		"channel": channel,
+		"ts":      messageTs,
+		"text":    text,
+	}
+
+	// Add blocks if provided
+	blocksJSON := params.GetNodeParameter("blocks", "[]").(string)
+	if blocksJSON != "[]" {
+		var blocks []interface{}
+		if err := json.Unmarshal([]byte(blocksJSON), &blocks); err == nil {
+			body["blocks"] = blocks
+		}
+	}
+
+	return n.makeSlackAPICall("chat.update", token, body)
+}
+
+func (n *SlackNode) deleteMessage(token string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+	channel := params.GetNodeParameter("channel", "").(string)
+	messageTs := params.GetNodeParameter("messageTs", "").(string)
+
+	if channel == "" || messageTs == "" {
+		return nil, fmt.Errorf("channel and messageTs are required")
+	}
+
+	body := map[string]interface{}{
+		"channel": channel,
+		"ts":      messageTs,
+	}
+
+	return n.makeSlackAPICall("chat.delete", token, body)
+}
+
+func (n *SlackNode) getMessagePermalink(token string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+	channel := params.GetNodeParameter("channel", "").(string)
+	messageTs := params.GetNodeParameter("messageTs", "").(string)
+
+	if channel == "" || messageTs == "" {
+		return nil, fmt.Errorf("channel and messageTs are required")
+	}
+
+	body := map[string]interface{}{
+		"channel":    channel,
+		"message_ts": messageTs,
+	}
+
+	return n.makeSlackAPICall("chat.getPermalink", token, body)
+}
+
+func (n *SlackNode) searchMessages(token string, params interfaces.ExecutionParams) ([]interface{}, error) {
+	query := params.GetNodeParameter("query", "").(string)
+	if query == "" {
+		return nil, fmt.Errorf("query is required")
+	}
+
+	body := map[string]interface{}{
+		"query": query,
+		"count": params.GetNodeParameter("limit", 50).(float64),
+	}
+
+	result, err := n.makeSlackAPICall("search.messages", token, body)
+	if err != nil {
+		return nil, err
+	}
+
+	if messages, ok := result["messages"].(map[string]interface{}); ok {
+		if matches, ok := messages["matches"].([]interface{}); ok {
+			return matches, nil
+		}
+	}
+
+	return []interface{}{}, nil
+}
+
+// Channel resource handlers
+
+func (n *SlackNode) handleChannelResource(token string, params interfaces.ExecutionParams) (interface{}, error) {
+	operation := params.GetNodeParameter("channelOperation", "create").(string)
+
+	switch operation {
+	case "create":
+		return n.createChannel(token, params)
+	case "get":
+		return n.getChannel(token, params)
+	case "getMany":
+		return n.getChannels(token, params)
+	case "join":
+		return n.joinChannel(token, params)
+	case "leave":
+		return n.leaveChannel(token, params)
+	case "archive":
+		return n.archiveChannel(token, params)
+	case "unarchive":
+		return n.unarchiveChannel(token, params)
+	case "invite":
+		return n.inviteToChannel(token, params)
+	case "kick":
+		return n.kickFromChannel(token, params)
+	default:
+		return nil, fmt.Errorf("unsupported channel operation: %s", operation)
+	}
+}
+
+func (n *SlackNode) createChannel(token string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+	name := params.GetNodeParameter("channelName", "").(string)
+	if name == "" {
+		return nil, fmt.Errorf("channel name is required")
+	}
+
+	body := map[string]interface{}{
+		"name":       name,
+		"is_private": params.GetNodeParameter("isPrivate", false).(bool),
+	}
+
+	return n.makeSlackAPICall("conversations.create", token, body)
+}
+
+func (n *SlackNode) getChannel(token string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+	channel := params.GetNodeParameter("channel", "").(string)
+	if channel == "" {
+		return nil, fmt.Errorf("channel is required")
+	}
+
+	body := map[string]interface{}{
+		"channel": channel,
+	}
+
+	return n.makeSlackAPICall("conversations.info", token, body)
+}
+
+func (n *SlackNode) getChannels(token string, params interfaces.ExecutionParams) ([]interface{}, error) {
+	body := map[string]interface{}{
+		"limit":           params.GetNodeParameter("limit", 50).(float64),
+		"exclude_archived": true,
+	}
+
+	result, err := n.makeSlackAPICall("conversations.list", token, body)
+	if err != nil {
+		return nil, err
+	}
+
+	if channels, ok := result["channels"].([]interface{}); ok {
+		return channels, nil
+	}
+
+	return []interface{}{}, nil
+}
+
+func (n *SlackNode) joinChannel(token string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+	channel := params.GetNodeParameter("channel", "").(string)
+	if channel == "" {
+		return nil, fmt.Errorf("channel is required")
+	}
+
+	body := map[string]interface{}{
+		"channel": channel,
+	}
+
+	return n.makeSlackAPICall("conversations.join", token, body)
+}
+
+func (n *SlackNode) leaveChannel(token string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+	channel := params.GetNodeParameter("channel", "").(string)
+	if channel == "" {
+		return nil, fmt.Errorf("channel is required")
+	}
+
+	body := map[string]interface{}{
+		"channel": channel,
+	}
+
+	return n.makeSlackAPICall("conversations.leave", token, body)
+}
+
+func (n *SlackNode) archiveChannel(token string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+	channel := params.GetNodeParameter("channel", "").(string)
+	if channel == "" {
+		return nil, fmt.Errorf("channel is required")
+	}
+
+	body := map[string]interface{}{
+		"channel": channel,
+	}
+
+	return n.makeSlackAPICall("conversations.archive", token, body)
+}
+
+func (n *SlackNode) unarchiveChannel(token string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+	channel := params.GetNodeParameter("channel", "").(string)
+	if channel == "" {
+		return nil, fmt.Errorf("channel is required")
+	}
+
+	body := map[string]interface{}{
+		"channel": channel,
+	}
+
+	return n.makeSlackAPICall("conversations.unarchive", token, body)
+}
+
+func (n *SlackNode) inviteToChannel(token string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+	channel := params.GetNodeParameter("channel", "").(string)
+	users := params.GetNodeParameter("users", "").(string)
+
+	if channel == "" || users == "" {
+		return nil, fmt.Errorf("channel and users are required")
+	}
+
+	body := map[string]interface{}{
+		"channel": channel,
+		"users":   users,
+	}
+
+	return n.makeSlackAPICall("conversations.invite", token, body)
+}
+
+func (n *SlackNode) kickFromChannel(token string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+	channel := params.GetNodeParameter("channel", "").(string)
+	user := params.GetNodeParameter("user", "").(string)
+
+	if channel == "" || user == "" {
+		return nil, fmt.Errorf("channel and user are required")
+	}
+
+	body := map[string]interface{}{
+		"channel": channel,
+		"user":    user,
+	}
+
+	return n.makeSlackAPICall("conversations.kick", token, body)
+}
+
+// User resource handlers
+
+func (n *SlackNode) handleUserResource(token string, params interfaces.ExecutionParams) (interface{}, error) {
+	operation := params.GetNodeParameter("userOperation", "get").(string)
+
+	switch operation {
+	case "get":
+		return n.getUser(token, params)
+	case "getMany":
+		return n.getUsers(token, params)
+	case "getPresence":
+		return n.getUserPresence(token, params)
+	default:
+		return nil, fmt.Errorf("unsupported user operation: %s", operation)
+	}
+}
+
+func (n *SlackNode) getUser(token string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+	userID := params.GetNodeParameter("userId", "").(string)
+	if userID == "" {
+		return nil, fmt.Errorf("user ID is required")
+	}
+
+	body := map[string]interface{}{
+		"user": userID,
+	}
+
+	return n.makeSlackAPICall("users.info", token, body)
+}
+
+func (n *SlackNode) getUsers(token string, params interfaces.ExecutionParams) ([]interface{}, error) {
+	body := map[string]interface{}{
+		"limit": params.GetNodeParameter("limit", 50).(float64),
+	}
+
+	result, err := n.makeSlackAPICall("users.list", token, body)
+	if err != nil {
+		return nil, err
+	}
+
+	if members, ok := result["members"].([]interface{}); ok {
+		return members, nil
+	}
+
+	return []interface{}{}, nil
+}
+
+func (n *SlackNode) getUserPresence(token string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+	userID := params.GetNodeParameter("userId", "").(string)
+	if userID == "" {
+		return nil, fmt.Errorf("user ID is required")
+	}
+
+	body := map[string]interface{}{
+		"user": userID,
+	}
+
+	return n.makeSlackAPICall("users.getPresence", token, body)
+}
+
+// File resource handlers
+
+func (n *SlackNode) handleFileResource(token string, params interfaces.ExecutionParams) (interface{}, error) {
+	operation := params.GetNodeParameter("fileOperation", "upload").(string)
+
+	switch operation {
+	case "upload":
+		return n.uploadFile(token, params)
+	case "get":
+		return n.getFile(token, params)
+	case "getMany":
+		return n.getFiles(token, params)
+	case "delete":
+		return n.deleteFile(token, params)
+	default:
+		return nil, fmt.Errorf("unsupported file operation: %s", operation)
+	}
+}
+
+func (n *SlackNode) uploadFile(token string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+	// Simplified file upload - in production would handle actual file data
+	channels := params.GetNodeParameter("channels", "").(string)
+	content := params.GetNodeParameter("content", "").(string)
+	filename := params.GetNodeParameter("filename", "file.txt").(string)
+	title := params.GetNodeParameter("title", "").(string)
+
+	body := map[string]interface{}{
+		"channels": channels,
+		"content":  content,
+		"filename": filename,
+		"title":    title,
+	}
+
+	return n.makeSlackAPICall("files.upload", token, body)
+}
+
+func (n *SlackNode) getFile(token string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+	fileID := params.GetNodeParameter("fileId", "").(string)
+	if fileID == "" {
+		return nil, fmt.Errorf("file ID is required")
+	}
+
+	body := map[string]interface{}{
+		"file": fileID,
+	}
+
+	return n.makeSlackAPICall("files.info", token, body)
+}
+
+func (n *SlackNode) getFiles(token string, params interfaces.ExecutionParams) ([]interface{}, error) {
+	body := map[string]interface{}{
+		"count": params.GetNodeParameter("limit", 50).(float64),
+	}
+
+	result, err := n.makeSlackAPICall("files.list", token, body)
+	if err != nil {
+		return nil, err
+	}
+
+	if files, ok := result["files"].([]interface{}); ok {
+		return files, nil
+	}
+
+	return []interface{}{}, nil
+}
+
+func (n *SlackNode) deleteFile(token string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+	fileID := params.GetNodeParameter("fileId", "").(string)
+	if fileID == "" {
+		return nil, fmt.Errorf("file ID is required")
+	}
+
+	body := map[string]interface{}{
+		"file": fileID,
+	}
+
+	return n.makeSlackAPICall("files.delete", token, body)
+}
+
+// Reaction resource handlers
+
+func (n *SlackNode) handleReactionResource(token string, params interfaces.ExecutionParams) (interface{}, error) {
+	operation := params.GetNodeParameter("reactionOperation", "add").(string)
+
+	switch operation {
+	case "add":
+		return n.addReaction(token, params)
+	case "remove":
+		return n.removeReaction(token, params)
+	case "get":
+		return n.getReactions(token, params)
+	default:
+		return nil, fmt.Errorf("unsupported reaction operation: %s", operation)
+	}
+}
+
+func (n *SlackNode) addReaction(token string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+	channel := params.GetNodeParameter("channel", "").(string)
+	emoji := params.GetNodeParameter("emoji", "").(string)
+	timestamp := params.GetNodeParameter("timestamp", "").(string)
+
+	if channel == "" || emoji == "" || timestamp == "" {
+		return nil, fmt.Errorf("channel, emoji, and timestamp are required")
+	}
+
+	body := map[string]interface{}{
+		"channel":   channel,
+		"name":      emoji,
+		"timestamp": timestamp,
+	}
+
+	return n.makeSlackAPICall("reactions.add", token, body)
+}
+
+func (n *SlackNode) removeReaction(token string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+	channel := params.GetNodeParameter("channel", "").(string)
+	emoji := params.GetNodeParameter("emoji", "").(string)
+	timestamp := params.GetNodeParameter("timestamp", "").(string)
+
+	if channel == "" || emoji == "" || timestamp == "" {
+		return nil, fmt.Errorf("channel, emoji, and timestamp are required")
+	}
+
+	body := map[string]interface{}{
+		"channel":   channel,
+		"name":      emoji,
+		"timestamp": timestamp,
+	}
+
+	return n.makeSlackAPICall("reactions.remove", token, body)
+}
+
+func (n *SlackNode) getReactions(token string, params interfaces.ExecutionParams) ([]interface{}, error) {
+	channel := params.GetNodeParameter("channel", "").(string)
+	timestamp := params.GetNodeParameter("timestamp", "").(string)
+
+	if channel == "" || timestamp == "" {
+		return nil, fmt.Errorf("channel and timestamp are required")
+	}
+
+	body := map[string]interface{}{
+		"channel":   channel,
+		"timestamp": timestamp,
+		"full":      true,
+	}
+
+	result, err := n.makeSlackAPICall("reactions.get", token, body)
+	if err != nil {
+		return nil, err
+	}
+
+	if message, ok := result["message"].(map[string]interface{}); ok {
+		if reactions, ok := message["reactions"].([]interface{}); ok {
+			return reactions, nil
+		}
+	}
+
+	return []interface{}{}, nil
+}
+
+// Helper methods
+
+func (n *SlackNode) makeSlackAPICall(method, token string, body map[string]interface{}) (map[string]interface{}, error) {
+	url := fmt.Sprintf("https://slack.com/api/%s", method)
+
+	jsonBody, err := json.Marshal(body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal request body: %w", err)
+	}
+
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonBody))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	resp, err := n.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to make request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	var result map[string]interface{}
+	if err := json.Unmarshal(respBody, &result); err != nil {
+		return nil, fmt.Errorf("failed to parse response: %w", err)
+	}
+
+	// Check for Slack API errors
+	if ok, exists := result["ok"].(bool); exists && !ok {
+		if errorMsg, exists := result["error"].(string); exists {
+			return nil, fmt.Errorf("Slack API error: %s", errorMsg)
+		}
+	}
+
+	return result, nil
+}
+
+func (n *SlackNode) getChannelID(token, channelName string) (string, error) {
+	body := map[string]interface{}{
+		"limit":            100,
+		"exclude_archived": true,
+	}
+
+	result, err := n.makeSlackAPICall("conversations.list", token, body)
+	if err != nil {
+		return "", err
+	}
+
+	if channels, ok := result["channels"].([]interface{}); ok {
+		for _, ch := range channels {
+			if channel, ok := ch.(map[string]interface{}); ok {
+				if name, ok := channel["name"].(string); ok && name == channelName {
+					if id, ok := channel["id"].(string); ok {
+						return id, nil
+					}
+				}
+			}
+		}
+	}
+
+	return "", fmt.Errorf("channel not found: %s", channelName)
+}
+
+// Clone creates a copy of the node
+func (n *SlackNode) Clone() interfaces.Node {
+	return &SlackNode{
+		BaseNode:   n.BaseNode.Clone(),
+		httpClient: n.httpClient,
+	}
+}

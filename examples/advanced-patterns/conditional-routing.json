@@ -1,0 +1,294 @@
+{
+  "name": "Conditional Routing",
+  "description": "Advanced routing logic using Switch node with complex conditions",
+  "category": "advanced-patterns",
+  "difficulty": "advanced",
+  "estimatedTime": "15 minutes",
+  "prerequisites": ["Switch node understanding", "Complex expressions"],
+  "learningObjectives": [
+    "Master conditional routing patterns",
+    "Learn complex expression evaluation",
+    "Practice multi-branch workflow design"
+  ],
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "start",
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "assignments": [
+          {
+            "name": "orders",
+            "value": "[{\"id\": \"ORD-001\", \"amount\": 150.00, \"customer\": {\"tier\": \"gold\", \"country\": \"US\"}, \"items\": 3, \"priority\": \"normal\"}, {\"id\": \"ORD-002\", \"amount\": 2500.00, \"customer\": {\"tier\": \"platinum\", \"country\": \"CA\"}, \"items\": 1, \"priority\": \"urgent\"}, {\"id\": \"ORD-003\", \"amount\": 45.00, \"customer\": {\"tier\": \"silver\", \"country\": \"MX\"}, \"items\": 2, \"priority\": \"normal\"}, {\"id\": \"ORD-004\", \"amount\": 750.00, \"customer\": {\"tier\": \"gold\", \"country\": \"US\"}, \"items\": 5, \"priority\": \"high\"}]"
+          }
+        ]
+      },
+      "id": "set-order-data",
+      "name": "Set Order Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "operation": "parse",
+        "jsonPath": "$json.orders",
+        "includeItemIndex": true
+      },
+      "id": "split-orders",
+      "name": "Split Orders",
+      "type": "n8n-nodes-base.json",
+      "typeVersion": 1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "conditions": [
+          {
+            "field": "{{ $json.data.priority }}",
+            "operation": "equal",
+            "value": "urgent"
+          }
+        ]
+      },
+      "id": "priority-check",
+      "name": "Priority Check",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "conditions": [
+          {
+            "field": "{{ $json.data.amount }}",
+            "operation": "largerEqual",
+            "value": 1000
+          },
+          {
+            "field": "{{ $json.data.customer.tier }}",
+            "operation": "equal",
+            "value": "platinum"
+          }
+        ],
+        "mode": "any"
+      },
+      "id": "vip-check",
+      "name": "VIP Check",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [1120, 200]
+    },
+    {
+      "parameters": {
+        "conditions": [
+          {
+            "field": "{{ $json.data.customer.country }}",
+            "operation": "equal",
+            "value": "US"
+          },
+          {
+            "field": "{{ $json.data.amount }}",
+            "operation": "largerEqual",
+            "value": 100
+          }
+        ],
+        "mode": "all"
+      },
+      "id": "domestic-standard-check",
+      "name": "Domestic Standard Check",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [1120, 400]
+    },
+    {
+      "parameters": {
+        "assignments": [
+          {
+            "name": "routingDecision",
+            "value": "urgent_processing"
+          },
+          {
+            "name": "processingTime",
+            "value": "1 hour"
+          },
+          {
+            "name": "assignedTeam",
+            "value": "urgent_fulfillment"
+          }
+        ]
+      },
+      "id": "urgent-processing",
+      "name": "Urgent Processing",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [1340, 100]
+    },
+    {
+      "parameters": {
+        "assignments": [
+          {
+            "name": "routingDecision",
+            "value": "vip_processing"
+          },
+          {
+            "name": "processingTime",
+            "value": "2 hours"
+          },
+          {
+            "name": "assignedTeam",
+            "value": "vip_fulfillment"
+          }
+        ]
+      },
+      "id": "vip-processing",
+      "name": "VIP Processing",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [1340, 200]
+    },
+    {
+      "parameters": {
+        "assignments": [
+          {
+            "name": "routingDecision",
+            "value": "standard_processing"
+          },
+          {
+            "name": "processingTime",
+            "value": "24 hours"
+          },
+          {
+            "name": "assignedTeam",
+            "value": "standard_fulfillment"
+          }
+        ]
+      },
+      "id": "standard-processing",
+      "name": "Standard Processing",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [1340, 300]
+    },
+    {
+      "parameters": {
+        "assignments": [
+          {
+            "name": "routingDecision",
+            "value": "international_processing"
+          },
+          {
+            "name": "processingTime",
+            "value": "3-5 days"
+          },
+          {
+            "name": "assignedTeam",
+            "value": "international_fulfillment"
+          }
+        ]
+      },
+      "id": "international-processing",
+      "name": "International Processing",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [1340, 500]
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Set Order Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Order Data": {
+      "main": [
+        [
+          {
+            "node": "Split Orders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Orders": {
+      "main": [
+        [
+          {
+            "node": "Priority Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Priority Check": {
+      "main": [
+        [
+          {
+            "node": "Urgent Processing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "VIP Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "VIP Check": {
+      "main": [
+        [
+          {
+            "node": "VIP Processing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Domestic Standard Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Domestic Standard Check": {
+      "main": [
+        [
+          {
+            "node": "Standard Processing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "International Processing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "1"
+}

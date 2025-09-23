@@ -1,0 +1,237 @@
+{
+  "id": "basic-automation-001",
+  "name": "Basic HTTP to Email Automation",
+  "description": "A simple automation template that monitors an HTTP endpoint and sends email notifications when specific conditions are met. Perfect for API monitoring and alerting scenarios.",
+  "version": "1.0.0",
+  "author": "n8n-go Team",
+  "category": "automation",
+  "tags": ["http", "email", "monitoring", "alerting", "api"],
+  "parameters": {
+    "http_url": {
+      "name": "http_url",
+      "type": "string",
+      "description": "The HTTP endpoint to monitor",
+      "required": true,
+      "placeholder": "https://api.example.com/health",
+      "validation": "value && value.startsWith('http')",
+      "group": "HTTP Configuration"
+    },
+    "http_method": {
+      "name": "http_method",
+      "type": "select",
+      "description": "HTTP method to use",
+      "required": true,
+      "default_value": "GET",
+      "options": ["GET", "POST", "PUT", "DELETE"],
+      "group": "HTTP Configuration"
+    },
+    "check_interval": {
+      "name": "check_interval",
+      "type": "number",
+      "description": "Check interval in minutes",
+      "required": true,
+      "default_value": 5,
+      "validation": "value && value > 0 && value <= 60",
+      "group": "Timing"
+    },
+    "email_recipient": {
+      "name": "email_recipient",
+      "type": "string",
+      "description": "Email address to send notifications to",
+      "required": true,
+      "validation": "value && /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(value)",
+      "placeholder": "admin@example.com",
+      "group": "Email Configuration"
+    },
+    "email_subject": {
+      "name": "email_subject",
+      "type": "string",
+      "description": "Subject line for notification emails",
+      "required": false,
+      "default_value": "API Monitoring Alert",
+      "group": "Email Configuration"
+    },
+    "success_status_codes": {
+      "name": "success_status_codes",
+      "type": "array",
+      "description": "HTTP status codes considered successful",
+      "required": false,
+      "default_value": [200, 201, 202],
+      "group": "Conditions"
+    },
+    "alert_on_failure_only": {
+      "name": "alert_on_failure_only",
+      "type": "boolean",
+      "description": "Only send alerts when the endpoint fails",
+      "required": false,
+      "default_value": true,
+      "group": "Conditions"
+    },
+    "workflow_name": {
+      "name": "workflow_name",
+      "type": "string",
+      "description": "Name for the created workflow",
+      "required": false,
+      "default_value": "HTTP Monitoring - {{http_url}}",
+      "group": "Workflow Settings"
+    }
+  },
+  "workflow": {
+    "id": "{{workflow_name | slugify}}",
+    "name": "{{workflow_name}}",
+    "description": "Automated workflow to monitor {{http_url}} and send email alerts",
+    "active": true,
+    "nodes": [
+      {
+        "id": "trigger-1",
+        "name": "Schedule Trigger",
+        "type": "schedule",
+        "position": [100, 100],
+        "config": {
+          "interval": "{{check_interval}}m",
+          "timezone": "UTC"
+        }
+      },
+      {
+        "id": "http-1",
+        "name": "HTTP Request",
+        "type": "http",
+        "position": [300, 100],
+        "config": {
+          "url": "{{http_url}}",
+          "method": "{{http_method}}",
+          "timeout": 30,
+          "retry": {
+            "enabled": true,
+            "max_attempts": 3,
+            "delay": 1000
+          }
+        }
+      },
+      {
+        "id": "condition-1",
+        "name": "Check Status",
+        "type": "condition",
+        "position": [500, 100],
+        "config": {
+          "condition": "{{$node['HTTP Request'].json.status_code}} in {{success_status_codes}}"
+        }
+      },
+      {
+        "id": "email-success",
+        "name": "Success Email",
+        "type": "email",
+        "position": [700, 50],
+        "config": {
+          "to": "{{email_recipient}}",
+          "subject": "✅ {{email_subject}} - Success",
+          "body": "The endpoint {{http_url}} is responding normally.\n\nStatus Code: {{$node['HTTP Request'].json.status_code}}\nResponse Time: {{$node['HTTP Request'].json.response_time}}ms\nTimestamp: {{new Date().toISOString()}}"
+        }
+      },
+      {
+        "id": "email-failure",
+        "name": "Failure Email",
+        "type": "email",
+        "position": [700, 150],
+        "config": {
+          "to": "{{email_recipient}}",
+          "subject": "❌ {{email_subject}} - Failure",
+          "body": "ALERT: The endpoint {{http_url}} is not responding as expected.\n\nStatus Code: {{$node['HTTP Request'].json.status_code || 'Connection Failed'}}\nError: {{$node['HTTP Request'].json.error || 'Unknown error'}}\nTimestamp: {{new Date().toISOString()}}\n\nPlease investigate immediately."
+        }
+      }
+    ],
+    "connections": [
+      {
+        "source": "trigger-1",
+        "target": "http-1",
+        "output": "main",
+        "input": "main"
+      },
+      {
+        "source": "http-1",
+        "target": "condition-1",
+        "output": "main",
+        "input": "main"
+      },
+      {
+        "source": "condition-1",
+        "target": "email-success",
+        "output": "true",
+        "input": "main",
+        "condition": "!{{alert_on_failure_only}}"
+      },
+      {
+        "source": "condition-1",
+        "target": "email-failure",
+        "output": "false",
+        "input": "main"
+      }
+    ]
+  },
+  "dependencies": [
+    "schedule-node",
+    "http-node",
+    "condition-node",
+    "email-node"
+  ],
+  "requirements": {
+    "min_version": "0.3.0",
+    "required_nodes": [
+      "schedule",
+      "http",
+      "condition",
+      "email"
+    ],
+    "optional_nodes": [],
+    "credentials": [
+      "email-smtp"
+    ],
+    "environment": {
+      "SMTP_HOST": "SMTP server hostname",
+      "SMTP_PORT": "SMTP server port",
+      "SMTP_USER": "SMTP username",
+      "SMTP_PASS": "SMTP password"
+    },
+    "permissions": [
+      "network:http",
+      "credentials:email"
+    ]
+  },
+  "metadata": {
+    "downloads": 1250,
+    "rating": 4.7,
+    "reviews": 23,
+    "screenshots": [
+      "screenshots/basic-automation-overview.png",
+      "screenshots/basic-automation-config.png"
+    ],
+    "documentation": "https://docs.n8n-go.dev/templates/basic-automation",
+    "repository": "https://github.com/n8n-go/templates",
+    "license": "MIT",
+    "keywords": [
+      "monitoring",
+      "alerting",
+      "http",
+      "email",
+      "automation",
+      "api",
+      "uptime",
+      "notifications"
+    ],
+    "use_cases": [
+      "API endpoint monitoring",
+      "Website uptime monitoring",
+      "Service health checks",
+      "Automated alerting",
+      "DevOps monitoring"
+    ],
+    "industry": [
+      "Technology",
+      "DevOps",
+      "IT Operations",
+      "Software Development"
+    ]
+  },
+  "created_at": "2024-12-20T10:00:00Z",
+  "updated_at": "2024-12-20T10:00:00Z"
+}

@@ -1,0 +1,139 @@
+{
+  "name": "Complex Expressions Integration Test",
+  "active": true,
+  "nodes": [
+    {
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "parameters": {}
+    },
+    {
+      "name": "Set Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [450, 300],
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "fullName",
+              "value": "={{ upper(trim($json.firstName)) }} {{ upper(trim($json.lastName)) }}"
+            },
+            {
+              "name": "email",
+              "value": "={{ lower(trim($json.firstName)) }}.{{ lower(trim($json.lastName)) }}@company.com"
+            },
+            {
+              "name": "ageCategory",
+              "value": "={{ $json.age >= 18 ? 'adult' : 'minor' }}"
+            },
+            {
+              "name": "initials",
+              "value": "={{ substring($json.firstName, 0, 1) }}{{ substring($json.lastName, 0, 1) }}"
+            }
+          ],
+          "number": [
+            {
+              "name": "ageInMonths",
+              "value": "={{ multiply($json.age, 12) }}"
+            },
+            {
+              "name": "random",
+              "value": "={{ randomInt(1, 100) }}"
+            }
+          ],
+          "boolean": [
+            {
+              "name": "isAdult",
+              "value": "={{ $json.age >= 18 }}"
+            },
+            {
+              "name": "hasLongName",
+              "value": "={{ length($json.firstName) > 5 }}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Filter Adults",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 1,
+      "position": [650, 300],
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.ageCategory }}",
+              "operation": "equal",
+              "value2": "adult"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Transform Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [850, 300],
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "processedAt",
+              "value": "={{ formatDate(now(), 'yyyy-MM-dd HH:mm:ss') }}"
+            },
+            {
+              "name": "summary",
+              "value": "={{ $json.fullName }} ({{ $json.ageInMonths }} months old) - {{ if($json.hasLongName, 'Long name', 'Short name') }}"
+            }
+          ],
+          "object": [
+            {
+              "name": "metadata",
+              "value": "={{ {\"processed\": true, \"source\": \"n8n-go\", \"timestamp\": now()} }}"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Set Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Data": {
+      "main": [
+        [
+          {
+            "node": "Filter Adults",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Adults": {
+      "main": [
+        [
+          {
+            "node": "Transform Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "name": "Realistic Expression Test",
+  "active": true,
+  "nodes": [
+    {
+      "name": "Set Initial Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "parameters": {
+        "assignments": [
+          {
+            "name": "name",
+            "value": "John"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Create Greeting",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [450, 300],
+      "parameters": {
+        "assignments": [
+          {
+            "name": "greeting",
+            "value": "Hello {{ uppercase($json.name) }}!"
+          }
+        ]
+      }
+    }
+  ],
+  "connections": {}
+}

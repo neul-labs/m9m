@@ -1,0 +1,221 @@
+{
+  "name": "Webhook Processing",
+  "description": "Handle incoming webhook requests with authentication and data processing",
+  "category": "api-integration",
+  "difficulty": "intermediate",
+  "estimatedTime": "10 minutes",
+  "prerequisites": ["Understanding of HTTP", "Webhook concepts"],
+  "learningObjectives": [
+    "Learn webhook node configuration",
+    "Practice request data processing",
+    "Understand webhook security"
+  ],
+  "nodes": [
+    {
+      "parameters": {
+        "path": "/webhook/user-signup",
+        "httpMethod": "POST",
+        "authentication": "headerAuth",
+        "headerName": "X-API-Key",
+        "headerValue": "{{ $env.WEBHOOK_SECRET }}"
+      },
+      "id": "webhook-trigger",
+      "name": "User Signup Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "webhookId": "user-signup-webhook"
+    },
+    {
+      "parameters": {
+        "assignments": [
+          {
+            "name": "userId",
+            "value": "{{ $json.body.user_id || 'unknown' }}"
+          },
+          {
+            "name": "email",
+            "value": "{{ lower(trim($json.body.email || '')) }}"
+          },
+          {
+            "name": "fullName",
+            "value": "{{ trim(($json.body.first_name || '') + ' ' + ($json.body.last_name || '')) }}"
+          },
+          {
+            "name": "signupSource",
+            "value": "{{ $json.body.source || 'web' }}"
+          },
+          {
+            "name": "requestIP",
+            "value": "{{ $json.headers['x-forwarded-for'] || $json.headers['x-real-ip'] || 'unknown' }}"
+          },
+          {
+            "name": "userAgent",
+            "value": "{{ $json.headers['user-agent'] || 'unknown' }}"
+          },
+          {
+            "name": "receivedAt",
+            "value": "{{ formatDate(now(), 'yyyy-MM-dd HH:mm:ss') }}"
+          }
+        ]
+      },
+      "id": "extract-user-data",
+      "name": "Extract User Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "assignments": [
+          {
+            "name": "isValidEmail",
+            "value": "{{ regex($json.email, '^[^@]+@[^@]+\\\\.[^@]+$') }}"
+          },
+          {
+            "name": "hasRequiredFields",
+            "value": "{{ and(isNotEmpty($json.email), isNotEmpty($json.fullName), isNotEmpty($json.userId)) }}"
+          },
+          {
+            "name": "isSuspiciousRequest",
+            "value": "{{ or(isEmpty($json.requestIP), includes(lower($json.userAgent), 'bot')) }}"
+          }
+        ]
+      },
+      "id": "validate-data",
+      "name": "Validate Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "conditions": [
+          {
+            "field": "isValidEmail",
+            "operation": "equal",
+            "value": true
+          },
+          {
+            "field": "hasRequiredFields",
+            "operation": "equal",
+            "value": true
+          },
+          {
+            "field": "isSuspiciousRequest",
+            "operation": "equal",
+            "value": false
+          }
+        ],
+        "mode": "all"
+      },
+      "id": "validation-switch",
+      "name": "Validation Switch",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "assignments": [
+          {
+            "name": "status",
+            "value": "success"
+          },
+          {
+            "name": "message",
+            "value": "User registration processed successfully"
+          },
+          {
+            "name": "processedUser",
+            "value": "{{ {id: $json.userId, email: $json.email, name: $json.fullName, source: $json.signupSource, processedAt: $json.receivedAt} }}"
+          }
+        ]
+      },
+      "id": "process-valid-user",
+      "name": "Process Valid User",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [1120, 200]
+    },
+    {
+      "parameters": {
+        "assignments": [
+          {
+            "name": "status",
+            "value": "error"
+          },
+          {
+            "name": "message",
+            "value": "{{ if(not($json.isValidEmail), 'Invalid email format', if(not($json.hasRequiredFields), 'Missing required fields', 'Suspicious request detected')) }}"
+          },
+          {
+            "name": "rejectedAt",
+            "value": "{{ formatDate(now(), 'yyyy-MM-dd HH:mm:ss') }}"
+          }
+        ]
+      },
+      "id": "handle-invalid-user",
+      "name": "Handle Invalid User",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [1120, 400]
+    }
+  ],
+  "connections": {
+    "User Signup Webhook": {
+      "main": [
+        [
+          {
+            "node": "Extract User Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract User Data": {
+      "main": [
+        [
+          {
+            "node": "Validate Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Data": {
+      "main": [
+        [
+          {
+            "node": "Validation Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validation Switch": {
+      "main": [
+        [
+          {
+            "node": "Process Valid User",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Handle Invalid User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "1"
+}

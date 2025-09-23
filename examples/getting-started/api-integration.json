@@ -1,0 +1,126 @@
+{
+  "name": "API Integration",
+  "description": "Basic HTTP API integration showing request handling and response processing",
+  "category": "getting-started",
+  "difficulty": "beginner",
+  "estimatedTime": "5 minutes",
+  "prerequisites": ["Basic HTTP knowledge"],
+  "learningObjectives": [
+    "Learn HTTP Request node usage",
+    "Practice API response handling",
+    "Understand error handling patterns"
+  ],
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "start",
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://jsonplaceholder.typicode.com/users",
+        "method": "GET",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "fetch-users",
+      "name": "Fetch Users",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "operation": "extract",
+        "extractionFields": [
+          {
+            "name": "userCount",
+            "path": "{{ length($json) }}"
+          },
+          {
+            "name": "usernames",
+            "path": "{{ $json.map(user => user.username) }}"
+          },
+          {
+            "name": "companies",
+            "path": "{{ unique($json.map(user => user.company.name)) }}"
+          },
+          {
+            "name": "cities",
+            "path": "{{ unique($json.map(user => user.address.city)) }}"
+          }
+        ]
+      },
+      "id": "extract-summary",
+      "name": "Extract Summary",
+      "type": "n8n-nodes-base.json",
+      "typeVersion": 1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "assignments": [
+          {
+            "name": "summary",
+            "value": "Found {{ $json.userCount }} users from {{ length($json.companies) }} companies in {{ length($json.cities) }} cities"
+          },
+          {
+            "name": "processedAt",
+            "value": "{{ formatDate(now(), 'yyyy-MM-dd HH:mm:ss') }}"
+          },
+          {
+            "name": "apiSource",
+            "value": "JSONPlaceholder"
+          }
+        ]
+      },
+      "id": "format-results",
+      "name": "Format Results",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [900, 300]
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Fetch Users",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Users": {
+      "main": [
+        [
+          {
+            "node": "Extract Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Summary": {
+      "main": [
+        [
+          {
+            "node": "Format Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "1"
+}
