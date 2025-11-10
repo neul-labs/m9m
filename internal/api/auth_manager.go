@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"crypto/subtle"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -356,7 +357,8 @@ func (am *AuthManager) writeErrorResponse(w http.ResponseWriter, statusCode int,
 		"timestamp": time.Now().UTC().Format(time.RFC3339),
 	}
 
-	WriteJSONResponse(w, errorResponse)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(errorResponse)
 }
 
 // generateID generates a random ID

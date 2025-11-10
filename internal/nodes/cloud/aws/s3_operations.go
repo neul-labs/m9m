@@ -14,9 +14,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 
-	"github.com/n8n-go/n8n-go/internal/expressions"
-	"github.com/n8n-go/n8n-go/internal/model"
-	"github.com/n8n-go/n8n-go/internal/nodes/base"
+	"github.com/dipankar/n8n-go/internal/expressions"
+	"github.com/dipankar/n8n-go/internal/model"
+	"github.com/dipankar/n8n-go/internal/nodes/base"
 )
 
 // S3OperationsNode provides comprehensive S3 operations

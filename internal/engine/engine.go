@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"sync"
 	
-	"github.com/yourusername/n8n-go/internal/model"
-	"github.com/yourusername/n8n-go/internal/nodes/base"
-	"github.com/yourusername/n8n-go/internal/connections"
-	"github.com/yourusername/n8n-go/internal/credentials"
+	"github.com/dipankar/n8n-go/internal/model"
+	"github.com/dipankar/n8n-go/internal/nodes/base"
+	"github.com/dipankar/n8n-go/internal/connections"
+	"github.com/dipankar/n8n-go/internal/credentials"
 )
 
 // ExecutionResult represents the result of a workflow execution

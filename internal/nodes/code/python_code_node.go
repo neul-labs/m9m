@@ -6,9 +6,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/n8n-go/internal/core/base"
-	"github.com/n8n-go/internal/core/interfaces"
-	"github.com/n8n-go/internal/runtime"
+	"github.com/dipankar/n8n-go/internal/nodes/base"
+	"github.com/dipankar/n8n-go/internal/runtime"
 )
 
 // PythonCodeNode executes Python code with n8n compatibility
@@ -20,7 +19,7 @@ type PythonCodeNode struct {
 // NewPythonCodeNode creates a new Python code execution node
 func NewPythonCodeNode() *PythonCodeNode {
 	node := &PythonCodeNode{
-		BaseNode: base.NewBaseNode("PythonCode", "Execute Python Code"),
+		BaseNode: base.NewBaseNode(base.NodeDescription{Name: "PythonCode", Description: "Execute Python Code", Category: "core"}),
 	}
 
 	// Initialize embedded Python runtime
@@ -36,8 +35,8 @@ func NewPythonCodeNode() *PythonCodeNode {
 }
 
 // GetMetadata returns the node metadata
-func (n *PythonCodeNode) GetMetadata() interfaces.NodeMetadata {
-	return interfaces.NodeMetadata{
+func (n *PythonCodeNode) GetMetadata() base.NodeMetadata {
+	return base.NodeMetadata{
 		Name:        "PythonCode",
 		DisplayName: "Python Code",
 		Description: "Execute Python code with n8n compatibility",
@@ -45,8 +44,8 @@ func (n *PythonCodeNode) GetMetadata() interfaces.NodeMetadata {
 		Version:     1,
 		Inputs:      []string{"main"},
 		Outputs:     []string{"main"},
-		Credentials: []interfaces.CredentialType{},
-		Properties: []interfaces.NodeProperty{
+		Credentials: []base.CredentialType{},
+		Properties: []base.NodeProperty{
 			{
 				Name:        "pythonCode",
 				DisplayName: "Python Code",
@@ -63,7 +62,7 @@ func (n *PythonCodeNode) GetMetadata() interfaces.NodeMetadata {
 				Name:        "mode",
 				DisplayName: "Mode",
 				Type:        "options",
-				Options: []interfaces.OptionItem{
+				Options: []base.OptionItem{
 					{Name: "Run Once for All Items", Value: "runOnce"},
 					{Name: "Run Once for Each Item", Value: "runForEach"},
 				},
@@ -82,12 +81,12 @@ func (n *PythonCodeNode) GetMetadata() interfaces.NodeMetadata {
 }
 
 // Execute runs the Python code
-func (n *PythonCodeNode) Execute(ctx context.Context, params interfaces.ExecutionParams) (interfaces.NodeOutput, error) {
+func (n *PythonCodeNode) Execute(ctx context.Context, params base.ExecutionParams) (base.NodeOutput, error) {
 	if n.pythonRuntime == nil {
 		// Try to initialize runtime if it failed during construction
 		pyRuntime, err := runtime.NewEmbeddedPythonRuntime()
 		if err != nil {
-			return interfaces.NodeOutput{}, fmt.Errorf("failed to initialize Python runtime: %w", err)
+			return base.NodeOutput{}, fmt.Errorf("failed to initialize Python runtime: %w", err)
 		}
 		n.pythonRuntime = pyRuntime
 	}
@@ -100,10 +99,10 @@ func (n *PythonCodeNode) Execute(ctx context.Context, params interfaces.Executio
 	// Get input data
 	input := params.GetInputData()
 	if len(input) == 0 {
-		input = []interfaces.ItemData{{JSON: map[string]interface{}{}}}
+		input = []base.ItemData{{JSON: map[string]interface{}{}}}
 	}
 
-	var outputItems []interfaces.ItemData
+	var outputItems []base.ItemData
 
 	if mode == "runOnce" {
 		// Run once for all items
@@ -122,23 +121,23 @@ func (n *PythonCodeNode) Execute(ctx context.Context, params interfaces.Executio
 		if err != nil {
 			if continueOnFail {
 				// Return error as data
-				outputItems = append(outputItems, interfaces.ItemData{
+				outputItems = append(outputItems, base.ItemData{
 					JSON: map[string]interface{}{
 						"error": err.Error(),
 					},
 				})
 			} else {
-				return interfaces.NodeOutput{}, fmt.Errorf("Python execution failed: %w", err)
+				return base.NodeOutput{}, fmt.Errorf("Python execution failed: %w", err)
 			}
 		} else if result.Type == "error" {
 			if continueOnFail {
-				outputItems = append(outputItems, interfaces.ItemData{
+				outputItems = append(outputItems, base.ItemData{
 					JSON: map[string]interface{}{
 						"error": result.Error,
 					},
 				})
 			} else {
-				return interfaces.NodeOutput{}, fmt.Errorf("Python code error: %s", result.Error)
+				return base.NodeOutput{}, fmt.Errorf("Python code error: %s", result.Error)
 			}
 		} else {
 			// Process result
@@ -148,19 +147,19 @@ func (n *PythonCodeNode) Execute(ctx context.Context, params interfaces.Executio
 					// Multiple items returned
 					for _, item := range v {
 						if itemMap, ok := item.(map[string]interface{}); ok {
-							outputItems = append(outputItems, interfaces.ItemData{JSON: itemMap})
+							outputItems = append(outputItems, base.ItemData{JSON: itemMap})
 						} else {
-							outputItems = append(outputItems, interfaces.ItemData{
+							outputItems = append(outputItems, base.ItemData{
 								JSON: map[string]interface{}{"value": item},
 							})
 						}
 					}
 				case map[string]interface{}:
 					// Single object returned
-					outputItems = append(outputItems, interfaces.ItemData{JSON: v})
+					outputItems = append(outputItems, base.ItemData{JSON: v})
 				default:
 					// Primitive value returned
-					outputItems = append(outputItems, interfaces.ItemData{
+					outputItems = append(outputItems, base.ItemData{
 						JSON: map[string]interface{}{"value": v},
 					})
 				}
@@ -181,7 +180,7 @@ func (n *PythonCodeNode) Execute(ctx context.Context, params interfaces.Executio
 
 			if err != nil {
 				if continueOnFail {
-					outputItems = append(outputItems, interfaces.ItemData{
+					outputItems = append(outputItems, base.ItemData{
 						JSON: map[string]interface{}{
 							"error": err.Error(),
 							"originalItem": item.JSON,
@@ -189,11 +188,11 @@ func (n *PythonCodeNode) Execute(ctx context.Context, params interfaces.Executio
 						Index: item.Index,
 					})
 				} else {
-					return interfaces.NodeOutput{}, fmt.Errorf("Python execution failed for item %d: %w", item.Index, err)
+					return base.NodeOutput{}, fmt.Errorf("Python execution failed for item %d: %w", item.Index, err)
 				}
 			} else if result.Type == "error" {
 				if continueOnFail {
-					outputItems = append(outputItems, interfaces.ItemData{
+					outputItems = append(outputItems, base.ItemData{
 						JSON: map[string]interface{}{
 							"error": result.Error,
 							"originalItem": item.JSON,
@@ -201,18 +200,18 @@ func (n *PythonCodeNode) Execute(ctx context.Context, params interfaces.Executio
 						Index: item.Index,
 					})
 				} else {
-					return interfaces.NodeOutput{}, fmt.Errorf("Python code error for item %d: %s", item.Index, result.Error)
+					return base.NodeOutput{}, fmt.Errorf("Python code error for item %d: %s", item.Index, result.Error)
 				}
 			} else {
 				// Process result
 				if result.Output != nil {
 					if outputMap, ok := result.Output.(map[string]interface{}); ok {
-						outputItems = append(outputItems, interfaces.ItemData{
+						outputItems = append(outputItems, base.ItemData{
 							JSON:  outputMap,
 							Index: item.Index,
 						})
 					} else {
-						outputItems = append(outputItems, interfaces.ItemData{
+						outputItems = append(outputItems, base.ItemData{
 							JSON: map[string]interface{}{"value": result.Output},
 							Index: item.Index,
 						})
@@ -225,7 +224,7 @@ func (n *PythonCodeNode) Execute(ctx context.Context, params interfaces.Executio
 		}
 	}
 
-	return interfaces.NodeOutput{
+	return base.NodeOutput{
 		Items: outputItems,
 	}, nil
 }
@@ -246,7 +245,7 @@ func (n *PythonCodeNode) ValidateParameters(params map[string]interface{}) error
 }
 
 // Clone creates a copy of the node
-func (n *PythonCodeNode) Clone() interfaces.Node {
+func (n *PythonCodeNode) Clone() base.Node {
 	return &PythonCodeNode{
 		BaseNode:      n.BaseNode.Clone(),
 		pythonRuntime: n.pythonRuntime, // Share runtime instance

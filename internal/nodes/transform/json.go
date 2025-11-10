@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/yourusername/n8n-go/internal/expressions"
-	"github.com/yourusername/n8n-go/internal/model"
-	"github.com/yourusername/n8n-go/internal/nodes/base"
+	"github.com/dipankar/n8n-go/internal/expressions"
+	"github.com/dipankar/n8n-go/internal/model"
+	"github.com/dipankar/n8n-go/internal/nodes/base"
 )
 
 // JSONNode implements the JSON node functionality for parsing and manipulating JSON data

@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 	
-	"github.com/yourusername/n8n-go/internal/model"
-	"github.com/yourusername/n8n-go/internal/nodes/base"
+	"github.com/dipankar/n8n-go/internal/model"
+	"github.com/dipankar/n8n-go/internal/nodes/base"
 )
 
 func TestReadBinaryFileNodeCreation(t *testing.T) {

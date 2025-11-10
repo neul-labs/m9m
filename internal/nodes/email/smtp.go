@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/n8n-go/n8n-go/internal/expressions"
-	"github.com/n8n-go/n8n-go/internal/model"
-	"github.com/n8n-go/n8n-go/internal/nodes/base"
+	"github.com/dipankar/n8n-go/internal/expressions"
+	"github.com/dipankar/n8n-go/internal/model"
+	"github.com/dipankar/n8n-go/internal/nodes/base"
 )
 
 // SMTPNode sends emails via SMTP
@@ -54,8 +54,8 @@ type EmailAttachment struct {
 // NewSMTPNode creates a new SMTP node
 func NewSMTPNode() *SMTPNode {
 	return &SMTPNode{
-		BaseNode:  base.NewBaseNode("Send Email", "n8n-nodes-base.smtp"),
-		evaluator: expressions.NewGojaExpressionEvaluator(),
+		BaseNode:  base.NewBaseNode(base.NodeDescription{Name: "Send Email", Description: "n8n-nodes-base.smtp", Category: "core"}),
+		evaluator: expressions.NewGojaExpressionEvaluator(expressions.DefaultEvaluatorConfig()),
 	}
 }
 
@@ -79,7 +79,7 @@ func (n *SMTPNode) Execute(inputData []model.DataItem, nodeParams map[string]int
 			ItemIndex:          index,
 			Mode:               expressions.ModeManual,
 			ConnectionInputData: []model.DataItem{item},
-			AdditionalKeys:     make(map[string]interface{}),
+			AdditionalKeys: &expressions.AdditionalKeys{},
 		}
 
 		// Build email message

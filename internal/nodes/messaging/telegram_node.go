@@ -12,8 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/n8n-go/internal/core/base"
-	"github.com/n8n-go/internal/core/interfaces"
+	"github.com/dipankar/n8n-go/internal/nodes/base"
 )
 
 // TelegramNode provides Telegram messaging operations
@@ -25,7 +24,7 @@ type TelegramNode struct {
 // NewTelegramNode creates a new Telegram node
 func NewTelegramNode() *TelegramNode {
 	return &TelegramNode{
-		BaseNode: base.NewBaseNode("Telegram", "Telegram Bot"),
+		BaseNode: base.NewBaseNode(base.NodeDescription{Name: "Telegram", Description: "Telegram Bot", Category: "core"}),
 		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
 		},
@@ -33,8 +32,8 @@ func NewTelegramNode() *TelegramNode {
 }
 
 // GetMetadata returns the node metadata
-func (n *TelegramNode) GetMetadata() interfaces.NodeMetadata {
-	return interfaces.NodeMetadata{
+func (n *TelegramNode) GetMetadata() base.NodeMetadata {
+	return base.NodeMetadata{
 		Name:        "Telegram",
 		DisplayName: "Telegram",
 		Description: "Send messages, manage chats, and interact with Telegram Bot API",
@@ -42,19 +41,19 @@ func (n *TelegramNode) GetMetadata() interfaces.NodeMetadata {
 		Version:     1,
 		Inputs:      []string{"main"},
 		Outputs:     []string{"main"},
-		Credentials: []interfaces.CredentialType{
+		Credentials: []base.CredentialType{
 			{
 				Name:        "telegramApi",
 				Required:    true,
 				DisplayName: "Telegram Bot API",
 			},
 		},
-		Properties: []interfaces.NodeProperty{
+		Properties: []base.NodeProperty{
 			{
 				Name:        "resource",
 				DisplayName: "Resource",
 				Type:        "options",
-				Options: []interfaces.OptionItem{
+				Options: []base.OptionItem{
 					{Name: "Message", Value: "message"},
 					{Name: "Chat", Value: "chat"},
 					{Name: "Callback Query", Value: "callbackQuery"},
@@ -69,7 +68,7 @@ func (n *TelegramNode) GetMetadata() interfaces.NodeMetadata {
 				Name:        "operation",
 				DisplayName: "Operation",
 				Type:        "options",
-				Options: []interfaces.OptionItem{
+				Options: []base.OptionItem{
 					{Name: "Send Message", Value: "sendMessage"},
 					{Name: "Send Photo", Value: "sendPhoto"},
 					{Name: "Send Document", Value: "sendDocument"},
@@ -131,7 +130,7 @@ func (n *TelegramNode) GetMetadata() interfaces.NodeMetadata {
 				Name:        "parseMode",
 				DisplayName: "Parse Mode",
 				Type:        "options",
-				Options: []interfaces.OptionItem{
+				Options: []base.OptionItem{
 					{Name: "None", Value: ""},
 					{Name: "Markdown", Value: "Markdown"},
 					{Name: "MarkdownV2", Value: "MarkdownV2"},
@@ -257,16 +256,16 @@ func (n *TelegramNode) GetMetadata() interfaces.NodeMetadata {
 }
 
 // Execute runs the Telegram operation
-func (n *TelegramNode) Execute(ctx context.Context, params interfaces.ExecutionParams) (interfaces.NodeOutput, error) {
+func (n *TelegramNode) Execute(ctx context.Context, params base.ExecutionParams) (base.NodeOutput, error) {
 	// Get credentials
 	credentials, err := params.GetCredentials("telegramApi")
 	if err != nil {
-		return interfaces.NodeOutput{}, fmt.Errorf("failed to get Telegram credentials: %w", err)
+		return base.NodeOutput{}, fmt.Errorf("failed to get Telegram credentials: %w", err)
 	}
 
 	botToken, ok := credentials["botToken"].(string)
 	if !ok || botToken == "" {
-		return interfaces.NodeOutput{}, fmt.Errorf("Telegram bot token not found")
+		return base.NodeOutput{}, fmt.Errorf("Telegram bot token not found")
 	}
 
 	// Get resource and operation
@@ -291,28 +290,28 @@ func (n *TelegramNode) Execute(ctx context.Context, params interfaces.ExecutionP
 	}
 
 	if err != nil {
-		return interfaces.NodeOutput{}, err
+		return base.NodeOutput{}, err
 	}
 
 	// Format output
-	var outputItems []interfaces.ItemData
+	var outputItems []base.ItemData
 	switch v := result.(type) {
 	case map[string]interface{}:
-		outputItems = append(outputItems, interfaces.ItemData{
+		outputItems = append(outputItems, base.ItemData{
 			JSON:  v,
 			Index: 0,
 		})
 	case []interface{}:
 		for i, item := range v {
 			if itemMap, ok := item.(map[string]interface{}); ok {
-				outputItems = append(outputItems, interfaces.ItemData{
+				outputItems = append(outputItems, base.ItemData{
 					JSON:  itemMap,
 					Index: i,
 				})
 			}
 		}
 	default:
-		outputItems = append(outputItems, interfaces.ItemData{
+		outputItems = append(outputItems, base.ItemData{
 			JSON: map[string]interface{}{
 				"result": result,
 			},
@@ -320,14 +319,14 @@ func (n *TelegramNode) Execute(ctx context.Context, params interfaces.ExecutionP
 		})
 	}
 
-	return interfaces.NodeOutput{
+	return base.NodeOutput{
 		Items: outputItems,
 	}, nil
 }
 
 // Message resource handlers
 
-func (n *TelegramNode) handleMessageResource(token, operation string, params interfaces.ExecutionParams) (interface{}, error) {
+func (n *TelegramNode) handleMessageResource(token, operation string, params base.ExecutionParams) (interface{}, error) {
 	chatId := params.GetNodeParameter("chatId", "").(string)
 	if chatId == "" {
 		return nil, fmt.Errorf("chat ID is required")
@@ -363,7 +362,7 @@ func (n *TelegramNode) handleMessageResource(token, operation string, params int
 	}
 }
 
-func (n *TelegramNode) sendMessage(token, chatId string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+func (n *TelegramNode) sendMessage(token, chatId string, params base.ExecutionParams) (map[string]interface{}, error) {
 	text := params.GetNodeParameter("text", "").(string)
 	if text == "" {
 		return nil, fmt.Errorf("text is required")
@@ -400,7 +399,7 @@ func (n *TelegramNode) sendMessage(token, chatId string, params interfaces.Execu
 	return n.makeTelegramRequest("sendMessage", token, body)
 }
 
-func (n *TelegramNode) sendPhoto(token, chatId string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+func (n *TelegramNode) sendPhoto(token, chatId string, params base.ExecutionParams) (map[string]interface{}, error) {
 	photo := params.GetNodeParameter("photo", "").(string)
 	if photo == "" {
 		return nil, fmt.Errorf("photo is required")
@@ -421,7 +420,7 @@ func (n *TelegramNode) sendPhoto(token, chatId string, params interfaces.Executi
 	return n.makeTelegramRequest("sendPhoto", token, body)
 }
 
-func (n *TelegramNode) sendDocument(token, chatId string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+func (n *TelegramNode) sendDocument(token, chatId string, params base.ExecutionParams) (map[string]interface{}, error) {
 	document := params.GetNodeParameter("document", "").(string)
 	if document == "" {
 		return nil, fmt.Errorf("document is required")
@@ -439,7 +438,7 @@ func (n *TelegramNode) sendDocument(token, chatId string, params interfaces.Exec
 	return n.makeTelegramRequest("sendDocument", token, body)
 }
 
-func (n *TelegramNode) sendAudio(token, chatId string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+func (n *TelegramNode) sendAudio(token, chatId string, params base.ExecutionParams) (map[string]interface{}, error) {
 	audio := params.GetNodeParameter("audio", "").(string)
 	if audio == "" {
 		return nil, fmt.Errorf("audio is required")
@@ -457,7 +456,7 @@ func (n *TelegramNode) sendAudio(token, chatId string, params interfaces.Executi
 	return n.makeTelegramRequest("sendAudio", token, body)
 }
 
-func (n *TelegramNode) sendVideo(token, chatId string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+func (n *TelegramNode) sendVideo(token, chatId string, params base.ExecutionParams) (map[string]interface{}, error) {
 	video := params.GetNodeParameter("video", "").(string)
 	if video == "" {
 		return nil, fmt.Errorf("video is required")
@@ -475,7 +474,7 @@ func (n *TelegramNode) sendVideo(token, chatId string, params interfaces.Executi
 	return n.makeTelegramRequest("sendVideo", token, body)
 }
 
-func (n *TelegramNode) sendLocation(token, chatId string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+func (n *TelegramNode) sendLocation(token, chatId string, params base.ExecutionParams) (map[string]interface{}, error) {
 	latitude := params.GetNodeParameter("latitude", 0.0).(float64)
 	longitude := params.GetNodeParameter("longitude", 0.0).(float64)
 
@@ -488,7 +487,7 @@ func (n *TelegramNode) sendLocation(token, chatId string, params interfaces.Exec
 	return n.makeTelegramRequest("sendLocation", token, body)
 }
 
-func (n *TelegramNode) sendContact(token, chatId string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+func (n *TelegramNode) sendContact(token, chatId string, params base.ExecutionParams) (map[string]interface{}, error) {
 	phoneNumber := params.GetNodeParameter("phoneNumber", "").(string)
 	firstName := params.GetNodeParameter("firstName", "").(string)
 
@@ -509,7 +508,7 @@ func (n *TelegramNode) sendContact(token, chatId string, params interfaces.Execu
 	return n.makeTelegramRequest("sendContact", token, body)
 }
 
-func (n *TelegramNode) sendSticker(token, chatId string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+func (n *TelegramNode) sendSticker(token, chatId string, params base.ExecutionParams) (map[string]interface{}, error) {
 	sticker := params.GetNodeParameter("sticker", "").(string)
 	if sticker == "" {
 		return nil, fmt.Errorf("sticker is required")
@@ -523,7 +522,7 @@ func (n *TelegramNode) sendSticker(token, chatId string, params interfaces.Execu
 	return n.makeTelegramRequest("sendSticker", token, body)
 }
 
-func (n *TelegramNode) editMessageText(token, chatId string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+func (n *TelegramNode) editMessageText(token, chatId string, params base.ExecutionParams) (map[string]interface{}, error) {
 	messageId := params.GetNodeParameter("messageId", "").(string)
 	text := params.GetNodeParameter("text", "").(string)
 
@@ -549,7 +548,7 @@ func (n *TelegramNode) editMessageText(token, chatId string, params interfaces.E
 	return n.makeTelegramRequest("editMessageText", token, body)
 }
 
-func (n *TelegramNode) deleteMessage(token, chatId string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+func (n *TelegramNode) deleteMessage(token, chatId string, params base.ExecutionParams) (map[string]interface{}, error) {
 	messageId := params.GetNodeParameter("messageId", "").(string)
 	if messageId == "" {
 		return nil, fmt.Errorf("message ID is required")
@@ -568,7 +567,7 @@ func (n *TelegramNode) deleteMessage(token, chatId string, params interfaces.Exe
 	return n.makeTelegramRequest("deleteMessage", token, body)
 }
 
-func (n *TelegramNode) pinChatMessage(token, chatId string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+func (n *TelegramNode) pinChatMessage(token, chatId string, params base.ExecutionParams) (map[string]interface{}, error) {
 	messageId := params.GetNodeParameter("messageId", "").(string)
 	if messageId == "" {
 		return nil, fmt.Errorf("message ID is required")
@@ -591,7 +590,7 @@ func (n *TelegramNode) pinChatMessage(token, chatId string, params interfaces.Ex
 	return n.makeTelegramRequest("pinChatMessage", token, body)
 }
 
-func (n *TelegramNode) unpinChatMessage(token, chatId string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+func (n *TelegramNode) unpinChatMessage(token, chatId string, params base.ExecutionParams) (map[string]interface{}, error) {
 	messageId := params.GetNodeParameter("messageId", "").(string)
 
 	body := map[string]interface{}{
@@ -611,7 +610,7 @@ func (n *TelegramNode) unpinChatMessage(token, chatId string, params interfaces.
 
 // Chat resource handlers
 
-func (n *TelegramNode) handleChatResource(token, operation string, params interfaces.ExecutionParams) (interface{}, error) {
+func (n *TelegramNode) handleChatResource(token, operation string, params base.ExecutionParams) (interface{}, error) {
 	chatId := params.GetNodeParameter("chatId", "").(string)
 	if chatId == "" {
 		return nil, fmt.Errorf("chat ID is required")
@@ -668,7 +667,7 @@ func (n *TelegramNode) handleChatResource(token, operation string, params interf
 
 // File resource handlers
 
-func (n *TelegramNode) handleFileResource(token, operation string, params interfaces.ExecutionParams) (interface{}, error) {
+func (n *TelegramNode) handleFileResource(token, operation string, params base.ExecutionParams) (interface{}, error) {
 	switch operation {
 	case "get":
 		fileId := params.GetNodeParameter("fileId", "").(string)
@@ -687,7 +686,7 @@ func (n *TelegramNode) handleFileResource(token, operation string, params interf
 
 // Chat Member resource handlers
 
-func (n *TelegramNode) handleChatMemberResource(token, operation string, params interfaces.ExecutionParams) (interface{}, error) {
+func (n *TelegramNode) handleChatMemberResource(token, operation string, params base.ExecutionParams) (interface{}, error) {
 	chatId := params.GetNodeParameter("chatId", "").(string)
 	userId := params.GetNodeParameter("userId", "").(string)
 
@@ -758,7 +757,7 @@ func (n *TelegramNode) handleChatMemberResource(token, operation string, params 
 
 // Callback Query resource handlers
 
-func (n *TelegramNode) handleCallbackQueryResource(token, operation string, params interfaces.ExecutionParams) (interface{}, error) {
+func (n *TelegramNode) handleCallbackQueryResource(token, operation string, params base.ExecutionParams) (interface{}, error) {
 	callbackQueryId := params.GetNodeParameter("callbackQueryId", "").(string)
 	if callbackQueryId == "" {
 		return nil, fmt.Errorf("callback query ID is required")
@@ -835,7 +834,7 @@ func (n *TelegramNode) makeTelegramRequest(method, token string, body map[string
 }
 
 // Clone creates a copy of the node
-func (n *TelegramNode) Clone() interfaces.Node {
+func (n *TelegramNode) Clone() base.Node {
 	return &TelegramNode{
 		BaseNode:   n.BaseNode.Clone(),
 		httpClient: n.httpClient,

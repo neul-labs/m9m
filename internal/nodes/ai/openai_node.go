@@ -10,8 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/n8n-go/internal/core/base"
-	"github.com/n8n-go/internal/core/interfaces"
+	"github.com/dipankar/n8n-go/internal/nodes/base"
 )
 
 // OpenAINode provides direct OpenAI API integration
@@ -23,7 +22,7 @@ type OpenAINode struct {
 // NewOpenAINode creates a new OpenAI node
 func NewOpenAINode() *OpenAINode {
 	return &OpenAINode{
-		BaseNode: base.NewBaseNode("OpenAI", "OpenAI API"),
+		BaseNode: base.NewBaseNode(base.NodeDescription{Name: "OpenAI", Description: "OpenAI API", Category: "core"}),
 		httpClient: &http.Client{
 			Timeout: 60 * time.Second,
 		},
@@ -31,8 +30,8 @@ func NewOpenAINode() *OpenAINode {
 }
 
 // GetMetadata returns the node metadata
-func (n *OpenAINode) GetMetadata() interfaces.NodeMetadata {
-	return interfaces.NodeMetadata{
+func (n *OpenAINode) GetMetadata() base.NodeMetadata {
+	return base.NodeMetadata{
 		Name:        "OpenAI",
 		DisplayName: "OpenAI",
 		Description: "Use OpenAI's API for GPT models, embeddings, and more",
@@ -40,19 +39,19 @@ func (n *OpenAINode) GetMetadata() interfaces.NodeMetadata {
 		Version:     1,
 		Inputs:      []string{"main"},
 		Outputs:     []string{"main"},
-		Credentials: []interfaces.CredentialType{
+		Credentials: []base.CredentialType{
 			{
 				Name:        "openAiApi",
 				Required:    true,
 				DisplayName: "OpenAI API",
 			},
 		},
-		Properties: []interfaces.NodeProperty{
+		Properties: []base.NodeProperty{
 			{
 				Name:        "operation",
 				DisplayName: "Operation",
 				Type:        "options",
-				Options: []interfaces.OptionItem{
+				Options: []base.OptionItem{
 					{Name: "Chat Completion", Value: "chat"},
 					{Name: "Text Completion", Value: "completion"},
 					{Name: "Create Embedding", Value: "embedding"},
@@ -69,7 +68,7 @@ func (n *OpenAINode) GetMetadata() interfaces.NodeMetadata {
 				Name:        "model",
 				DisplayName: "Model",
 				Type:        "options",
-				Options: []interfaces.OptionItem{
+				Options: []base.OptionItem{
 					// GPT-4 models
 					{Name: "GPT-4 Turbo", Value: "gpt-4-turbo"},
 					{Name: "GPT-4", Value: "gpt-4"},
@@ -148,7 +147,7 @@ func (n *OpenAINode) GetMetadata() interfaces.NodeMetadata {
 				Name:        "responseFormat",
 				DisplayName: "Response Format",
 				Type:        "options",
-				Options: []interfaces.OptionItem{
+				Options: []base.OptionItem{
 					{Name: "Text", Value: "text"},
 					{Name: "JSON", Value: "json_object"},
 				},
@@ -166,24 +165,24 @@ func (n *OpenAINode) GetMetadata() interfaces.NodeMetadata {
 }
 
 // Execute runs the OpenAI operation
-func (n *OpenAINode) Execute(ctx context.Context, params interfaces.ExecutionParams) (interfaces.NodeOutput, error) {
+func (n *OpenAINode) Execute(ctx context.Context, params base.ExecutionParams) (base.NodeOutput, error) {
 	operation := params.GetNodeParameter("operation", "chat").(string)
 	model := params.GetNodeParameter("model", "gpt-3.5-turbo").(string)
 	
 	// Get credentials
 	credentials, err := params.GetCredentials("openAiApi")
 	if err != nil {
-		return interfaces.NodeOutput{}, fmt.Errorf("failed to get OpenAI credentials: %w", err)
+		return base.NodeOutput{}, fmt.Errorf("failed to get OpenAI credentials: %w", err)
 	}
 
 	apiKey, ok := credentials["apiKey"].(string)
 	if !ok || apiKey == "" {
-		return interfaces.NodeOutput{}, fmt.Errorf("OpenAI API key not found in credentials")
+		return base.NodeOutput{}, fmt.Errorf("OpenAI API key not found in credentials")
 	}
 
 	// Get input data
 	inputData := params.GetInputData()
-	var outputItems []interfaces.ItemData
+	var outputItems []base.ItemData
 
 	for _, item := range inputData {
 		var result interface{}
@@ -209,16 +208,16 @@ func (n *OpenAINode) Execute(ctx context.Context, params interfaces.ExecutionPar
 		}
 
 		if err != nil {
-			return interfaces.NodeOutput{}, err
+			return base.NodeOutput{}, err
 		}
 
 		if resultMap, ok := result.(map[string]interface{}); ok {
-			outputItems = append(outputItems, interfaces.ItemData{
+			outputItems = append(outputItems, base.ItemData{
 				JSON:  resultMap,
 				Index: item.Index,
 			})
 		} else {
-			outputItems = append(outputItems, interfaces.ItemData{
+			outputItems = append(outputItems, base.ItemData{
 				JSON: map[string]interface{}{
 					"result": result,
 				},
@@ -227,13 +226,13 @@ func (n *OpenAINode) Execute(ctx context.Context, params interfaces.ExecutionPar
 		}
 	}
 
-	return interfaces.NodeOutput{
+	return base.NodeOutput{
 		Items: outputItems,
 	}, nil
 }
 
 // executeChatCompletion handles chat completion requests
-func (n *OpenAINode) executeChatCompletion(apiKey, model string, item interfaces.ItemData, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+func (n *OpenAINode) executeChatCompletion(apiKey, model string, item base.ItemData, params base.ExecutionParams) (map[string]interface{}, error) {
 	prompt := params.GetNodeParameter("prompt", "").(string)
 	systemMessage := params.GetNodeParameter("systemMessage", "You are a helpful assistant.").(string)
 	temperature := params.GetNodeParameter("temperature", 0.7).(float64)
@@ -300,7 +299,7 @@ func (n *OpenAINode) executeChatCompletion(apiKey, model string, item interfaces
 }
 
 // executeTextCompletion handles text completion requests
-func (n *OpenAINode) executeTextCompletion(apiKey, model string, item interfaces.ItemData, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+func (n *OpenAINode) executeTextCompletion(apiKey, model string, item base.ItemData, params base.ExecutionParams) (map[string]interface{}, error) {
 	prompt := params.GetNodeParameter("prompt", "").(string)
 	temperature := params.GetNodeParameter("temperature", 0.7).(float64)
 	maxTokens := params.GetNodeParameter("maxTokens", 2048).(int)
@@ -333,7 +332,7 @@ func (n *OpenAINode) executeTextCompletion(apiKey, model string, item interfaces
 }
 
 // executeEmbedding handles embedding requests
-func (n *OpenAINode) executeEmbedding(apiKey, model string, item interfaces.ItemData, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+func (n *OpenAINode) executeEmbedding(apiKey, model string, item base.ItemData, params base.ExecutionParams) (map[string]interface{}, error) {
 	text := ""
 	if textValue, ok := item.JSON["text"].(string); ok {
 		text = textValue
@@ -369,7 +368,7 @@ func (n *OpenAINode) executeEmbedding(apiKey, model string, item interfaces.Item
 }
 
 // executeImageGeneration handles image generation requests
-func (n *OpenAINode) executeImageGeneration(apiKey, model string, item interfaces.ItemData, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+func (n *OpenAINode) executeImageGeneration(apiKey, model string, item base.ItemData, params base.ExecutionParams) (map[string]interface{}, error) {
 	prompt := params.GetNodeParameter("prompt", "").(string)
 	
 	requestBody := map[string]interface{}{
@@ -398,7 +397,7 @@ func (n *OpenAINode) executeImageGeneration(apiKey, model string, item interface
 }
 
 // executeTextToSpeech handles text to speech requests
-func (n *OpenAINode) executeTextToSpeech(apiKey, model string, item interfaces.ItemData, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+func (n *OpenAINode) executeTextToSpeech(apiKey, model string, item base.ItemData, params base.ExecutionParams) (map[string]interface{}, error) {
 	text := params.GetNodeParameter("prompt", "").(string)
 
 	requestBody := map[string]interface{}{
@@ -417,7 +416,7 @@ func (n *OpenAINode) executeTextToSpeech(apiKey, model string, item interfaces.I
 }
 
 // executeSpeechToText handles speech to text requests
-func (n *OpenAINode) executeSpeechToText(apiKey, model string, item interfaces.ItemData, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+func (n *OpenAINode) executeSpeechToText(apiKey, model string, item base.ItemData, params base.ExecutionParams) (map[string]interface{}, error) {
 	// This would handle audio file upload - simplified for now
 	return map[string]interface{}{
 		"text": "Transcribed text would appear here",
@@ -425,7 +424,7 @@ func (n *OpenAINode) executeSpeechToText(apiKey, model string, item interfaces.I
 }
 
 // executeModeration handles content moderation requests
-func (n *OpenAINode) executeModeration(apiKey string, item interfaces.ItemData, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+func (n *OpenAINode) executeModeration(apiKey string, item base.ItemData, params base.ExecutionParams) (map[string]interface{}, error) {
 	text := params.GetNodeParameter("prompt", "").(string)
 
 	requestBody := map[string]interface{}{
@@ -485,7 +484,7 @@ func (n *OpenAINode) makeOpenAIRequest(url, apiKey string, body map[string]inter
 }
 
 // Clone creates a copy of the node
-func (n *OpenAINode) Clone() interfaces.Node {
+func (n *OpenAINode) Clone() base.Node {
 	return &OpenAINode{
 		BaseNode:   n.BaseNode.Clone(),
 		httpClient: n.httpClient,

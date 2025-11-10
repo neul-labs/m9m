@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/n8n-go/n8n-go/internal/expressions"
-	"github.com/n8n-go/n8n-go/internal/model"
-	"github.com/n8n-go/n8n-go/internal/nodes/base"
+	"github.com/dipankar/n8n-go/internal/expressions"
+	"github.com/dipankar/n8n-go/internal/model"
+	"github.com/dipankar/n8n-go/internal/nodes/base"
 )
 
 // WriteBinaryFileNode writes binary data to files on the filesystem with enhanced security
@@ -25,8 +25,8 @@ type WriteBinaryFileNode struct {
 // NewWriteBinaryFileNode creates a new WriteBinaryFileNode instance
 func NewWriteBinaryFileNode() *WriteBinaryFileNode {
 	return &WriteBinaryFileNode{
-		BaseNode:          base.NewBaseNode("Write Binary File", "n8n-nodes-base.writeBinaryFile"),
-		evaluator:         expressions.NewGojaExpressionEvaluator(),
+		BaseNode:          base.NewBaseNode(base.NodeDescription{Name: "Write Binary File", Description: "n8n-nodes-base.writeBinaryFile", Category: "core"}),
+		evaluator:         expressions.NewGojaExpressionEvaluator(expressions.DefaultEvaluatorConfig()),
 		allowedDirectories: []string{"/tmp", "/var/tmp", "./data", "./uploads", "./output"}, // Default allowed directories
 		maxFileSize:       100 * 1024 * 1024, // 100MB default limit
 	}
@@ -44,7 +44,7 @@ func (n *WriteBinaryFileNode) Execute(inputData []model.DataItem, nodeParams map
 			ItemIndex:          index,
 			Mode:               expressions.ModeManual,
 			ConnectionInputData: []model.DataItem{item},
-			AdditionalKeys:     make(map[string]interface{}),
+			AdditionalKeys: &expressions.AdditionalKeys{},
 		}
 
 		// Evaluate file path

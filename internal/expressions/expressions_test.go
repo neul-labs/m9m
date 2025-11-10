@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/yourusername/n8n-go/internal/model"
+	"github.com/dipankar/n8n-go/internal/model"
 )
 
 // TestExpressionCompatibility tests n8n expression compatibility

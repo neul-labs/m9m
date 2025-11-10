@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/n8n-go/n8n-go/internal/templates"
+	"github.com/dipankar/n8n-go/internal/templates"
 )
 
 var (

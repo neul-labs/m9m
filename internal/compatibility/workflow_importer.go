@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/n8n-go/n8n-go/pkg/model"
+	"github.com/dipankar/n8n-go/internal/model"
 )
 
 type N8nWorkflowImporter struct {

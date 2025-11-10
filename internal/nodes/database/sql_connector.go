@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/n8n-go/n8n-go/internal/expressions"
-	"github.com/n8n-go/n8n-go/internal/model"
-	"github.com/n8n-go/n8n-go/internal/nodes/base"
+	"github.com/dipankar/n8n-go/internal/expressions"
+	"github.com/dipankar/n8n-go/internal/model"
+	"github.com/dipankar/n8n-go/internal/nodes/base"
 
 	// Import SQL drivers
 	_ "github.com/lib/pq"           // PostgreSQL
@@ -50,8 +50,8 @@ type QueryResult struct {
 // NewSQLConnectorNode creates a new SQL connector node
 func NewSQLConnectorNode() *SQLConnectorNode {
 	return &SQLConnectorNode{
-		BaseNode:  base.NewBaseNode("SQL Database", "n8n-nodes-base.sqlDatabase"),
-		evaluator: expressions.NewGojaExpressionEvaluator(),
+		BaseNode:  base.NewBaseNode(base.NodeDescription{Name: "SQL Database", Description: "n8n-nodes-base.sqlDatabase", Category: "core"}),
+		evaluator: expressions.NewGojaExpressionEvaluator(expressions.DefaultEvaluatorConfig()),
 	}
 }
 
@@ -90,7 +90,7 @@ func (n *SQLConnectorNode) Execute(inputData []model.DataItem, nodeParams map[st
 			ItemIndex:          index,
 			Mode:               expressions.ModeManual,
 			ConnectionInputData: []model.DataItem{item},
-			AdditionalKeys:     make(map[string]interface{}),
+			AdditionalKeys: &expressions.AdditionalKeys{},
 		}
 
 		var result *QueryResult

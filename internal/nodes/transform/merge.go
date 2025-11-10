@@ -3,9 +3,9 @@ package transform
 import (
 	"fmt"
 
-	"github.com/yourusername/n8n-go/internal/expressions"
-	"github.com/yourusername/n8n-go/internal/model"
-	"github.com/yourusername/n8n-go/internal/nodes/base"
+	"github.com/dipankar/n8n-go/internal/expressions"
+	"github.com/dipankar/n8n-go/internal/model"
+	"github.com/dipankar/n8n-go/internal/nodes/base"
 )
 
 // MergeNode implements the Merge node functionality for combining data from multiple inputs

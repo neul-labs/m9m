@@ -1,0 +1,241 @@
+version: '3.8'
+
+services:
+  # n8n-go backend (high-performance Go implementation)
+  n8n-go:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: n8n-go
+    ports:
+      - "5678:8080"  # Map to n8n's default port for frontend compatibility
+      - "9090:9090"  # Metrics/monitoring
+    environment:
+      # Server configuration
+      - N8N_GO_PORT=8080
+      - N8N_GO_HOST=0.0.0.0
+      - N8N_GO_LOG_LEVEL=info
+
+      # Database configuration
+      - N8N_GO_DB_TYPE=postgres
+      - N8N_GO_DB_POSTGRES_HOST=postgres
+      - N8N_GO_DB_POSTGRES_PORT=5432
+      - N8N_GO_DB_POSTGRES_DATABASE=n8n
+      - N8N_GO_DB_POSTGRES_USER=n8n
+      - N8N_GO_DB_POSTGRES_PASSWORD=n8n_password
+
+      # Queue configuration
+      - N8N_GO_QUEUE_TYPE=redis
+      - N8N_GO_QUEUE_URL=redis://redis:6379
+      - N8N_GO_MAX_WORKERS=10
+
+      # MongoDB for workflow storage (optional)
+      - N8N_GO_MONGODB_URL=mongodb://mongo:27017/n8n
+
+      # RabbitMQ for advanced queuing (optional)
+      - N8N_GO_RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+
+      # Monitoring
+      - N8N_GO_METRICS_PORT=9090
+      - N8N_GO_ENABLE_TRACING=false
+
+      # n8n API compatibility mode (for frontend integration)
+      - N8N_GO_COMPATIBILITY_MODE=true
+      - N8N_GO_API_VERSION=v1
+
+    volumes:
+      - n8n-go-data:/app/data
+      - n8n-go-logs:/app/logs
+      - ./config:/app/config:ro
+    depends_on:
+      - postgres
+      - redis
+      - mongo
+      - rabbitmq
+    networks:
+      - n8n-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+  # n8n frontend (original n8n UI)
+  # This connects to n8n-go backend via API compatibility layer
+  n8n-frontend:
+    image: n8nio/n8n:latest
+    container_name: n8n-frontend
+    ports:
+      - "5679:5678"  # Frontend on different port for testing
+    environment:
+      # Point to n8n-go backend
+      - N8N_BACKEND_URL=http://n8n-go:8080
+      - N8N_HOST=0.0.0.0
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+
+      # Database (same as n8n-go)
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=n8n
+      - DB_POSTGRESDB_USER=n8n
+      - DB_POSTGRESDB_PASSWORD=n8n_password
+
+      # Queue (same as n8n-go)
+      - QUEUE_BULL_REDIS_HOST=redis
+      - QUEUE_BULL_REDIS_PORT=6379
+      - EXECUTIONS_MODE=queue
+
+      # Generic timezone
+      - GENERIC_TIMEZONE=America/New_York
+
+      # Security
+      - N8N_BASIC_AUTH_ACTIVE=false
+      - N8N_METRICS=true
+
+    volumes:
+      - n8n-frontend-data:/home/node/.n8n
+    depends_on:
+      - n8n-go
+      - postgres
+      - redis
+    networks:
+      - n8n-network
+    restart: unless-stopped
+
+  # PostgreSQL database
+  postgres:
+    image: postgres:16-alpine
+    container_name: n8n-postgres
+    environment:
+      - POSTGRES_DB=n8n
+      - POSTGRES_USER=n8n
+      - POSTGRES_PASSWORD=n8n_password
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - n8n-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U n8n"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for queue management
+  redis:
+    image: redis:7-alpine
+    container_name: n8n-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    networks:
+      - n8n-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # MongoDB for document storage (optional)
+  mongo:
+    image: mongo:7
+    container_name: n8n-mongo
+    environment:
+      - MONGO_INITDB_DATABASE=n8n
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - n8n-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # RabbitMQ for advanced message queuing (optional)
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: n8n-rabbitmq
+    ports:
+      - "5672:5672"   # AMQP port
+      - "15672:15672" # Management UI
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - n8n-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Prometheus for monitoring (optional)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: n8n-prometheus
+    ports:
+      - "9091:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    networks:
+      - n8n-network
+    restart: unless-stopped
+    depends_on:
+      - n8n-go
+
+  # Grafana for visualization (optional)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: n8n-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_INSTALL_PLUGINS=
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./config/grafana:/etc/grafana/provisioning:ro
+    networks:
+      - n8n-network
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+
+networks:
+  n8n-network:
+    driver: bridge
+
+volumes:
+  n8n-go-data:
+    driver: local
+  n8n-go-logs:
+    driver: local
+  n8n-frontend-data:
+    driver: local
+  postgres-data:
+    driver: local
+  redis-data:
+    driver: local
+  mongo-data:
+    driver: local
+  rabbitmq-data:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local

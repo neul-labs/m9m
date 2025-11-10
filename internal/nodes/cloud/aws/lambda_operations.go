@@ -12,9 +12,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/lambda"
 
-	"github.com/n8n-go/n8n-go/internal/expressions"
-	"github.com/n8n-go/n8n-go/internal/model"
-	"github.com/n8n-go/n8n-go/internal/nodes/base"
+	"github.com/dipankar/n8n-go/internal/expressions"
+	"github.com/dipankar/n8n-go/internal/model"
+	"github.com/dipankar/n8n-go/internal/nodes/base"
 )
 
 // LambdaOperationsNode provides AWS Lambda operations

@@ -9,13 +9,13 @@ import (
 	"time"
 
 	"github.com/robfig/cron/v3"
-	"github.com/n8n-go/n8n-go/internal/engine"
-	"github.com/n8n-go/n8n-go/internal/model"
+	"github.com/dipankar/n8n-go/internal/engine"
+	"github.com/dipankar/n8n-go/internal/model"
 )
 
 // WorkflowScheduler manages scheduled workflow executions
 type WorkflowScheduler struct {
-	engine       *engine.WorkflowEngine
+	engine       engine.WorkflowEngine
 	schedules    map[string]*ScheduleConfig
 	cronJobs     map[string]*cron.Cron
 	executions   map[string]*ExecutionHistory
@@ -92,11 +92,11 @@ type SchedulerMetrics struct {
 }
 
 // NewWorkflowScheduler creates a new workflow scheduler
-func NewWorkflowScheduler(engine *engine.WorkflowEngine) *WorkflowScheduler {
+func NewWorkflowScheduler(eng engine.WorkflowEngine) *WorkflowScheduler {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	return &WorkflowScheduler{
-		engine:     engine,
+		engine:     eng,
 		schedules:  make(map[string]*ScheduleConfig),
 		cronJobs:   make(map[string]*cron.Cron),
 		executions: make(map[string]*ExecutionHistory),
@@ -464,7 +464,10 @@ func (s *WorkflowScheduler) executeScheduledWorkflow(scheduleID string) {
 
 	// Execute workflow
 	startTime := time.Now()
-	result, err := s.engine.ExecuteWorkflowWithContext(ctx, workflow, inputData)
+	// Note: Using ExecuteWorkflow as ExecuteWorkflowWithContext is not available
+	// TODO: Add context support to WorkflowEngine interface and use ctx for timeout
+	_ = ctx // Silence unused warning until context support is added
+	result, err := s.engine.ExecuteWorkflow(workflow, inputData)
 	duration := time.Since(startTime)
 
 	if err != nil {

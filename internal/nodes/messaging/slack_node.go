@@ -11,8 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/n8n-go/internal/core/base"
-	"github.com/n8n-go/internal/core/interfaces"
+	"github.com/dipankar/n8n-go/internal/nodes/base"
 )
 
 // SlackNode provides Slack messaging operations
@@ -24,7 +23,7 @@ type SlackNode struct {
 // NewSlackNode creates a new Slack node
 func NewSlackNode() *SlackNode {
 	return &SlackNode{
-		BaseNode: base.NewBaseNode("Slack", "Slack Messaging"),
+		BaseNode: base.NewBaseNode(base.NodeDescription{Name: "Slack", Description: "Slack Messaging", Category: "core"}),
 		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
 		},
@@ -32,8 +31,8 @@ func NewSlackNode() *SlackNode {
 }
 
 // GetMetadata returns the node metadata
-func (n *SlackNode) GetMetadata() interfaces.NodeMetadata {
-	return interfaces.NodeMetadata{
+func (n *SlackNode) GetMetadata() base.NodeMetadata {
+	return base.NodeMetadata{
 		Name:        "Slack",
 		DisplayName: "Slack",
 		Description: "Send messages, manage channels, and interact with Slack",
@@ -41,19 +40,19 @@ func (n *SlackNode) GetMetadata() interfaces.NodeMetadata {
 		Version:     1,
 		Inputs:      []string{"main"},
 		Outputs:     []string{"main"},
-		Credentials: []interfaces.CredentialType{
+		Credentials: []base.CredentialType{
 			{
 				Name:        "slackApi",
 				Required:    true,
 				DisplayName: "Slack API",
 			},
 		},
-		Properties: []interfaces.NodeProperty{
+		Properties: []base.NodeProperty{
 			{
 				Name:        "resource",
 				DisplayName: "Resource",
 				Type:        "options",
-				Options: []interfaces.OptionItem{
+				Options: []base.OptionItem{
 					{Name: "Message", Value: "message"},
 					{Name: "Channel", Value: "channel"},
 					{Name: "User", Value: "user"},
@@ -76,7 +75,7 @@ func (n *SlackNode) GetMetadata() interfaces.NodeMetadata {
 						"resource": []string{"message"},
 					},
 				},
-				Options: []interfaces.OptionItem{
+				Options: []base.OptionItem{
 					{Name: "Send", Value: "send"},
 					{Name: "Update", Value: "update"},
 					{Name: "Delete", Value: "delete"},
@@ -96,7 +95,7 @@ func (n *SlackNode) GetMetadata() interfaces.NodeMetadata {
 						"resource": []string{"channel"},
 					},
 				},
-				Options: []interfaces.OptionItem{
+				Options: []base.OptionItem{
 					{Name: "Create", Value: "create"},
 					{Name: "Get", Value: "get"},
 					{Name: "Get Many", Value: "getMany"},
@@ -238,16 +237,16 @@ func (n *SlackNode) GetMetadata() interfaces.NodeMetadata {
 }
 
 // Execute runs the Slack operation
-func (n *SlackNode) Execute(ctx context.Context, params interfaces.ExecutionParams) (interfaces.NodeOutput, error) {
+func (n *SlackNode) Execute(ctx context.Context, params base.ExecutionParams) (base.NodeOutput, error) {
 	// Get credentials
 	credentials, err := params.GetCredentials("slackApi")
 	if err != nil {
-		return interfaces.NodeOutput{}, fmt.Errorf("failed to get Slack credentials: %w", err)
+		return base.NodeOutput{}, fmt.Errorf("failed to get Slack credentials: %w", err)
 	}
 
 	accessToken, ok := credentials["accessToken"].(string)
 	if !ok || accessToken == "" {
-		return interfaces.NodeOutput{}, fmt.Errorf("Slack access token not found")
+		return base.NodeOutput{}, fmt.Errorf("Slack access token not found")
 	}
 
 	// Get resource and operation
@@ -270,28 +269,28 @@ func (n *SlackNode) Execute(ctx context.Context, params interfaces.ExecutionPara
 	}
 
 	if err != nil {
-		return interfaces.NodeOutput{}, err
+		return base.NodeOutput{}, err
 	}
 
 	// Format output
-	var outputItems []interfaces.ItemData
+	var outputItems []base.ItemData
 	switch v := result.(type) {
 	case []interface{}:
 		for i, item := range v {
 			if itemMap, ok := item.(map[string]interface{}); ok {
-				outputItems = append(outputItems, interfaces.ItemData{
+				outputItems = append(outputItems, base.ItemData{
 					JSON:  itemMap,
 					Index: i,
 				})
 			}
 		}
 	case map[string]interface{}:
-		outputItems = append(outputItems, interfaces.ItemData{
+		outputItems = append(outputItems, base.ItemData{
 			JSON:  v,
 			Index: 0,
 		})
 	default:
-		outputItems = append(outputItems, interfaces.ItemData{
+		outputItems = append(outputItems, base.ItemData{
 			JSON: map[string]interface{}{
 				"result": result,
 			},
@@ -299,14 +298,14 @@ func (n *SlackNode) Execute(ctx context.Context, params interfaces.ExecutionPara
 		})
 	}
 
-	return interfaces.NodeOutput{
+	return base.NodeOutput{
 		Items: outputItems,
 	}, nil
 }
 
 // Message resource handlers
 
-func (n *SlackNode) handleMessageResource(token string, params interfaces.ExecutionParams) (interface{}, error) {
+func (n *SlackNode) handleMessageResource(token string, params base.ExecutionParams) (interface{}, error) {
 	operation := params.GetNodeParameter("operation", "send").(string)
 
 	switch operation {
@@ -325,7 +324,7 @@ func (n *SlackNode) handleMessageResource(token string, params interfaces.Execut
 	}
 }
 
-func (n *SlackNode) sendMessage(token string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+func (n *SlackNode) sendMessage(token string, params base.ExecutionParams) (map[string]interface{}, error) {
 	channel := params.GetNodeParameter("channel", "").(string)
 	text := params.GetNodeParameter("text", "").(string)
 	username := params.GetNodeParameter("username", "").(string)
@@ -382,7 +381,7 @@ func (n *SlackNode) sendMessage(token string, params interfaces.ExecutionParams)
 	return n.makeSlackAPICall("chat.postMessage", token, body)
 }
 
-func (n *SlackNode) updateMessage(token string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+func (n *SlackNode) updateMessage(token string, params base.ExecutionParams) (map[string]interface{}, error) {
 	channel := params.GetNodeParameter("channel", "").(string)
 	messageTs := params.GetNodeParameter("messageTs", "").(string)
 	text := params.GetNodeParameter("text", "").(string)
@@ -409,7 +408,7 @@ func (n *SlackNode) updateMessage(token string, params interfaces.ExecutionParam
 	return n.makeSlackAPICall("chat.update", token, body)
 }
 
-func (n *SlackNode) deleteMessage(token string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+func (n *SlackNode) deleteMessage(token string, params base.ExecutionParams) (map[string]interface{}, error) {
 	channel := params.GetNodeParameter("channel", "").(string)
 	messageTs := params.GetNodeParameter("messageTs", "").(string)
 
@@ -425,7 +424,7 @@ func (n *SlackNode) deleteMessage(token string, params interfaces.ExecutionParam
 	return n.makeSlackAPICall("chat.delete", token, body)
 }
 
-func (n *SlackNode) getMessagePermalink(token string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+func (n *SlackNode) getMessagePermalink(token string, params base.ExecutionParams) (map[string]interface{}, error) {
 	channel := params.GetNodeParameter("channel", "").(string)
 	messageTs := params.GetNodeParameter("messageTs", "").(string)
 
@@ -441,7 +440,7 @@ func (n *SlackNode) getMessagePermalink(token string, params interfaces.Executio
 	return n.makeSlackAPICall("chat.getPermalink", token, body)
 }
 
-func (n *SlackNode) searchMessages(token string, params interfaces.ExecutionParams) ([]interface{}, error) {
+func (n *SlackNode) searchMessages(token string, params base.ExecutionParams) ([]interface{}, error) {
 	query := params.GetNodeParameter("query", "").(string)
 	if query == "" {
 		return nil, fmt.Errorf("query is required")
@@ -468,7 +467,7 @@ func (n *SlackNode) searchMessages(token string, params interfaces.ExecutionPara
 
 // Channel resource handlers
 
-func (n *SlackNode) handleChannelResource(token string, params interfaces.ExecutionParams) (interface{}, error) {
+func (n *SlackNode) handleChannelResource(token string, params base.ExecutionParams) (interface{}, error) {
 	operation := params.GetNodeParameter("channelOperation", "create").(string)
 
 	switch operation {
@@ -495,7 +494,7 @@ func (n *SlackNode) handleChannelResource(token string, params interfaces.Execut
 	}
 }
 
-func (n *SlackNode) createChannel(token string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+func (n *SlackNode) createChannel(token string, params base.ExecutionParams) (map[string]interface{}, error) {
 	name := params.GetNodeParameter("channelName", "").(string)
 	if name == "" {
 		return nil, fmt.Errorf("channel name is required")
@@ -509,7 +508,7 @@ func (n *SlackNode) createChannel(token string, params interfaces.ExecutionParam
 	return n.makeSlackAPICall("conversations.create", token, body)
 }
 
-func (n *SlackNode) getChannel(token string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+func (n *SlackNode) getChannel(token string, params base.ExecutionParams) (map[string]interface{}, error) {
 	channel := params.GetNodeParameter("channel", "").(string)
 	if channel == "" {
 		return nil, fmt.Errorf("channel is required")
@@ -522,7 +521,7 @@ func (n *SlackNode) getChannel(token string, params interfaces.ExecutionParams) 
 	return n.makeSlackAPICall("conversations.info", token, body)
 }
 
-func (n *SlackNode) getChannels(token string, params interfaces.ExecutionParams) ([]interface{}, error) {
+func (n *SlackNode) getChannels(token string, params base.ExecutionParams) ([]interface{}, error) {
 	body := map[string]interface{}{
 		"limit":           params.GetNodeParameter("limit", 50).(float64),
 		"exclude_archived": true,
@@ -540,7 +539,7 @@ func (n *SlackNode) getChannels(token string, params interfaces.ExecutionParams)
 	return []interface{}{}, nil
 }
 
-func (n *SlackNode) joinChannel(token string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+func (n *SlackNode) joinChannel(token string, params base.ExecutionParams) (map[string]interface{}, error) {
 	channel := params.GetNodeParameter("channel", "").(string)
 	if channel == "" {
 		return nil, fmt.Errorf("channel is required")
@@ -553,7 +552,7 @@ func (n *SlackNode) joinChannel(token string, params interfaces.ExecutionParams)
 	return n.makeSlackAPICall("conversations.join", token, body)
 }
 
-func (n *SlackNode) leaveChannel(token string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+func (n *SlackNode) leaveChannel(token string, params base.ExecutionParams) (map[string]interface{}, error) {
 	channel := params.GetNodeParameter("channel", "").(string)
 	if channel == "" {
 		return nil, fmt.Errorf("channel is required")
@@ -566,7 +565,7 @@ func (n *SlackNode) leaveChannel(token string, params interfaces.ExecutionParams
 	return n.makeSlackAPICall("conversations.leave", token, body)
 }
 
-func (n *SlackNode) archiveChannel(token string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+func (n *SlackNode) archiveChannel(token string, params base.ExecutionParams) (map[string]interface{}, error) {
 	channel := params.GetNodeParameter("channel", "").(string)
 	if channel == "" {
 		return nil, fmt.Errorf("channel is required")
@@ -579,7 +578,7 @@ func (n *SlackNode) archiveChannel(token string, params interfaces.ExecutionPara
 	return n.makeSlackAPICall("conversations.archive", token, body)
 }
 
-func (n *SlackNode) unarchiveChannel(token string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+func (n *SlackNode) unarchiveChannel(token string, params base.ExecutionParams) (map[string]interface{}, error) {
 	channel := params.GetNodeParameter("channel", "").(string)
 	if channel == "" {
 		return nil, fmt.Errorf("channel is required")
@@ -592,7 +591,7 @@ func (n *SlackNode) unarchiveChannel(token string, params interfaces.ExecutionPa
 	return n.makeSlackAPICall("conversations.unarchive", token, body)
 }
 
-func (n *SlackNode) inviteToChannel(token string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+func (n *SlackNode) inviteToChannel(token string, params base.ExecutionParams) (map[string]interface{}, error) {
 	channel := params.GetNodeParameter("channel", "").(string)
 	users := params.GetNodeParameter("users", "").(string)
 
@@ -608,7 +607,7 @@ func (n *SlackNode) inviteToChannel(token string, params interfaces.ExecutionPar
 	return n.makeSlackAPICall("conversations.invite", token, body)
 }
 
-func (n *SlackNode) kickFromChannel(token string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+func (n *SlackNode) kickFromChannel(token string, params base.ExecutionParams) (map[string]interface{}, error) {
 	channel := params.GetNodeParameter("channel", "").(string)
 	user := params.GetNodeParameter("user", "").(string)
 
@@ -626,7 +625,7 @@ func (n *SlackNode) kickFromChannel(token string, params interfaces.ExecutionPar
 
 // User resource handlers
 
-func (n *SlackNode) handleUserResource(token string, params interfaces.ExecutionParams) (interface{}, error) {
+func (n *SlackNode) handleUserResource(token string, params base.ExecutionParams) (interface{}, error) {
 	operation := params.GetNodeParameter("userOperation", "get").(string)
 
 	switch operation {
@@ -641,7 +640,7 @@ func (n *SlackNode) handleUserResource(token string, params interfaces.Execution
 	}
 }
 
-func (n *SlackNode) getUser(token string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+func (n *SlackNode) getUser(token string, params base.ExecutionParams) (map[string]interface{}, error) {
 	userID := params.GetNodeParameter("userId", "").(string)
 	if userID == "" {
 		return nil, fmt.Errorf("user ID is required")
@@ -654,7 +653,7 @@ func (n *SlackNode) getUser(token string, params interfaces.ExecutionParams) (ma
 	return n.makeSlackAPICall("users.info", token, body)
 }
 
-func (n *SlackNode) getUsers(token string, params interfaces.ExecutionParams) ([]interface{}, error) {
+func (n *SlackNode) getUsers(token string, params base.ExecutionParams) ([]interface{}, error) {
 	body := map[string]interface{}{
 		"limit": params.GetNodeParameter("limit", 50).(float64),
 	}
@@ -671,7 +670,7 @@ func (n *SlackNode) getUsers(token string, params interfaces.ExecutionParams) ([
 	return []interface{}{}, nil
 }
 
-func (n *SlackNode) getUserPresence(token string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+func (n *SlackNode) getUserPresence(token string, params base.ExecutionParams) (map[string]interface{}, error) {
 	userID := params.GetNodeParameter("userId", "").(string)
 	if userID == "" {
 		return nil, fmt.Errorf("user ID is required")
@@ -686,7 +685,7 @@ func (n *SlackNode) getUserPresence(token string, params interfaces.ExecutionPar
 
 // File resource handlers
 
-func (n *SlackNode) handleFileResource(token string, params interfaces.ExecutionParams) (interface{}, error) {
+func (n *SlackNode) handleFileResource(token string, params base.ExecutionParams) (interface{}, error) {
 	operation := params.GetNodeParameter("fileOperation", "upload").(string)
 
 	switch operation {
@@ -703,7 +702,7 @@ func (n *SlackNode) handleFileResource(token string, params interfaces.Execution
 	}
 }
 
-func (n *SlackNode) uploadFile(token string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+func (n *SlackNode) uploadFile(token string, params base.ExecutionParams) (map[string]interface{}, error) {
 	// Simplified file upload - in production would handle actual file data
 	channels := params.GetNodeParameter("channels", "").(string)
 	content := params.GetNodeParameter("content", "").(string)
@@ -720,7 +719,7 @@ func (n *SlackNode) uploadFile(token string, params interfaces.ExecutionParams) 
 	return n.makeSlackAPICall("files.upload", token, body)
 }
 
-func (n *SlackNode) getFile(token string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+func (n *SlackNode) getFile(token string, params base.ExecutionParams) (map[string]interface{}, error) {
 	fileID := params.GetNodeParameter("fileId", "").(string)
 	if fileID == "" {
 		return nil, fmt.Errorf("file ID is required")
@@ -733,7 +732,7 @@ func (n *SlackNode) getFile(token string, params interfaces.ExecutionParams) (ma
 	return n.makeSlackAPICall("files.info", token, body)
 }
 
-func (n *SlackNode) getFiles(token string, params interfaces.ExecutionParams) ([]interface{}, error) {
+func (n *SlackNode) getFiles(token string, params base.ExecutionParams) ([]interface{}, error) {
 	body := map[string]interface{}{
 		"count": params.GetNodeParameter("limit", 50).(float64),
 	}
@@ -750,7 +749,7 @@ func (n *SlackNode) getFiles(token string, params interfaces.ExecutionParams) ([
 	return []interface{}{}, nil
 }
 
-func (n *SlackNode) deleteFile(token string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+func (n *SlackNode) deleteFile(token string, params base.ExecutionParams) (map[string]interface{}, error) {
 	fileID := params.GetNodeParameter("fileId", "").(string)
 	if fileID == "" {
 		return nil, fmt.Errorf("file ID is required")
@@ -765,7 +764,7 @@ func (n *SlackNode) deleteFile(token string, params interfaces.ExecutionParams) 
 
 // Reaction resource handlers
 
-func (n *SlackNode) handleReactionResource(token string, params interfaces.ExecutionParams) (interface{}, error) {
+func (n *SlackNode) handleReactionResource(token string, params base.ExecutionParams) (interface{}, error) {
 	operation := params.GetNodeParameter("reactionOperation", "add").(string)
 
 	switch operation {
@@ -780,7 +779,7 @@ func (n *SlackNode) handleReactionResource(token string, params interfaces.Execu
 	}
 }
 
-func (n *SlackNode) addReaction(token string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+func (n *SlackNode) addReaction(token string, params base.ExecutionParams) (map[string]interface{}, error) {
 	channel := params.GetNodeParameter("channel", "").(string)
 	emoji := params.GetNodeParameter("emoji", "").(string)
 	timestamp := params.GetNodeParameter("timestamp", "").(string)
@@ -798,7 +797,7 @@ func (n *SlackNode) addReaction(token string, params interfaces.ExecutionParams)
 	return n.makeSlackAPICall("reactions.add", token, body)
 }
 
-func (n *SlackNode) removeReaction(token string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+func (n *SlackNode) removeReaction(token string, params base.ExecutionParams) (map[string]interface{}, error) {
 	channel := params.GetNodeParameter("channel", "").(string)
 	emoji := params.GetNodeParameter("emoji", "").(string)
 	timestamp := params.GetNodeParameter("timestamp", "").(string)
@@ -816,7 +815,7 @@ func (n *SlackNode) removeReaction(token string, params interfaces.ExecutionPara
 	return n.makeSlackAPICall("reactions.remove", token, body)
 }
 
-func (n *SlackNode) getReactions(token string, params interfaces.ExecutionParams) ([]interface{}, error) {
+func (n *SlackNode) getReactions(token string, params base.ExecutionParams) ([]interface{}, error) {
 	channel := params.GetNodeParameter("channel", "").(string)
 	timestamp := params.GetNodeParameter("timestamp", "").(string)
 
@@ -915,7 +914,7 @@ func (n *SlackNode) getChannelID(token, channelName string) (string, error) {
 }
 
 // Clone creates a copy of the node
-func (n *SlackNode) Clone() interfaces.Node {
+func (n *SlackNode) Clone() base.Node {
 	return &SlackNode{
 		BaseNode:   n.BaseNode.Clone(),
 		httpClient: n.httpClient,

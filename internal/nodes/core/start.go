@@ -1,8 +1,8 @@
 package core
 
 import (
-	"github.com/yourusername/n8n-go/internal/model"
-	"github.com/yourusername/n8n-go/internal/nodes/base"
+	"github.com/dipankar/n8n-go/internal/model"
+	"github.com/dipankar/n8n-go/internal/nodes/base"
 )
 
 // StartNode implements the n8n start trigger node

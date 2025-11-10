@@ -8,20 +8,26 @@ import (
 	"encoding/json"
 	"io"
 	"os"
+	"time"
 )
 
 // Workflow represents an n8n workflow structure
 type Workflow struct {
 	ID          string                 `json:"id"`
 	Name        string                 `json:"name"`
+	Description string                 `json:"description,omitempty"`
 	Active      bool                   `json:"active"`
 	Nodes       []Node                 `json:"nodes"`
 	Connections map[string]Connections `json:"connections"`
 	Settings    *WorkflowSettings      `json:"settings,omitempty"`
 	StaticData  map[string]interface{} `json:"staticData,omitempty"`
 	PinData     map[string][]DataItem  `json:"pinData,omitempty"`
+	Tags        []string               `json:"tags,omitempty"`
 	VersionID   string                 `json:"versionId,omitempty"`
 	IsArchived  bool                   `json:"isArchived,omitempty"`
+	CreatedAt   time.Time              `json:"createdAt"`
+	UpdatedAt   time.Time              `json:"updatedAt"`
+	CreatedBy   string                 `json:"createdBy,omitempty"`
 }
 
 // Node represents an individual node in a workflow
@@ -134,4 +140,50 @@ func (w *Workflow) ToFile(filename string) error {
 	
 	_, err = file.Write(data)
 	return err
+}
+// Additional type definitions for compatibility
+
+// NodeExecutionInput represents input to a node execution
+type NodeExecutionInput struct {
+	Data []DataItem
+	RunIndex int
+	ItemIndex int
+}
+
+// NodeExecutionOutput represents output from a node execution
+type NodeExecutionOutput struct {
+	Data []DataItem
+	Error error
+}
+
+// NodeDefinition describes a node type's definition
+type NodeDefinition struct {
+	Name        string
+	DisplayName string
+	Description string
+	Version     int
+	Inputs      []string
+	Outputs     []string
+	Properties  []interface{}
+}
+
+// WorkflowExecution represents the execution of a workflow
+type WorkflowExecution struct {
+	ID          string                 `json:"id"`
+	WorkflowID  string                 `json:"workflowId"`
+	Status      string                 `json:"status"` // running, completed, failed, cancelled
+	Mode        string                 `json:"mode"`   // manual, trigger, test
+	StartedAt   time.Time              `json:"startedAt"`
+	FinishedAt  *time.Time             `json:"finishedAt,omitempty"`
+	Data        []DataItem             `json:"data,omitempty"`
+	Error       error                  `json:"error,omitempty"`
+	NodeData    map[string][]DataItem  `json:"nodeData,omitempty"`
+	Metadata    map[string]interface{} `json:"metadata,omitempty"`
+	CreatedAt   time.Time              `json:"createdAt"`
+	UpdatedAt   time.Time              `json:"updatedAt"`
+}
+
+// NodeConnections represents connections configuration for a node
+type NodeConnections struct {
+	Main [][]Connection `json:"main,omitempty"`
 }

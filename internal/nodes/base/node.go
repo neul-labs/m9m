@@ -5,8 +5,8 @@ package base
 
 import (
 	"fmt"
-	"github.com/yourusername/n8n-go/internal/model"
-	"github.com/yourusername/n8n-go/internal/expressions"
+	"github.com/dipankar/n8n-go/internal/model"
+	"github.com/dipankar/n8n-go/internal/expressions"
 )
 
 // NodeExecutor is the interface that all node types must implement
@@ -167,4 +167,54 @@ func (b *BaseNode) EvaluateExpressions(params map[string]interface{}, context *e
 	}
 	
 	return evaluatedParams, nil
+}
+// Additional type definitions for compatibility with some node implementations
+
+// Node is a compatibility type for older node implementations
+type Node interface {
+	Execute(inputData []model.DataItem, nodeParams map[string]interface{}) ([]model.DataItem, error)
+}
+
+// NodeMetadata provides extended metadata about a node
+type NodeMetadata struct {
+	Name        string                 `json:"name"`
+	DisplayName string                 `json:"displayName"`
+	Description string                 `json:"description"`
+	Version     int                    `json:"version"`
+	Defaults    map[string]interface{} `json:"defaults"`
+	Inputs      []string               `json:"inputs"`
+	Outputs     []string               `json:"outputs"`
+	Properties  []NodeProperty         `json:"properties"`
+}
+
+// NodeProperty describes a node parameter/property
+type NodeProperty struct {
+	DisplayName  string      `json:"displayName"`
+	Name         string      `json:"name"`
+	Type         string      `json:"type"`
+	Default      interface{} `json:"default"`
+	Description  string      `json:"description"`
+	Required     bool        `json:"required"`
+	Options      []Option    `json:"options,omitempty"`
+}
+
+// Option represents a selection option for a property
+type Option struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
+// ExecutionParams holds parameters for node execution
+type ExecutionParams struct {
+	CurrentNodeName string
+	InputData       []model.DataItem
+	RunIndex        int
+	ItemIndex       int
+	NodeParams      map[string]interface{}
+}
+
+// NodeOutput represents the output from a node
+type NodeOutput struct {
+	Data  []model.DataItem
+	Error error
 }

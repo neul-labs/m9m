@@ -6,8 +6,8 @@ package transform
 import (
 	"fmt"
 	
-	"github.com/yourusername/n8n-go/internal/model"
-	"github.com/yourusername/n8n-go/internal/nodes/base"
+	"github.com/dipankar/n8n-go/internal/model"
+	"github.com/dipankar/n8n-go/internal/nodes/base"
 )
 
 // ItemListsNode implements the Item Lists node functionality

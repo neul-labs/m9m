@@ -6,8 +6,8 @@ package timer
 import (
 	"time"
 	
-	"github.com/yourusername/n8n-go/internal/model"
-	"github.com/yourusername/n8n-go/internal/nodes/base"
+	"github.com/dipankar/n8n-go/internal/model"
+	"github.com/dipankar/n8n-go/internal/nodes/base"
 )
 
 // CronNode implements the Cron node functionality

@@ -1,0 +1,1208 @@
+package http
+
+import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net"
+	"net/http"
+	"strings"
+	"sync"
+	"time"
+
+	"github.com/gorilla/mux"
+	"github.com/dipankar/n8n-go/internal/expressions"
+	"github.com/dipankar/n8n-go/internal/model"
+	"github.com/dipankar/n8n-go/internal/nodes/base"
+)
+
+// WebhookManager manages dynamic webhook endpoints
+type WebhookManager struct {
+	mu                sync.RWMutex
+	webhooks          map[string]*WebhookConfig
+	router            *mux.Router
+	server            *http.Server
+	analytics         *WebhookAnalytics
+	rateLimiters      map[string]*RateLimiter
+	securityRules     map[string]*SecurityRule
+	eventBus          *EventBus
+	isRunning         bool
+	port              int
+}
+
+// WebhookConfig defines webhook configuration
+type WebhookConfig struct {
+	ID              string                 `json:"id"`
+	Path            string                 `json:"path"`
+	Methods         []string               `json:"methods"`
+	WorkflowID      string                 `json:"workflowId"`
+	NodeID          string                 `json:"nodeId"`
+	Security        *WebhookSecurity       `json:"security,omitempty"`
+	RateLimit       *RateLimitConfig       `json:"rateLimit,omitempty"`
+	PayloadConfig   *PayloadConfig         `json:"payloadConfig,omitempty"`
+	ResponseConfig  *ResponseConfig        `json:"responseConfig,omitempty"`
+	Filters         []*WebhookFilter       `json:"filters,omitempty"`
+	Transformations []*PayloadTransform    `json:"transformations,omitempty"`
+	CreatedAt       time.Time              `json:"createdAt"`
+	UpdatedAt       time.Time              `json:"updatedAt"`
+	LastTriggered   *time.Time             `json:"lastTriggered,omitempty"`
+	Enabled         bool                   `json:"enabled"`
+	Description     string                 `json:"description,omitempty"`
+	Tags            []string               `json:"tags,omitempty"`
+}
+
+// WebhookSecurity defines security configuration for webhooks
+type WebhookSecurity struct {
+	SecretKey        string   `json:"secretKey,omitempty"`
+	SignatureHeader  string   `json:"signatureHeader,omitempty"`
+	SignatureMethod  string   `json:"signatureMethod"` // hmac-sha256, sha256, md5
+	IPWhitelist      []string `json:"ipWhitelist,omitempty"`
+	IPBlacklist      []string `json:"ipBlacklist,omitempty"`
+	RequiredHeaders  map[string]string `json:"requiredHeaders,omitempty"`
+	CustomValidation string   `json:"customValidation,omitempty"` // expression for custom validation
+	TLSRequired      bool     `json:"tlsRequired"`
+	BasicAuth        *BasicAuthConfig `json:"basicAuth,omitempty"`
+}
+
+// BasicAuthConfig defines basic authentication for webhooks
+type BasicAuthConfig struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Realm    string `json:"realm,omitempty"`
+}
+
+// RateLimitConfig defines rate limiting configuration
+type RateLimitConfig struct {
+	RequestsPerSecond int           `json:"requestsPerSecond"`
+	BurstSize         int           `json:"burstSize"`
+	WindowSize        time.Duration `json:"windowSize"`
+	KeyExtractor      string        `json:"keyExtractor"` // ip, header, query_param
+	KeyName           string        `json:"keyName,omitempty"`
+	ErrorResponse     interface{}   `json:"errorResponse,omitempty"`
+}
+
+// PayloadConfig defines how to process incoming payloads
+type PayloadConfig struct {
+	MaxSize         int64    `json:"maxSize"` // in bytes
+	AllowedTypes    []string `json:"allowedTypes"` // application/json, application/xml, etc.
+	RequiredFields  []string `json:"requiredFields,omitempty"`
+	ValidationSchema string  `json:"validationSchema,omitempty"` // JSON schema
+	AutoParse       bool     `json:"autoParse"`
+	PreserveRaw     bool     `json:"preserveRaw"`
+}
+
+// ResponseConfig defines webhook response configuration
+type ResponseConfig struct {
+	StatusCode    int                    `json:"statusCode"`
+	Headers       map[string]string      `json:"headers,omitempty"`
+	Body          interface{}            `json:"body,omitempty"`
+	BodyTemplate  string                 `json:"bodyTemplate,omitempty"`
+	AsyncResponse bool                   `json:"asyncResponse"`
+	Timeout       time.Duration          `json:"timeout"`
+}
+
+// WebhookFilter defines filtering rules for webhooks
+type WebhookFilter struct {
+	Field    string      `json:"field"`    // json path or header name
+	Operator string      `json:"operator"` // equals, contains, regex, exists
+	Value    interface{} `json:"value"`
+	CaseSensitive bool   `json:"caseSensitive"`
+}
+
+// PayloadTransform defines payload transformation rules
+type PayloadTransform struct {
+	Type        string                 `json:"type"` // map, filter, aggregate, extract
+	Source      string                 `json:"source"` // json path
+	Target      string                 `json:"target"` // json path
+	Expression  string                 `json:"expression,omitempty"`
+	Options     map[string]interface{} `json:"options,omitempty"`
+}
+
+// WebhookRequest represents an incoming webhook request
+type WebhookRequest struct {
+	ID          string                 `json:"id"`
+	WebhookID   string                 `json:"webhookId"`
+	Method      string                 `json:"method"`
+	Path        string                 `json:"path"`
+	Headers     map[string]string      `json:"headers"`
+	QueryParams map[string]string      `json:"queryParams"`
+	Body        interface{}            `json:"body,omitempty"`
+	RawBody     []byte                 `json:"rawBody,omitempty"`
+	RemoteAddr  string                 `json:"remoteAddr"`
+	UserAgent   string                 `json:"userAgent"`
+	Timestamp   time.Time              `json:"timestamp"`
+	Size        int64                  `json:"size"`
+	ProcessingTime time.Duration       `json:"processingTime"`
+}
+
+// WebhookResponse represents a webhook response
+type WebhookResponse struct {
+	StatusCode int                    `json:"statusCode"`
+	Headers    map[string]string      `json:"headers"`
+	Body       interface{}            `json:"body,omitempty"`
+	Size       int64                  `json:"size"`
+	Timestamp  time.Time              `json:"timestamp"`
+}
+
+// WebhookAnalytics tracks webhook usage and performance
+type WebhookAnalytics struct {
+	mu                sync.RWMutex
+	totalRequests     int64
+	successfulRequests int64
+	failedRequests    int64
+	avgProcessingTime time.Duration
+	totalProcessingTime time.Duration
+	requestsByWebhook map[string]*WebhookStats
+	requestsByMethod  map[string]int64
+	requestsByStatus  map[int]int64
+	recentRequests    []*WebhookRequest
+	maxRecentRequests int
+}
+
+// WebhookStats tracks statistics for individual webhooks
+type WebhookStats struct {
+	TotalRequests     int64         `json:"totalRequests"`
+	SuccessfulRequests int64        `json:"successfulRequests"`
+	FailedRequests    int64         `json:"failedRequests"`
+	AvgProcessingTime time.Duration `json:"avgProcessingTime"`
+	LastTriggered     time.Time     `json:"lastTriggered"`
+	PayloadSizes      []int64       `json:"payloadSizes"` // Recent payload sizes
+	ResponseTimes     []time.Duration `json:"responseTimes"` // Recent response times
+}
+
+// RateLimiter implements token bucket rate limiting
+type RateLimiter struct {
+	tokens     float64
+	capacity   float64
+	refillRate float64
+	lastRefill time.Time
+	mu         sync.Mutex
+}
+
+// SecurityRule defines IP-based security rules
+type SecurityRule struct {
+	AllowedIPs []net.IPNet
+	BlockedIPs []net.IPNet
+}
+
+// EventBus handles webhook event distribution
+type EventBus struct {
+	subscribers map[string][]chan *WebhookEvent
+	mu          sync.RWMutex
+}
+
+// WebhookEvent represents a webhook event
+type WebhookEvent struct {
+	Type      string         `json:"type"` // request, response, error, rate_limit
+	WebhookID string         `json:"webhookId"`
+	Request   *WebhookRequest `json:"request,omitempty"`
+	Response  *WebhookResponse `json:"response,omitempty"`
+	Error     string         `json:"error,omitempty"`
+	Timestamp time.Time      `json:"timestamp"`
+}
+
+// NewWebhookManager creates a new webhook manager
+func NewWebhookManager(port int) *WebhookManager {
+	return &WebhookManager{
+		webhooks:      make(map[string]*WebhookConfig),
+		analytics:     NewWebhookAnalytics(),
+		rateLimiters:  make(map[string]*RateLimiter),
+		securityRules: make(map[string]*SecurityRule),
+		eventBus:      NewEventBus(),
+		port:          port,
+	}
+}
+
+// Start starts the webhook server
+func (wm *WebhookManager) Start() error {
+	wm.mu.Lock()
+	defer wm.mu.Unlock()
+
+	if wm.isRunning {
+		return fmt.Errorf("webhook manager is already running")
+	}
+
+	// Create router
+	wm.router = mux.NewRouter()
+
+	// Add management endpoints
+	wm.setupManagementRoutes()
+
+	// Create server
+	wm.server = &http.Server{
+		Addr:         fmt.Sprintf(":%d", wm.port),
+		Handler:      wm.router,
+		ReadTimeout:  30 * time.Second,
+		WriteTimeout: 30 * time.Second,
+		IdleTimeout:  60 * time.Second,
+	}
+
+	// Start server in goroutine
+	go func() {
+		if err := wm.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			fmt.Printf("Webhook server error: %v\n", err)
+		}
+	}()
+
+	wm.isRunning = true
+	fmt.Printf("Webhook manager started on port %d\n", wm.port)
+	return nil
+}
+
+// Stop stops the webhook server
+func (wm *WebhookManager) Stop() error {
+	wm.mu.Lock()
+	defer wm.mu.Unlock()
+
+	if !wm.isRunning {
+		return fmt.Errorf("webhook manager is not running")
+	}
+
+	if wm.server != nil {
+		if err := wm.server.Close(); err != nil {
+			return err
+		}
+	}
+
+	wm.isRunning = false
+	fmt.Println("Webhook manager stopped")
+	return nil
+}
+
+// CreateWebhook creates a new webhook endpoint
+func (wm *WebhookManager) CreateWebhook(config *WebhookConfig) error {
+	wm.mu.Lock()
+	defer wm.mu.Unlock()
+
+	// Validate configuration
+	if err := wm.validateWebhookConfig(config); err != nil {
+		return fmt.Errorf("invalid webhook configuration: %w", err)
+	}
+
+	// Check if path already exists
+	for _, existingWebhook := range wm.webhooks {
+		if existingWebhook.Path == config.Path {
+			return fmt.Errorf("webhook path %s already exists", config.Path)
+		}
+	}
+
+	// Set timestamps
+	config.CreatedAt = time.Now()
+	config.UpdatedAt = time.Now()
+
+	// Store webhook configuration
+	wm.webhooks[config.ID] = config
+
+	// Setup security rules if needed
+	if config.Security != nil {
+		if err := wm.setupSecurityRule(config); err != nil {
+			return fmt.Errorf("failed to setup security rule: %w", err)
+		}
+	}
+
+	// Setup rate limiter if needed
+	if config.RateLimit != nil {
+		wm.rateLimiters[config.ID] = NewRateLimiter(
+			float64(config.RateLimit.RequestsPerSecond),
+			float64(config.RateLimit.BurstSize),
+		)
+	}
+
+	// Register route
+	if wm.router != nil {
+		wm.registerWebhookRoute(config)
+	}
+
+	wm.analytics.AddWebhook(config.ID)
+	return nil
+}
+
+// UpdateWebhook updates an existing webhook
+func (wm *WebhookManager) UpdateWebhook(webhookID string, config *WebhookConfig) error {
+	wm.mu.Lock()
+	defer wm.mu.Unlock()
+
+	existingConfig, exists := wm.webhooks[webhookID]
+	if !exists {
+		return fmt.Errorf("webhook %s not found", webhookID)
+	}
+
+	// Validate new configuration
+	if err := wm.validateWebhookConfig(config); err != nil {
+		return fmt.Errorf("invalid webhook configuration: %w", err)
+	}
+
+	// Preserve creation time
+	config.CreatedAt = existingConfig.CreatedAt
+	config.UpdatedAt = time.Now()
+
+	// Update configuration
+	wm.webhooks[webhookID] = config
+
+	// Update security rules
+	if config.Security != nil {
+		if err := wm.setupSecurityRule(config); err != nil {
+			return fmt.Errorf("failed to update security rule: %w", err)
+		}
+	}
+
+	// Update rate limiter
+	if config.RateLimit != nil {
+		wm.rateLimiters[config.ID] = NewRateLimiter(
+			float64(config.RateLimit.RequestsPerSecond),
+			float64(config.RateLimit.BurstSize),
+		)
+	} else {
+		delete(wm.rateLimiters, config.ID)
+	}
+
+	return nil
+}
+
+// DeleteWebhook deletes a webhook
+func (wm *WebhookManager) DeleteWebhook(webhookID string) error {
+	wm.mu.Lock()
+	defer wm.mu.Unlock()
+
+	if _, exists := wm.webhooks[webhookID]; !exists {
+		return fmt.Errorf("webhook %s not found", webhookID)
+	}
+
+	// Clean up
+	delete(wm.webhooks, webhookID)
+	delete(wm.rateLimiters, webhookID)
+	delete(wm.securityRules, webhookID)
+	wm.analytics.RemoveWebhook(webhookID)
+
+	return nil
+}
+
+// GetWebhook retrieves a webhook configuration
+func (wm *WebhookManager) GetWebhook(webhookID string) (*WebhookConfig, error) {
+	wm.mu.RLock()
+	defer wm.mu.RUnlock()
+
+	config, exists := wm.webhooks[webhookID]
+	if !exists {
+		return nil, fmt.Errorf("webhook %s not found", webhookID)
+	}
+
+	return config, nil
+}
+
+// ListWebhooks returns all webhook configurations
+func (wm *WebhookManager) ListWebhooks() []*WebhookConfig {
+	wm.mu.RLock()
+	defer wm.mu.RUnlock()
+
+	webhooks := make([]*WebhookConfig, 0, len(wm.webhooks))
+	for _, config := range wm.webhooks {
+		webhooks = append(webhooks, config)
+	}
+
+	return webhooks
+}
+
+// setupManagementRoutes sets up management API routes
+func (wm *WebhookManager) setupManagementRoutes() {
+	mgmt := wm.router.PathPrefix("/webhook-mgmt").Subrouter()
+
+	mgmt.HandleFunc("/webhooks", wm.handleListWebhooks).Methods("GET")
+	mgmt.HandleFunc("/webhooks", wm.handleCreateWebhook).Methods("POST")
+	mgmt.HandleFunc("/webhooks/{id}", wm.handleGetWebhook).Methods("GET")
+	mgmt.HandleFunc("/webhooks/{id}", wm.handleUpdateWebhook).Methods("PUT")
+	mgmt.HandleFunc("/webhooks/{id}", wm.handleDeleteWebhook).Methods("DELETE")
+	mgmt.HandleFunc("/analytics", wm.handleGetAnalytics).Methods("GET")
+	mgmt.HandleFunc("/analytics/{id}", wm.handleGetWebhookAnalytics).Methods("GET")
+	mgmt.HandleFunc("/health", wm.handleHealthCheck).Methods("GET")
+}
+
+// registerWebhookRoute registers a webhook route
+func (wm *WebhookManager) registerWebhookRoute(config *WebhookConfig) {
+	handler := wm.createWebhookHandler(config)
+
+	// Register for all specified methods
+	for _, method := range config.Methods {
+		wm.router.HandleFunc(config.Path, handler).Methods(method)
+	}
+}
+
+// createWebhookHandler creates a handler for a specific webhook
+func (wm *WebhookManager) createWebhookHandler(config *WebhookConfig) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		startTime := time.Now()
+
+		// Create webhook request
+		webhookReq := &WebhookRequest{
+			ID:          generateRequestID(),
+			WebhookID:   config.ID,
+			Method:      r.Method,
+			Path:        r.URL.Path,
+			Headers:     extractHeaders(r),
+			QueryParams: extractQueryParams(r),
+			RemoteAddr:  r.RemoteAddr,
+			UserAgent:   r.UserAgent(),
+			Timestamp:   startTime,
+		}
+
+		// Security validation
+		if config.Security != nil {
+			if err := wm.validateSecurity(config, r); err != nil {
+				wm.sendErrorResponse(w, http.StatusUnauthorized, "Security validation failed", err)
+				wm.analytics.RecordRequest(config.ID, false, time.Since(startTime))
+				return
+			}
+		}
+
+		// Rate limiting
+		if config.RateLimit != nil {
+			rateLimiter := wm.rateLimiters[config.ID]
+			if rateLimiter != nil && !rateLimiter.Allow() {
+				wm.sendErrorResponse(w, http.StatusTooManyRequests, "Rate limit exceeded", nil)
+				wm.analytics.RecordRequest(config.ID, false, time.Since(startTime))
+				return
+			}
+		}
+
+		// Read and process payload
+		if r.Body != nil {
+			bodyBytes, err := io.ReadAll(r.Body)
+			if err != nil {
+				wm.sendErrorResponse(w, http.StatusBadRequest, "Failed to read request body", err)
+				wm.analytics.RecordRequest(config.ID, false, time.Since(startTime))
+				return
+			}
+
+			webhookReq.Size = int64(len(bodyBytes))
+			webhookReq.RawBody = bodyBytes
+
+			// Process payload based on configuration
+			if config.PayloadConfig != nil {
+				processedBody, err := wm.processPayload(bodyBytes, config.PayloadConfig, r.Header.Get("Content-Type"))
+				if err != nil {
+					wm.sendErrorResponse(w, http.StatusBadRequest, "Failed to process payload", err)
+					wm.analytics.RecordRequest(config.ID, false, time.Since(startTime))
+					return
+				}
+				webhookReq.Body = processedBody
+			} else {
+				// Default JSON parsing
+				var jsonBody interface{}
+				if err := json.Unmarshal(bodyBytes, &jsonBody); err == nil {
+					webhookReq.Body = jsonBody
+				} else {
+					webhookReq.Body = string(bodyBytes)
+				}
+			}
+		}
+
+		// Apply filters
+		if config.Filters != nil {
+			if !wm.applyFilters(webhookReq, config.Filters) {
+				wm.sendErrorResponse(w, http.StatusBadRequest, "Request filtered out", nil)
+				wm.analytics.RecordRequest(config.ID, false, time.Since(startTime))
+				return
+			}
+		}
+
+		// Apply transformations
+		if config.Transformations != nil {
+			transformedBody, err := wm.applyTransformations(webhookReq.Body, config.Transformations)
+			if err != nil {
+				wm.sendErrorResponse(w, http.StatusInternalServerError, "Transformation failed", err)
+				wm.analytics.RecordRequest(config.ID, false, time.Since(startTime))
+				return
+			}
+			webhookReq.Body = transformedBody
+		}
+
+		webhookReq.ProcessingTime = time.Since(startTime)
+
+		// Trigger workflow execution (this would integrate with the workflow engine)
+		wm.triggerWorkflow(config, webhookReq)
+
+		// Send response
+		wm.sendWebhookResponse(w, config.ResponseConfig, webhookReq)
+
+		// Record analytics
+		wm.analytics.RecordRequest(config.ID, true, time.Since(startTime))
+		wm.analytics.AddRecentRequest(webhookReq)
+
+		// Publish event
+		event := &WebhookEvent{
+			Type:      "request",
+			WebhookID: config.ID,
+			Request:   webhookReq,
+			Timestamp: time.Now(),
+		}
+		wm.eventBus.Publish("webhook.request", event)
+
+		// Update last triggered time
+		now := time.Now()
+		config.LastTriggered = &now
+	}
+}
+
+// Validation and processing methods
+
+func (wm *WebhookManager) validateWebhookConfig(config *WebhookConfig) error {
+	if config.ID == "" {
+		return fmt.Errorf("webhook ID is required")
+	}
+
+	if config.Path == "" {
+		return fmt.Errorf("webhook path is required")
+	}
+
+	if len(config.Methods) == 0 {
+		config.Methods = []string{"POST"} // Default to POST
+	}
+
+	// Validate methods
+	validMethods := map[string]bool{
+		"GET": true, "POST": true, "PUT": true, "DELETE": true,
+		"PATCH": true, "HEAD": true, "OPTIONS": true,
+	}
+
+	for _, method := range config.Methods {
+		if !validMethods[strings.ToUpper(method)] {
+			return fmt.Errorf("invalid HTTP method: %s", method)
+		}
+	}
+
+	return nil
+}
+
+func (wm *WebhookManager) setupSecurityRule(config *WebhookConfig) error {
+	if config.Security == nil {
+		return nil
+	}
+
+	rule := &SecurityRule{
+		AllowedIPs: make([]net.IPNet, 0),
+		BlockedIPs: make([]net.IPNet, 0),
+	}
+
+	// Parse IP whitelist
+	for _, ipStr := range config.Security.IPWhitelist {
+		_, ipNet, err := net.ParseCIDR(ipStr)
+		if err != nil {
+			// Try parsing as single IP
+			ip := net.ParseIP(ipStr)
+			if ip == nil {
+				return fmt.Errorf("invalid IP address in whitelist: %s", ipStr)
+			}
+			if ip.To4() != nil {
+				ipNet = &net.IPNet{IP: ip, Mask: net.CIDRMask(32, 32)}
+			} else {
+				ipNet = &net.IPNet{IP: ip, Mask: net.CIDRMask(128, 128)}
+			}
+		}
+		rule.AllowedIPs = append(rule.AllowedIPs, *ipNet)
+	}
+
+	// Parse IP blacklist
+	for _, ipStr := range config.Security.IPBlacklist {
+		_, ipNet, err := net.ParseCIDR(ipStr)
+		if err != nil {
+			ip := net.ParseIP(ipStr)
+			if ip == nil {
+				return fmt.Errorf("invalid IP address in blacklist: %s", ipStr)
+			}
+			if ip.To4() != nil {
+				ipNet = &net.IPNet{IP: ip, Mask: net.CIDRMask(32, 32)}
+			} else {
+				ipNet = &net.IPNet{IP: ip, Mask: net.CIDRMask(128, 128)}
+			}
+		}
+		rule.BlockedIPs = append(rule.BlockedIPs, *ipNet)
+	}
+
+	wm.securityRules[config.ID] = rule
+	return nil
+}
+
+func (wm *WebhookManager) validateSecurity(config *WebhookConfig, r *http.Request) error {
+	security := config.Security
+
+	// Check IP restrictions
+	if rule, exists := wm.securityRules[config.ID]; exists {
+		clientIP := net.ParseIP(strings.Split(r.RemoteAddr, ":")[0])
+		if clientIP == nil {
+			return fmt.Errorf("invalid client IP")
+		}
+
+		// Check blacklist
+		for _, blockedIP := range rule.BlockedIPs {
+			if blockedIP.Contains(clientIP) {
+				return fmt.Errorf("IP address is blacklisted")
+			}
+		}
+
+		// Check whitelist (if defined)
+		if len(rule.AllowedIPs) > 0 {
+			allowed := false
+			for _, allowedIP := range rule.AllowedIPs {
+				if allowedIP.Contains(clientIP) {
+					allowed = true
+					break
+				}
+			}
+			if !allowed {
+				return fmt.Errorf("IP address not in whitelist")
+			}
+		}
+	}
+
+	// Check required headers
+	for headerName, expectedValue := range security.RequiredHeaders {
+		actualValue := r.Header.Get(headerName)
+		if actualValue != expectedValue {
+			return fmt.Errorf("required header %s mismatch", headerName)
+		}
+	}
+
+	// Check TLS requirement
+	if security.TLSRequired && r.TLS == nil {
+		return fmt.Errorf("TLS connection required")
+	}
+
+	// Check basic authentication
+	if security.BasicAuth != nil {
+		username, password, ok := r.BasicAuth()
+		if !ok || username != security.BasicAuth.Username || password != security.BasicAuth.Password {
+			return fmt.Errorf("invalid basic authentication")
+		}
+	}
+
+	// Validate signature
+	if security.SecretKey != "" && security.SignatureHeader != "" {
+		signature := r.Header.Get(security.SignatureHeader)
+		if signature == "" {
+			return fmt.Errorf("missing signature header")
+		}
+
+		bodyBytes, err := io.ReadAll(r.Body)
+		if err != nil {
+			return fmt.Errorf("failed to read body for signature validation")
+		}
+
+		// Reset body for further processing
+		r.Body = io.NopCloser(strings.NewReader(string(bodyBytes)))
+
+		if !wm.validateSignature(bodyBytes, signature, security.SecretKey, security.SignatureMethod) {
+			return fmt.Errorf("invalid signature")
+		}
+	}
+
+	return nil
+}
+
+func (wm *WebhookManager) validateSignature(payload []byte, signature, secret, method string) bool {
+	switch strings.ToLower(method) {
+	case "hmac-sha256", "sha256":
+		mac := hmac.New(sha256.New, []byte(secret))
+		mac.Write(payload)
+		expectedSignature := hex.EncodeToString(mac.Sum(nil))
+
+		// Handle GitHub-style signatures (sha256=...)
+		if strings.HasPrefix(signature, "sha256=") {
+			signature = signature[7:]
+		}
+
+		return hmac.Equal([]byte(signature), []byte(expectedSignature))
+	default:
+		return false
+	}
+}
+
+func (wm *WebhookManager) processPayload(bodyBytes []byte, config *PayloadConfig, contentType string) (interface{}, error) {
+	// Check size limit
+	if config.MaxSize > 0 && int64(len(bodyBytes)) > config.MaxSize {
+		return nil, fmt.Errorf("payload size %d exceeds limit %d", len(bodyBytes), config.MaxSize)
+	}
+
+	// Check content type
+	if len(config.AllowedTypes) > 0 {
+		allowed := false
+		for _, allowedType := range config.AllowedTypes {
+			if strings.Contains(contentType, allowedType) {
+				allowed = true
+				break
+			}
+		}
+		if !allowed {
+			return nil, fmt.Errorf("content type %s not allowed", contentType)
+		}
+	}
+
+	// Auto-parse based on content type
+	if config.AutoParse {
+		if strings.Contains(contentType, "application/json") {
+			var jsonData interface{}
+			if err := json.Unmarshal(bodyBytes, &jsonData); err != nil {
+				return nil, fmt.Errorf("failed to parse JSON: %w", err)
+			}
+			return jsonData, nil
+		}
+		// Add support for other content types (XML, form data, etc.)
+	}
+
+	return string(bodyBytes), nil
+}
+
+func (wm *WebhookManager) applyFilters(request *WebhookRequest, filters []*WebhookFilter) bool {
+	for _, filter := range filters {
+		if !wm.evaluateFilter(request, filter) {
+			return false
+		}
+	}
+	return true
+}
+
+func (wm *WebhookManager) evaluateFilter(request *WebhookRequest, filter *WebhookFilter) bool {
+	// Extract field value based on filter field specification
+	var fieldValue interface{}
+
+	if strings.HasPrefix(filter.Field, "header.") {
+		headerName := filter.Field[7:]
+		fieldValue = request.Headers[headerName]
+	} else if strings.HasPrefix(filter.Field, "query.") {
+		queryName := filter.Field[6:]
+		fieldValue = request.QueryParams[queryName]
+	} else {
+		// Assume it's a JSON path into the body
+		fieldValue = extractJSONPath(request.Body, filter.Field)
+	}
+
+	// Evaluate based on operator
+	switch filter.Operator {
+	case "equals":
+		if !filter.CaseSensitive {
+			return strings.EqualFold(fmt.Sprintf("%v", fieldValue), fmt.Sprintf("%v", filter.Value))
+		}
+		return fmt.Sprintf("%v", fieldValue) == fmt.Sprintf("%v", filter.Value)
+
+	case "contains":
+		haystack := fmt.Sprintf("%v", fieldValue)
+		needle := fmt.Sprintf("%v", filter.Value)
+		if !filter.CaseSensitive {
+			haystack = strings.ToLower(haystack)
+			needle = strings.ToLower(needle)
+		}
+		return strings.Contains(haystack, needle)
+
+	case "exists":
+		return fieldValue != nil
+
+	default:
+		return false
+	}
+}
+
+func (wm *WebhookManager) applyTransformations(body interface{}, transformations []*PayloadTransform) (interface{}, error) {
+	result := body
+
+	for _, transform := range transformations {
+		switch transform.Type {
+		case "extract":
+			result = extractJSONPath(result, transform.Source)
+		case "map":
+			// Apply mapping transformation
+			if mapping, ok := transform.Options["mapping"].(map[string]interface{}); ok {
+				result = applyMapping(result, mapping)
+			}
+		// Add more transformation types as needed
+		}
+	}
+
+	return result, nil
+}
+
+// Response handling
+
+func (wm *WebhookManager) sendWebhookResponse(w http.ResponseWriter, config *ResponseConfig, request *WebhookRequest) {
+	// Set default response config if not provided
+	if config == nil {
+		config = &ResponseConfig{
+			StatusCode: http.StatusOK,
+			Headers:    map[string]string{"Content-Type": "application/json"},
+			Body:       map[string]interface{}{"status": "ok", "received": true},
+		}
+	}
+
+	// Set headers
+	for key, value := range config.Headers {
+		w.Header().Set(key, value)
+	}
+
+	// Set status code
+	w.WriteHeader(config.StatusCode)
+
+	// Send body
+	if config.Body != nil {
+		if err := json.NewEncoder(w).Encode(config.Body); err != nil {
+			fmt.Printf("Error encoding response: %v\n", err)
+		}
+	}
+}
+
+func (wm *WebhookManager) sendErrorResponse(w http.ResponseWriter, statusCode int, message string, err error) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+
+	response := map[string]interface{}{
+		"error":   message,
+		"status":  statusCode,
+		"timestamp": time.Now().UTC().Format(time.RFC3339),
+	}
+
+	if err != nil {
+		response["details"] = err.Error()
+	}
+
+	json.NewEncoder(w).Encode(response)
+}
+
+// Workflow integration (placeholder)
+func (wm *WebhookManager) triggerWorkflow(config *WebhookConfig, request *WebhookRequest) {
+	// This would integrate with the workflow engine to trigger workflow execution
+	// For now, it's a placeholder
+	fmt.Printf("Triggering workflow %s for webhook %s\n", config.WorkflowID, config.ID)
+}
+
+// Utility functions
+
+func extractHeaders(r *http.Request) map[string]string {
+	headers := make(map[string]string)
+	for key, values := range r.Header {
+		headers[key] = strings.Join(values, ", ")
+	}
+	return headers
+}
+
+func extractQueryParams(r *http.Request) map[string]string {
+	params := make(map[string]string)
+	for key, values := range r.URL.Query() {
+		params[key] = strings.Join(values, ", ")
+	}
+	return params
+}
+
+func extractJSONPath(data interface{}, path string) interface{} {
+	// Simplified JSON path extraction
+	// In a real implementation, use a proper JSON path library
+	if dataMap, ok := data.(map[string]interface{}); ok {
+		if strings.Contains(path, ".") {
+			parts := strings.SplitN(path, ".", 2)
+			if value, exists := dataMap[parts[0]]; exists {
+				return extractJSONPath(value, parts[1])
+			}
+		} else {
+			return dataMap[path]
+		}
+	}
+	return nil
+}
+
+func applyMapping(data interface{}, mapping map[string]interface{}) interface{} {
+	// Simplified mapping application
+	// In a real implementation, this would be more sophisticated
+	if dataMap, ok := data.(map[string]interface{}); ok {
+		result := make(map[string]interface{})
+		for targetKey, sourceKey := range mapping {
+			if sourceKeyStr, ok := sourceKey.(string); ok {
+				result[targetKey] = dataMap[sourceKeyStr]
+			}
+		}
+		return result
+	}
+	return data
+}
+
+func generateRequestID() string {
+	// Generate a unique request ID
+	return fmt.Sprintf("%d", time.Now().UnixNano())
+}
+
+// Rate limiter implementation
+
+func NewRateLimiter(rate, capacity float64) *RateLimiter {
+	return &RateLimiter{
+		tokens:     capacity,
+		capacity:   capacity,
+		refillRate: rate,
+		lastRefill: time.Now(),
+	}
+}
+
+func (rl *RateLimiter) Allow() bool {
+	rl.mu.Lock()
+	defer rl.mu.Unlock()
+
+	now := time.Now()
+	elapsed := now.Sub(rl.lastRefill).Seconds()
+
+	// Add tokens based on elapsed time
+	rl.tokens += elapsed * rl.refillRate
+	if rl.tokens > rl.capacity {
+		rl.tokens = rl.capacity
+	}
+
+	rl.lastRefill = now
+
+	// Check if we have tokens available
+	if rl.tokens >= 1 {
+		rl.tokens--
+		return true
+	}
+
+	return false
+}
+
+// Analytics implementation
+
+func NewWebhookAnalytics() *WebhookAnalytics {
+	return &WebhookAnalytics{
+		requestsByWebhook: make(map[string]*WebhookStats),
+		requestsByMethod:  make(map[string]int64),
+		requestsByStatus:  make(map[int]int64),
+		recentRequests:    make([]*WebhookRequest, 0),
+		maxRecentRequests: 100,
+	}
+}
+
+func (wa *WebhookAnalytics) AddWebhook(webhookID string) {
+	wa.mu.Lock()
+	defer wa.mu.Unlock()
+
+	wa.requestsByWebhook[webhookID] = &WebhookStats{}
+}
+
+func (wa *WebhookAnalytics) RemoveWebhook(webhookID string) {
+	wa.mu.Lock()
+	defer wa.mu.Unlock()
+
+	delete(wa.requestsByWebhook, webhookID)
+}
+
+func (wa *WebhookAnalytics) RecordRequest(webhookID string, success bool, processingTime time.Duration) {
+	wa.mu.Lock()
+	defer wa.mu.Unlock()
+
+	wa.totalRequests++
+	wa.totalProcessingTime += processingTime
+	wa.avgProcessingTime = wa.totalProcessingTime / time.Duration(wa.totalRequests)
+
+	if success {
+		wa.successfulRequests++
+	} else {
+		wa.failedRequests++
+	}
+
+	// Update webhook-specific stats
+	if stats, exists := wa.requestsByWebhook[webhookID]; exists {
+		stats.TotalRequests++
+		if success {
+			stats.SuccessfulRequests++
+		} else {
+			stats.FailedRequests++
+		}
+		stats.LastTriggered = time.Now()
+
+		// Update response times (keep last 10)
+		stats.ResponseTimes = append(stats.ResponseTimes, processingTime)
+		if len(stats.ResponseTimes) > 10 {
+			stats.ResponseTimes = stats.ResponseTimes[1:]
+		}
+
+		// Calculate average
+		if stats.TotalRequests > 0 {
+			var total time.Duration
+			for _, rt := range stats.ResponseTimes {
+				total += rt
+			}
+			stats.AvgProcessingTime = total / time.Duration(len(stats.ResponseTimes))
+		}
+	}
+}
+
+func (wa *WebhookAnalytics) AddRecentRequest(request *WebhookRequest) {
+	wa.mu.Lock()
+	defer wa.mu.Unlock()
+
+	wa.recentRequests = append(wa.recentRequests, request)
+	if len(wa.recentRequests) > wa.maxRecentRequests {
+		wa.recentRequests = wa.recentRequests[1:]
+	}
+}
+
+func (wa *WebhookAnalytics) GetStats() map[string]interface{} {
+	wa.mu.RLock()
+	defer wa.mu.RUnlock()
+
+	return map[string]interface{}{
+		"totalRequests":      wa.totalRequests,
+		"successfulRequests": wa.successfulRequests,
+		"failedRequests":     wa.failedRequests,
+		"avgProcessingTime":  wa.avgProcessingTime.String(),
+		"successRate":        float64(wa.successfulRequests) / float64(wa.totalRequests) * 100,
+		"webhookStats":       wa.requestsByWebhook,
+		"recentRequestCount": len(wa.recentRequests),
+	}
+}
+
+// Event bus implementation
+
+func NewEventBus() *EventBus {
+	return &EventBus{
+		subscribers: make(map[string][]chan *WebhookEvent),
+	}
+}
+
+func (eb *EventBus) Subscribe(eventType string) <-chan *WebhookEvent {
+	eb.mu.Lock()
+	defer eb.mu.Unlock()
+
+	ch := make(chan *WebhookEvent, 100)
+	eb.subscribers[eventType] = append(eb.subscribers[eventType], ch)
+	return ch
+}
+
+func (eb *EventBus) Publish(eventType string, event *WebhookEvent) {
+	eb.mu.RLock()
+	defer eb.mu.RUnlock()
+
+	if subscribers, exists := eb.subscribers[eventType]; exists {
+		for _, ch := range subscribers {
+			select {
+			case ch <- event:
+			default:
+				// Channel is full, skip
+			}
+		}
+	}
+}
+
+// HTTP handlers for management API
+
+func (wm *WebhookManager) handleListWebhooks(w http.ResponseWriter, r *http.Request) {
+	webhooks := wm.ListWebhooks()
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"webhooks": webhooks,
+		"count":    len(webhooks),
+	})
+}
+
+func (wm *WebhookManager) handleCreateWebhook(w http.ResponseWriter, r *http.Request) {
+	var config WebhookConfig
+	if err := json.NewDecoder(r.Body).Decode(&config); err != nil {
+		wm.sendErrorResponse(w, http.StatusBadRequest, "Invalid request body", err)
+		return
+	}
+
+	if err := wm.CreateWebhook(&config); err != nil {
+		wm.sendErrorResponse(w, http.StatusBadRequest, "Failed to create webhook", err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"status":  "created",
+		"webhook": config,
+	})
+}
+
+func (wm *WebhookManager) handleGetWebhook(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	webhookID := vars["id"]
+
+	config, err := wm.GetWebhook(webhookID)
+	if err != nil {
+		wm.sendErrorResponse(w, http.StatusNotFound, "Webhook not found", err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(config)
+}
+
+func (wm *WebhookManager) handleUpdateWebhook(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	webhookID := vars["id"]
+
+	var config WebhookConfig
+	if err := json.NewDecoder(r.Body).Decode(&config); err != nil {
+		wm.sendErrorResponse(w, http.StatusBadRequest, "Invalid request body", err)
+		return
+	}
+
+	config.ID = webhookID
+	if err := wm.UpdateWebhook(webhookID, &config); err != nil {
+		wm.sendErrorResponse(w, http.StatusBadRequest, "Failed to update webhook", err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"status":  "updated",
+		"webhook": config,
+	})
+}
+
+func (wm *WebhookManager) handleDeleteWebhook(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	webhookID := vars["id"]
+
+	if err := wm.DeleteWebhook(webhookID); err != nil {
+		wm.sendErrorResponse(w, http.StatusNotFound, "Failed to delete webhook", err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"status": "deleted",
+		"id":     webhookID,
+	})
+}
+
+func (wm *WebhookManager) handleGetAnalytics(w http.ResponseWriter, r *http.Request) {
+	stats := wm.analytics.GetStats()
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(stats)
+}
+
+func (wm *WebhookManager) handleGetWebhookAnalytics(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	webhookID := vars["id"]
+
+	wm.analytics.mu.RLock()
+	stats, exists := wm.analytics.requestsByWebhook[webhookID]
+	wm.analytics.mu.RUnlock()
+
+	if !exists {
+		wm.sendErrorResponse(w, http.StatusNotFound, "Webhook analytics not found", nil)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(stats)
+}
+
+func (wm *WebhookManager) handleHealthCheck(w http.ResponseWriter, r *http.Request) {
+	health := map[string]interface{}{
+		"status":           "healthy",
+		"webhookCount":     len(wm.webhooks),
+		"totalRequests":    wm.analytics.totalRequests,
+		"uptime":          time.Since(wm.analytics.requestsByWebhook["startup_time"].LastTriggered).String(),
+		"memoryUsage":     "N/A", // Could add actual memory usage
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(health)
+}

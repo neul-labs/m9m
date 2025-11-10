@@ -2,9 +2,9 @@ package engine
 
 import (
 	"testing"
-	"github.com/yourusername/n8n-go/internal/credentials"
-	"github.com/yourusername/n8n-go/internal/model"
-	"github.com/yourusername/n8n-go/internal/nodes/base"
+	"github.com/dipankar/n8n-go/internal/credentials"
+	"github.com/dipankar/n8n-go/internal/model"
+	"github.com/dipankar/n8n-go/internal/nodes/base"
 )
 
 // mockNodeExecutor is a mock implementation of NodeExecutor for testing

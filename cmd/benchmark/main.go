@@ -5,11 +5,11 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/yourusername/n8n-go/internal/engine"
-	"github.com/yourusername/n8n-go/internal/expressions"
-	"github.com/yourusername/n8n-go/internal/model"
-	"github.com/yourusername/n8n-go/internal/nodes/core"
-	"github.com/yourusername/n8n-go/internal/nodes/transform"
+	"github.com/dipankar/n8n-go/internal/engine"
+	"github.com/dipankar/n8n-go/internal/expressions"
+	"github.com/dipankar/n8n-go/internal/model"
+	"github.com/dipankar/n8n-go/internal/nodes/core"
+	"github.com/dipankar/n8n-go/internal/nodes/transform"
 )
 
 func main() {

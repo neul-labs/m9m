@@ -10,9 +10,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/n8n-go/n8n-go/internal/expressions"
-	"github.com/n8n-go/n8n-go/internal/nodes/base"
-	"github.com/n8n-go/n8n-go/pkg/model"
+	"github.com/dipankar/n8n-go/internal/expressions"
+	"github.com/dipankar/n8n-go/internal/nodes/base"
+	"github.com/dipankar/n8n-go/internal/model"
 )
 
 // LiteLLMNode provides unified access to multiple LLM providers
@@ -160,8 +160,8 @@ var modelMappings = map[string]string{
 
 func NewLiteLLMNode() *LiteLLMNode {
 	return &LiteLLMNode{
-		BaseNode: base.NewBaseNode("LiteLLM", "Universal LLM interface", "1.0.0"),
-		evaluator: expressions.NewGojaExpressionEvaluator(),
+		BaseNode: base.NewBaseNode(base.NodeDescription{Name: "LiteLLM", Description: "Universal LLM interface", Category: "1.0.0"}),
+		evaluator: expressions.NewGojaExpressionEvaluator(expressions.DefaultEvaluatorConfig()),
 		httpClient: &http.Client{
 			Timeout: 120 * time.Second, // Longer timeout for LLMs
 		},

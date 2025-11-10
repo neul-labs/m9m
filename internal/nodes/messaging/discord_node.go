@@ -11,8 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/n8n-go/internal/core/base"
-	"github.com/n8n-go/internal/core/interfaces"
+	"github.com/dipankar/n8n-go/internal/nodes/base"
 )
 
 // DiscordNode provides Discord messaging operations
@@ -24,7 +23,7 @@ type DiscordNode struct {
 // NewDiscordNode creates a new Discord node
 func NewDiscordNode() *DiscordNode {
 	return &DiscordNode{
-		BaseNode: base.NewBaseNode("Discord", "Discord Messaging"),
+		BaseNode: base.NewBaseNode(base.NodeDescription{Name: "Discord", Description: "Discord Messaging", Category: "core"}),
 		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
 		},
@@ -32,8 +31,8 @@ func NewDiscordNode() *DiscordNode {
 }
 
 // GetMetadata returns the node metadata
-func (n *DiscordNode) GetMetadata() interfaces.NodeMetadata {
-	return interfaces.NodeMetadata{
+func (n *DiscordNode) GetMetadata() base.NodeMetadata {
+	return base.NodeMetadata{
 		Name:        "Discord",
 		DisplayName: "Discord",
 		Description: "Send messages, manage channels, and interact with Discord",
@@ -41,19 +40,19 @@ func (n *DiscordNode) GetMetadata() interfaces.NodeMetadata {
 		Version:     1,
 		Inputs:      []string{"main"},
 		Outputs:     []string{"main"},
-		Credentials: []interfaces.CredentialType{
+		Credentials: []base.CredentialType{
 			{
 				Name:        "discordApi",
 				Required:    true,
 				DisplayName: "Discord Bot/Webhook",
 			},
 		},
-		Properties: []interfaces.NodeProperty{
+		Properties: []base.NodeProperty{
 			{
 				Name:        "resource",
 				DisplayName: "Resource",
 				Type:        "options",
-				Options: []interfaces.OptionItem{
+				Options: []base.OptionItem{
 					{Name: "Message", Value: "message"},
 					{Name: "Channel", Value: "channel"},
 					{Name: "User", Value: "user"},
@@ -70,7 +69,7 @@ func (n *DiscordNode) GetMetadata() interfaces.NodeMetadata {
 				Name:        "operation",
 				DisplayName: "Operation",
 				Type:        "options",
-				Options: []interfaces.OptionItem{
+				Options: []base.OptionItem{
 					{Name: "Send", Value: "send"},
 					{Name: "Edit", Value: "edit"},
 					{Name: "Delete", Value: "delete"},
@@ -194,11 +193,11 @@ func (n *DiscordNode) GetMetadata() interfaces.NodeMetadata {
 }
 
 // Execute runs the Discord operation
-func (n *DiscordNode) Execute(ctx context.Context, params interfaces.ExecutionParams) (interfaces.NodeOutput, error) {
+func (n *DiscordNode) Execute(ctx context.Context, params base.ExecutionParams) (base.NodeOutput, error) {
 	// Get credentials
 	credentials, err := params.GetCredentials("discordApi")
 	if err != nil {
-		return interfaces.NodeOutput{}, fmt.Errorf("failed to get Discord credentials: %w", err)
+		return base.NodeOutput{}, fmt.Errorf("failed to get Discord credentials: %w", err)
 	}
 
 	// Check credential type (bot token or webhook URL)
@@ -211,7 +210,7 @@ func (n *DiscordNode) Execute(ctx context.Context, params interfaces.ExecutionPa
 	}
 
 	if botToken == "" && webhookUrl == "" {
-		return interfaces.NodeOutput{}, fmt.Errorf("Discord bot token or webhook URL required")
+		return base.NodeOutput{}, fmt.Errorf("Discord bot token or webhook URL required")
 	}
 
 	// Get resource and operation
@@ -246,28 +245,28 @@ func (n *DiscordNode) Execute(ctx context.Context, params interfaces.ExecutionPa
 	}
 
 	if err != nil {
-		return interfaces.NodeOutput{}, err
+		return base.NodeOutput{}, err
 	}
 
 	// Format output
-	var outputItems []interfaces.ItemData
+	var outputItems []base.ItemData
 	switch v := result.(type) {
 	case []interface{}:
 		for i, item := range v {
 			if itemMap, ok := item.(map[string]interface{}); ok {
-				outputItems = append(outputItems, interfaces.ItemData{
+				outputItems = append(outputItems, base.ItemData{
 					JSON:  itemMap,
 					Index: i,
 				})
 			}
 		}
 	case map[string]interface{}:
-		outputItems = append(outputItems, interfaces.ItemData{
+		outputItems = append(outputItems, base.ItemData{
 			JSON:  v,
 			Index: 0,
 		})
 	default:
-		outputItems = append(outputItems, interfaces.ItemData{
+		outputItems = append(outputItems, base.ItemData{
 			JSON: map[string]interface{}{
 				"result": result,
 			},
@@ -275,14 +274,14 @@ func (n *DiscordNode) Execute(ctx context.Context, params interfaces.ExecutionPa
 		})
 	}
 
-	return interfaces.NodeOutput{
+	return base.NodeOutput{
 		Items: outputItems,
 	}, nil
 }
 
 // Webhook operations
 
-func (n *DiscordNode) sendWebhookMessage(webhookUrl string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+func (n *DiscordNode) sendWebhookMessage(webhookUrl string, params base.ExecutionParams) (map[string]interface{}, error) {
 	content := params.GetNodeParameter("content", "").(string)
 	username := params.GetNodeParameter("username", "").(string)
 	avatarUrl := params.GetNodeParameter("avatarUrl", "").(string)
@@ -314,7 +313,7 @@ func (n *DiscordNode) sendWebhookMessage(webhookUrl string, params interfaces.Ex
 
 // Message resource handlers
 
-func (n *DiscordNode) handleMessageResource(token, operation string, params interfaces.ExecutionParams) (interface{}, error) {
+func (n *DiscordNode) handleMessageResource(token, operation string, params base.ExecutionParams) (interface{}, error) {
 	channelId := params.GetNodeParameter("channelId", "").(string)
 	if channelId == "" {
 		return nil, fmt.Errorf("channel ID is required")
@@ -340,7 +339,7 @@ func (n *DiscordNode) handleMessageResource(token, operation string, params inte
 	}
 }
 
-func (n *DiscordNode) sendMessage(token, channelId string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+func (n *DiscordNode) sendMessage(token, channelId string, params base.ExecutionParams) (map[string]interface{}, error) {
 	content := params.GetNodeParameter("content", "").(string)
 	tts := params.GetNodeParameter("tts", false).(bool)
 
@@ -362,7 +361,7 @@ func (n *DiscordNode) sendMessage(token, channelId string, params interfaces.Exe
 	return n.makeDiscordRequest("POST", url, token, body)
 }
 
-func (n *DiscordNode) editMessage(token, channelId string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+func (n *DiscordNode) editMessage(token, channelId string, params base.ExecutionParams) (map[string]interface{}, error) {
 	messageId := params.GetNodeParameter("messageId", "").(string)
 	if messageId == "" {
 		return nil, fmt.Errorf("message ID is required")
@@ -377,7 +376,7 @@ func (n *DiscordNode) editMessage(token, channelId string, params interfaces.Exe
 	return n.makeDiscordRequest("PATCH", url, token, body)
 }
 
-func (n *DiscordNode) deleteMessage(token, channelId string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+func (n *DiscordNode) deleteMessage(token, channelId string, params base.ExecutionParams) (map[string]interface{}, error) {
 	messageId := params.GetNodeParameter("messageId", "").(string)
 	if messageId == "" {
 		return nil, fmt.Errorf("message ID is required")
@@ -387,7 +386,7 @@ func (n *DiscordNode) deleteMessage(token, channelId string, params interfaces.E
 	return n.makeDiscordRequest("DELETE", url, token, nil)
 }
 
-func (n *DiscordNode) getMessage(token, channelId string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+func (n *DiscordNode) getMessage(token, channelId string, params base.ExecutionParams) (map[string]interface{}, error) {
 	messageId := params.GetNodeParameter("messageId", "").(string)
 	if messageId == "" {
 		// Get multiple messages
@@ -400,7 +399,7 @@ func (n *DiscordNode) getMessage(token, channelId string, params interfaces.Exec
 	return n.makeDiscordRequest("GET", url, token, nil)
 }
 
-func (n *DiscordNode) addReaction(token, channelId string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+func (n *DiscordNode) addReaction(token, channelId string, params base.ExecutionParams) (map[string]interface{}, error) {
 	messageId := params.GetNodeParameter("messageId", "").(string)
 	emoji := params.GetNodeParameter("emoji", "").(string)
 
@@ -412,7 +411,7 @@ func (n *DiscordNode) addReaction(token, channelId string, params interfaces.Exe
 	return n.makeDiscordRequest("PUT", url, token, nil)
 }
 
-func (n *DiscordNode) pinMessage(token, channelId string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+func (n *DiscordNode) pinMessage(token, channelId string, params base.ExecutionParams) (map[string]interface{}, error) {
 	messageId := params.GetNodeParameter("messageId", "").(string)
 	if messageId == "" {
 		return nil, fmt.Errorf("message ID is required")
@@ -422,7 +421,7 @@ func (n *DiscordNode) pinMessage(token, channelId string, params interfaces.Exec
 	return n.makeDiscordRequest("PUT", url, token, nil)
 }
 
-func (n *DiscordNode) unpinMessage(token, channelId string, params interfaces.ExecutionParams) (map[string]interface{}, error) {
+func (n *DiscordNode) unpinMessage(token, channelId string, params base.ExecutionParams) (map[string]interface{}, error) {
 	messageId := params.GetNodeParameter("messageId", "").(string)
 	if messageId == "" {
 		return nil, fmt.Errorf("message ID is required")
@@ -434,7 +433,7 @@ func (n *DiscordNode) unpinMessage(token, channelId string, params interfaces.Ex
 
 // Channel resource handlers
 
-func (n *DiscordNode) handleChannelResource(token, operation string, params interfaces.ExecutionParams) (interface{}, error) {
+func (n *DiscordNode) handleChannelResource(token, operation string, params base.ExecutionParams) (interface{}, error) {
 	channelId := params.GetNodeParameter("channelId", "").(string)
 
 	switch operation {
@@ -471,7 +470,7 @@ func (n *DiscordNode) handleChannelResource(token, operation string, params inte
 
 // User resource handlers
 
-func (n *DiscordNode) handleUserResource(token, operation string, params interfaces.ExecutionParams) (interface{}, error) {
+func (n *DiscordNode) handleUserResource(token, operation string, params base.ExecutionParams) (interface{}, error) {
 	userId := params.GetNodeParameter("userId", "").(string)
 
 	switch operation {
@@ -493,7 +492,7 @@ func (n *DiscordNode) handleUserResource(token, operation string, params interfa
 
 // Guild resource handlers
 
-func (n *DiscordNode) handleGuildResource(token, operation string, params interfaces.ExecutionParams) (interface{}, error) {
+func (n *DiscordNode) handleGuildResource(token, operation string, params base.ExecutionParams) (interface{}, error) {
 	guildId := params.GetNodeParameter("guildId", "").(string)
 
 	switch operation {
@@ -527,7 +526,7 @@ func (n *DiscordNode) handleGuildResource(token, operation string, params interf
 
 // Role resource handlers
 
-func (n *DiscordNode) handleRoleResource(token, operation string, params interfaces.ExecutionParams) (interface{}, error) {
+func (n *DiscordNode) handleRoleResource(token, operation string, params base.ExecutionParams) (interface{}, error) {
 	guildId := params.GetNodeParameter("guildId", "").(string)
 	if guildId == "" {
 		return nil, fmt.Errorf("guild ID is required")
@@ -554,7 +553,7 @@ func (n *DiscordNode) handleRoleResource(token, operation string, params interfa
 
 // Member resource handlers
 
-func (n *DiscordNode) handleMemberResource(token, operation string, params interfaces.ExecutionParams) (interface{}, error) {
+func (n *DiscordNode) handleMemberResource(token, operation string, params base.ExecutionParams) (interface{}, error) {
 	guildId := params.GetNodeParameter("guildId", "").(string)
 	userId := params.GetNodeParameter("userId", "").(string)
 
@@ -663,7 +662,7 @@ func (n *DiscordNode) makeDiscordRequest(method, url, token string, body interfa
 }
 
 // Clone creates a copy of the node
-func (n *DiscordNode) Clone() interfaces.Node {
+func (n *DiscordNode) Clone() base.Node {
 	return &DiscordNode{
 		BaseNode:   n.BaseNode.Clone(),
 		httpClient: n.httpClient,

@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/n8n-go/n8n-go/internal/compatibility"
-	"github.com/n8n-go/n8n-go/internal/runtime"
-	"github.com/n8n-go/n8n-go/pkg/model"
+	"github.com/dipankar/n8n-go/internal/compatibility"
+	"github.com/dipankar/n8n-go/internal/runtime"
+	"github.com/dipankar/n8n-go/internal/model"
 )
 
 var (

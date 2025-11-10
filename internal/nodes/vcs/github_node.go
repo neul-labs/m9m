@@ -10,8 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/n8n-go/internal/core/base"
-	"github.com/n8n-go/internal/core/interfaces"
+	"github.com/dipankar/n8n-go/internal/nodes/base"
 )
 
 // GitHubNode provides GitHub API operations
@@ -23,7 +22,7 @@ type GitHubNode struct {
 // NewGitHubNode creates a new GitHub node
 func NewGitHubNode() *GitHubNode {
 	return &GitHubNode{
-		BaseNode: base.NewBaseNode("GitHub", "GitHub API"),
+		BaseNode: base.NewBaseNode(base.NodeDescription{Name: "GitHub", Description: "GitHub API", Category: "core"}),
 		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
 		},
@@ -31,8 +30,8 @@ func NewGitHubNode() *GitHubNode {
 }
 
 // GetMetadata returns the node metadata
-func (n *GitHubNode) GetMetadata() interfaces.NodeMetadata {
-	return interfaces.NodeMetadata{
+func (n *GitHubNode) GetMetadata() base.NodeMetadata {
+	return base.NodeMetadata{
 		Name:        "GitHub",
 		DisplayName: "GitHub",
 		Description: "Interact with GitHub repositories, issues, pull requests, and more",
@@ -40,19 +39,19 @@ func (n *GitHubNode) GetMetadata() interfaces.NodeMetadata {
 		Version:     1,
 		Inputs:      []string{"main"},
 		Outputs:     []string{"main"},
-		Credentials: []interfaces.CredentialType{
+		Credentials: []base.CredentialType{
 			{
 				Name:        "githubApi",
 				Required:    true,
 				DisplayName: "GitHub API",
 			},
 		},
-		Properties: []interfaces.NodeProperty{
+		Properties: []base.NodeProperty{
 			{
 				Name:        "resource",
 				DisplayName: "Resource",
 				Type:        "options",
-				Options: []interfaces.OptionItem{
+				Options: []base.OptionItem{
 					{Name: "Repository", Value: "repository"},
 					{Name: "Issue", Value: "issue"},
 					{Name: "Pull Request", Value: "pullRequest"},
@@ -80,7 +79,7 @@ func (n *GitHubNode) GetMetadata() interfaces.NodeMetadata {
 						"resource": []string{"repository"},
 					},
 				},
-				Options: []interfaces.OptionItem{
+				Options: []base.OptionItem{
 					{Name: "Get", Value: "get"},
 					{Name: "Get Many", Value: "getMany"},
 					{Name: "Create", Value: "create"},
@@ -161,7 +160,7 @@ func (n *GitHubNode) GetMetadata() interfaces.NodeMetadata {
 				Name:        "state",
 				DisplayName: "State",
 				Type:        "options",
-				Options: []interfaces.OptionItem{
+				Options: []base.OptionItem{
 					{Name: "Open", Value: "open"},
 					{Name: "Closed", Value: "closed"},
 					{Name: "All", Value: "all"},
@@ -287,16 +286,16 @@ func (n *GitHubNode) GetMetadata() interfaces.NodeMetadata {
 }
 
 // Execute runs the GitHub operation
-func (n *GitHubNode) Execute(ctx context.Context, params interfaces.ExecutionParams) (interfaces.NodeOutput, error) {
+func (n *GitHubNode) Execute(ctx context.Context, params base.ExecutionParams) (base.NodeOutput, error) {
 	// Get credentials
 	credentials, err := params.GetCredentials("githubApi")
 	if err != nil {
-		return interfaces.NodeOutput{}, fmt.Errorf("failed to get GitHub credentials: %w", err)
+		return base.NodeOutput{}, fmt.Errorf("failed to get GitHub credentials: %w", err)
 	}
 
 	token, ok := credentials["accessToken"].(string)
 	if !ok || token == "" {
-		return interfaces.NodeOutput{}, fmt.Errorf("GitHub access token not found")
+		return base.NodeOutput{}, fmt.Errorf("GitHub access token not found")
 	}
 
 	// Get resource
@@ -329,28 +328,28 @@ func (n *GitHubNode) Execute(ctx context.Context, params interfaces.ExecutionPar
 	}
 
 	if err != nil {
-		return interfaces.NodeOutput{}, err
+		return base.NodeOutput{}, err
 	}
 
 	// Format output
-	var outputItems []interfaces.ItemData
+	var outputItems []base.ItemData
 	switch v := result.(type) {
 	case []interface{}:
 		for i, item := range v {
 			if itemMap, ok := item.(map[string]interface{}); ok {
-				outputItems = append(outputItems, interfaces.ItemData{
+				outputItems = append(outputItems, base.ItemData{
 					JSON:  itemMap,
 					Index: i,
 				})
 			}
 		}
 	case map[string]interface{}:
-		outputItems = append(outputItems, interfaces.ItemData{
+		outputItems = append(outputItems, base.ItemData{
 			JSON:  v,
 			Index: 0,
 		})
 	default:
-		outputItems = append(outputItems, interfaces.ItemData{
+		outputItems = append(outputItems, base.ItemData{
 			JSON: map[string]interface{}{
 				"result": result,
 			},
@@ -358,14 +357,14 @@ func (n *GitHubNode) Execute(ctx context.Context, params interfaces.ExecutionPar
 		})
 	}
 
-	return interfaces.NodeOutput{
+	return base.NodeOutput{
 		Items: outputItems,
 	}, nil
 }
 
 // Repository resource handlers
 
-func (n *GitHubNode) handleRepositoryResource(token string, params interfaces.ExecutionParams) (interface{}, error) {
+func (n *GitHubNode) handleRepositoryResource(token string, params base.ExecutionParams) (interface{}, error) {
 	operation := params.GetNodeParameter("operation", "get").(string)
 	owner := params.GetNodeParameter("owner", "").(string)
 	repo := params.GetNodeParameter("repository", "").(string)
@@ -401,7 +400,7 @@ func (n *GitHubNode) handleRepositoryResource(token string, params interfaces.Ex
 
 // Issue resource handlers
 
-func (n *GitHubNode) handleIssueResource(token string, params interfaces.ExecutionParams) (interface{}, error) {
+func (n *GitHubNode) handleIssueResource(token string, params base.ExecutionParams) (interface{}, error) {
 	operation := params.GetNodeParameter("operation", "get").(string)
 	owner := params.GetNodeParameter("owner", "").(string)
 	repo := params.GetNodeParameter("repository", "").(string)
@@ -469,7 +468,7 @@ func (n *GitHubNode) handleIssueResource(token string, params interfaces.Executi
 
 // Pull Request resource handlers
 
-func (n *GitHubNode) handlePullRequestResource(token string, params interfaces.ExecutionParams) (interface{}, error) {
+func (n *GitHubNode) handlePullRequestResource(token string, params base.ExecutionParams) (interface{}, error) {
 	operation := params.GetNodeParameter("operation", "get").(string)
 	owner := params.GetNodeParameter("owner", "").(string)
 	repo := params.GetNodeParameter("repository", "").(string)
@@ -539,7 +538,7 @@ func (n *GitHubNode) handlePullRequestResource(token string, params interfaces.E
 
 // Release resource handlers
 
-func (n *GitHubNode) handleReleaseResource(token string, params interfaces.ExecutionParams) (interface{}, error) {
+func (n *GitHubNode) handleReleaseResource(token string, params base.ExecutionParams) (interface{}, error) {
 	operation := params.GetNodeParameter("operation", "get").(string)
 	owner := params.GetNodeParameter("owner", "").(string)
 	repo := params.GetNodeParameter("repository", "").(string)
@@ -601,7 +600,7 @@ func (n *GitHubNode) handleReleaseResource(token string, params interfaces.Execu
 
 // User resource handlers
 
-func (n *GitHubNode) handleUserResource(token string, params interfaces.ExecutionParams) (interface{}, error) {
+func (n *GitHubNode) handleUserResource(token string, params base.ExecutionParams) (interface{}, error) {
 	operation := params.GetNodeParameter("operation", "get").(string)
 
 	switch operation {
@@ -626,7 +625,7 @@ func (n *GitHubNode) handleUserResource(token string, params interfaces.Executio
 
 // Organization resource handlers
 
-func (n *GitHubNode) handleOrganizationResource(token string, params interfaces.ExecutionParams) (interface{}, error) {
+func (n *GitHubNode) handleOrganizationResource(token string, params base.ExecutionParams) (interface{}, error) {
 	operation := params.GetNodeParameter("operation", "get").(string)
 	org := params.GetNodeParameter("organization", "").(string)
 
@@ -653,7 +652,7 @@ func (n *GitHubNode) handleOrganizationResource(token string, params interfaces.
 
 // File resource handlers
 
-func (n *GitHubNode) handleFileResource(token string, params interfaces.ExecutionParams) (interface{}, error) {
+func (n *GitHubNode) handleFileResource(token string, params base.ExecutionParams) (interface{}, error) {
 	operation := params.GetNodeParameter("operation", "get").(string)
 	owner := params.GetNodeParameter("owner", "").(string)
 	repo := params.GetNodeParameter("repository", "").(string)
@@ -723,7 +722,7 @@ func (n *GitHubNode) handleFileResource(token string, params interfaces.Executio
 
 // Commit resource handlers
 
-func (n *GitHubNode) handleCommitResource(token string, params interfaces.ExecutionParams) (interface{}, error) {
+func (n *GitHubNode) handleCommitResource(token string, params base.ExecutionParams) (interface{}, error) {
 	operation := params.GetNodeParameter("operation", "get").(string)
 	owner := params.GetNodeParameter("owner", "").(string)
 	repo := params.GetNodeParameter("repository", "").(string)
@@ -752,7 +751,7 @@ func (n *GitHubNode) handleCommitResource(token string, params interfaces.Execut
 
 // Branch resource handlers
 
-func (n *GitHubNode) handleBranchResource(token string, params interfaces.ExecutionParams) (interface{}, error) {
+func (n *GitHubNode) handleBranchResource(token string, params base.ExecutionParams) (interface{}, error) {
 	operation := params.GetNodeParameter("operation", "get").(string)
 	owner := params.GetNodeParameter("owner", "").(string)
 	repo := params.GetNodeParameter("repository", "").(string)
@@ -803,7 +802,7 @@ func (n *GitHubNode) handleBranchResource(token string, params interfaces.Execut
 
 // Tag resource handlers
 
-func (n *GitHubNode) handleTagResource(token string, params interfaces.ExecutionParams) (interface{}, error) {
+func (n *GitHubNode) handleTagResource(token string, params base.ExecutionParams) (interface{}, error) {
 	operation := params.GetNodeParameter("operation", "get").(string)
 	owner := params.GetNodeParameter("owner", "").(string)
 	repo := params.GetNodeParameter("repository", "").(string)
@@ -895,7 +894,7 @@ func (n *GitHubNode) makeGitHubRequest(method, endpoint, token string, body inte
 }
 
 // Clone creates a copy of the node
-func (n *GitHubNode) Clone() interfaces.Node {
+func (n *GitHubNode) Clone() base.Node {
 	return &GitHubNode{
 		BaseNode:   n.BaseNode.Clone(),
 		httpClient: n.httpClient,

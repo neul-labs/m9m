@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/n8n-go/n8n-go/internal/runtime"
-	"github.com/n8n-go/n8n-go/pkg/model"
+	"github.com/dipankar/n8n-go/internal/runtime"
+	"github.com/dipankar/n8n-go/internal/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

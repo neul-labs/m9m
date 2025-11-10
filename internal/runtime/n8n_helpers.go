@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/dop251/goja"
-	"github.com/n8n-go/n8n-go/pkg/model"
+	"github.com/dipankar/n8n-go/internal/model"
 )
 
 // N8n-specific helper functions that provide the familiar n8n syntax

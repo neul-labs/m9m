@@ -6,9 +6,9 @@ package transform
 import (
 	"fmt"
 
-	"github.com/yourusername/n8n-go/internal/model"
-	"github.com/yourusername/n8n-go/internal/nodes/base"
-	"github.com/yourusername/n8n-go/internal/expressions"
+	"github.com/dipankar/n8n-go/internal/model"
+	"github.com/dipankar/n8n-go/internal/nodes/base"
+	"github.com/dipankar/n8n-go/internal/expressions"
 )
 
 // CodeNode implements the Code node functionality for executing custom code

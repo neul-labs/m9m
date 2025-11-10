@@ -9,8 +9,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/n8n-go/internal/core/base"
-	"github.com/n8n-go/internal/core/interfaces"
+	"github.com/dipankar/n8n-go/internal/nodes/base"
 )
 
 // AnthropicNode provides Anthropic Claude API integration
@@ -22,7 +21,7 @@ type AnthropicNode struct {
 // NewAnthropicNode creates a new Anthropic node
 func NewAnthropicNode() *AnthropicNode {
 	return &AnthropicNode{
-		BaseNode: base.NewBaseNode("Anthropic", "Anthropic Claude"),
+		BaseNode: base.NewBaseNode(base.NodeDescription{Name: "Anthropic", Description: "Anthropic Claude", Category: "core"}),
 		httpClient: &http.Client{
 			Timeout: 60 * time.Second,
 		},
@@ -30,8 +29,8 @@ func NewAnthropicNode() *AnthropicNode {
 }
 
 // GetMetadata returns the node metadata
-func (n *AnthropicNode) GetMetadata() interfaces.NodeMetadata {
-	return interfaces.NodeMetadata{
+func (n *AnthropicNode) GetMetadata() base.NodeMetadata {
+	return base.NodeMetadata{
 		Name:        "Anthropic",
 		DisplayName: "Anthropic Claude",
 		Description: "Use Anthropic's Claude models for advanced AI tasks",
@@ -39,19 +38,19 @@ func (n *AnthropicNode) GetMetadata() interfaces.NodeMetadata {
 		Version:     1,
 		Inputs:      []string{"main"},
 		Outputs:     []string{"main"},
-		Credentials: []interfaces.CredentialType{
+		Credentials: []base.CredentialType{
 			{
 				Name:        "anthropicApi",
 				Required:    true,
 				DisplayName: "Anthropic API",
 			},
 		},
-		Properties: []interfaces.NodeProperty{
+		Properties: []base.NodeProperty{
 			{
 				Name:        "model",
 				DisplayName: "Model",
 				Type:        "options",
-				Options: []interfaces.OptionItem{
+				Options: []base.OptionItem{
 					// Claude 3 models
 					{Name: "Claude 3 Opus", Value: "claude-3-opus-20240229"},
 					{Name: "Claude 3 Sonnet", Value: "claude-3-sonnet-20240229"},
@@ -144,16 +143,16 @@ func (n *AnthropicNode) GetMetadata() interfaces.NodeMetadata {
 }
 
 // Execute runs the Anthropic operation
-func (n *AnthropicNode) Execute(ctx context.Context, params interfaces.ExecutionParams) (interfaces.NodeOutput, error) {
+func (n *AnthropicNode) Execute(ctx context.Context, params base.ExecutionParams) (base.NodeOutput, error) {
 	// Get credentials
 	credentials, err := params.GetCredentials("anthropicApi")
 	if err != nil {
-		return interfaces.NodeOutput{}, fmt.Errorf("failed to get Anthropic credentials: %w", err)
+		return base.NodeOutput{}, fmt.Errorf("failed to get Anthropic credentials: %w", err)
 	}
 
 	apiKey, ok := credentials["apiKey"].(string)
 	if !ok || apiKey == "" {
-		return interfaces.NodeOutput{}, fmt.Errorf("Anthropic API key not found in credentials")
+		return base.NodeOutput{}, fmt.Errorf("Anthropic API key not found in credentials")
 	}
 
 	// Get parameters
@@ -178,7 +177,7 @@ func (n *AnthropicNode) Execute(ctx context.Context, params interfaces.Execution
 
 	// Get input data
 	inputData := params.GetInputData()
-	var outputItems []interfaces.ItemData
+	var outputItems []base.ItemData
 
 	for _, item := range inputData {
 		// Build messages
@@ -216,13 +215,13 @@ func (n *AnthropicNode) Execute(ctx context.Context, params interfaces.Execution
 		// Make API request
 		response, err := n.makeAnthropicRequest(apiKey, requestBody)
 		if err != nil {
-			return interfaces.NodeOutput{}, fmt.Errorf("Anthropic API error: %w", err)
+			return base.NodeOutput{}, fmt.Errorf("Anthropic API error: %w", err)
 		}
 
 		// Extract content
 		content, ok := response["content"].([]interface{})
 		if !ok || len(content) == 0 {
-			return interfaces.NodeOutput{}, fmt.Errorf("unexpected response format from Anthropic")
+			return base.NodeOutput{}, fmt.Errorf("unexpected response format from Anthropic")
 		}
 
 		firstContent := content[0].(map[string]interface{})
@@ -241,13 +240,13 @@ func (n *AnthropicNode) Execute(ctx context.Context, params interfaces.Execution
 			outputItem["usage"] = usage
 		}
 
-		outputItems = append(outputItems, interfaces.ItemData{
+		outputItems = append(outputItems, base.ItemData{
 			JSON:  outputItem,
 			Index: item.Index,
 		})
 	}
 
-	return interfaces.NodeOutput{
+	return base.NodeOutput{
 		Items: outputItems,
 	}, nil
 }
@@ -303,7 +302,7 @@ func (n *AnthropicNode) makeAnthropicRequest(apiKey string, body map[string]inte
 }
 
 // Clone creates a copy of the node
-func (n *AnthropicNode) Clone() interfaces.Node {
+func (n *AnthropicNode) Clone() base.Node {
 	return &AnthropicNode{
 		BaseNode:   n.BaseNode.Clone(),
 		httpClient: n.httpClient,

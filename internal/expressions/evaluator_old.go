@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 	
-	"github.com/yourusername/n8n-go/internal/model"
+	"github.com/dipankar/n8n-go/internal/model"
 )
 
 // ExecutionContext provides context for expression evaluation

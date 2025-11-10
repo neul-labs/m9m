@@ -13,9 +13,9 @@ import (
 	"strings"
 	"time"
 	
-	"github.com/yourusername/n8n-go/internal/model"
-	"github.com/yourusername/n8n-go/internal/nodes/base"
-	"github.com/yourusername/n8n-go/internal/expressions"
+	"github.com/dipankar/n8n-go/internal/model"
+	"github.com/dipankar/n8n-go/internal/nodes/base"
+	"github.com/dipankar/n8n-go/internal/expressions"
 )
 
 // HTTPRequestNode implements the HTTP Request node functionality

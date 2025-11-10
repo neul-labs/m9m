@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/dop251/goja"
-	"github.com/yourusername/n8n-go/internal/model"
+	"github.com/dipankar/n8n-go/internal/model"
 )
 
 // WorkflowExecuteMode represents the execution mode of the workflow
@@ -621,4 +621,11 @@ func (p *WorkflowDataProxy) Reset() {
 	p.cacheMutex.Lock()
 	defer p.cacheMutex.Unlock()
 	p.dataCache = make(map[string]interface{})
+}
+// NewExpressionContext creates a new expression context with defaults
+func NewExpressionContext() *ExpressionContext {
+	return &ExpressionContext{
+		AdditionalKeys: &AdditionalKeys{},
+		Mode:           ModeManual,
+	}
 }

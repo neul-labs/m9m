@@ -7,13 +7,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/n8n-go/internal/core/interfaces"
+	"github.com/dipankar/n8n-go/internal/nodes/base"
 )
 
-// MockExecutionParams implements interfaces.ExecutionParams for testing
+// MockExecutionParams implements base.ExecutionParams for testing
 type MockExecutionParams struct {
 	nodeParams map[string]interface{}
-	inputData  []interfaces.ItemData
+	inputData  []base.ItemData
 	workflow   interface{}
 }
 
@@ -24,7 +24,7 @@ func (m *MockExecutionParams) GetNodeParameter(name string, defaultValue interfa
 	return defaultValue
 }
 
-func (m *MockExecutionParams) GetInputData() []interfaces.ItemData {
+func (m *MockExecutionParams) GetInputData() []base.ItemData {
 	return m.inputData
 }
 
@@ -49,7 +49,7 @@ func TestPythonCodeNode_Execute(t *testing.T) {
 		name       string
 		pythonCode string
 		mode       string
-		inputData  []interfaces.ItemData
+		inputData  []base.ItemData
 		expected   []interface{}
 		wantError  bool
 	}{
@@ -60,7 +60,7 @@ result = 2 + 2
 return result
 `,
 			mode: "runOnce",
-			inputData: []interfaces.ItemData{
+			inputData: []base.ItemData{
 				{JSON: map[string]interface{}{"test": "data"}},
 			},
 			expected:  []interface{}{4},
@@ -76,7 +76,7 @@ for item in $input:
 return result
 `,
 			mode: "runOnce",
-			inputData: []interfaces.ItemData{
+			inputData: []base.ItemData{
 				{JSON: map[string]interface{}{"id": 1}},
 				{JSON: map[string]interface{}{"id": 2}},
 			},
@@ -100,7 +100,7 @@ result = {
 return result
 `,
 			mode:      "runOnce",
-			inputData: []interfaces.ItemData{},
+			inputData: []base.ItemData{},
 			expected: []interface{}{
 				map[string]interface{}{
 					"sum":   15,
@@ -126,7 +126,7 @@ result = {
 return result
 `,
 			mode:      "runOnce",
-			inputData: []interfaces.ItemData{},
+			inputData: []base.ItemData{},
 			expected: []interface{}{
 				map[string]interface{}{
 					"json_test": `{"test":"data"}`,
@@ -144,7 +144,7 @@ result['doubled'] = result.get('value', 0) * 2
 return result
 `,
 			mode: "runForEach",
-			inputData: []interfaces.ItemData{
+			inputData: []base.ItemData{
 				{JSON: map[string]interface{}{"value": 5}, Index: 0},
 				{JSON: map[string]interface{}{"value": 10}, Index: 1},
 			},
@@ -160,7 +160,7 @@ return result
 raise Exception("Test error")
 `,
 			mode:      "runOnce",
-			inputData: []interfaces.ItemData{},
+			inputData: []base.ItemData{},
 			expected:  nil,
 			wantError: true,
 		},

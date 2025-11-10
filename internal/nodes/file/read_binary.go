@@ -13,9 +13,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/n8n-go/n8n-go/internal/expressions"
-	"github.com/n8n-go/n8n-go/internal/model"
-	"github.com/n8n-go/n8n-go/internal/nodes/base"
+	"github.com/dipankar/n8n-go/internal/expressions"
+	"github.com/dipankar/n8n-go/internal/model"
+	"github.com/dipankar/n8n-go/internal/nodes/base"
 )
 
 // ReadBinaryFileNode reads binary files from the filesystem with enhanced security and features
@@ -29,8 +29,8 @@ type ReadBinaryFileNode struct {
 // NewReadBinaryFileNode creates a new ReadBinaryFileNode instance
 func NewReadBinaryFileNode() *ReadBinaryFileNode {
 	return &ReadBinaryFileNode{
-		BaseNode:          base.NewBaseNode("Read Binary File", "n8n-nodes-base.readBinaryFile"),
-		evaluator:         expressions.NewGojaExpressionEvaluator(),
+		BaseNode:          base.NewBaseNode(base.NodeDescription{Name: "Read Binary File", Description: "n8n-nodes-base.readBinaryFile", Category: "core"}),
+		evaluator:         expressions.NewGojaExpressionEvaluator(expressions.DefaultEvaluatorConfig()),
 		allowedDirectories: []string{"/tmp", "/var/tmp", "./data", "./uploads"}, // Default allowed directories
 		maxFileSize:       100 * 1024 * 1024, // 100MB default limit
 	}
@@ -48,7 +48,7 @@ func (n *ReadBinaryFileNode) Execute(inputData []model.DataItem, nodeParams map[
 			ItemIndex:          index,
 			Mode:               expressions.ModeManual,
 			ConnectionInputData: []model.DataItem{item},
-			AdditionalKeys:     make(map[string]interface{}),
+			AdditionalKeys: &expressions.AdditionalKeys{},
 		}
 
 		// Evaluate file path
@@ -125,7 +125,13 @@ func (n *ReadBinaryFileNode) Execute(inputData []model.DataItem, nodeParams map[
 				"modTime":   fileInfo.ModTime().Format(time.RFC3339),
 				"readAt":    time.Now().UTC().Format(time.RFC3339),
 			},
-			Binary: data,
+			Binary: map[string]model.BinaryData{
+				"data": {
+					Data:     base64.StdEncoding.EncodeToString(data),
+					MimeType: n.detectMimeType(filePathStr),
+					FileName: filepath.Base(filePathStr),
+				},
+			},
 		}
 
 		if hashes != nil {
