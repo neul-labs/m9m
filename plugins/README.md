@@ -499,12 +499,79 @@ Check n8n-go logs for plugin errors:
 
 ### Hot Reloading
 
-Plugin hot reloading is supported but requires manual trigger:
+Plugin hot-reloading allows you to update plugins without restarting n8n-go. This is particularly useful during development and for updating plugins in production.
+
+**HTTP API Endpoints:**
 
 ```bash
-# Send SIGUSR1 to reload plugins
-kill -USR1 $(pgrep n8n-go)
+# List all loaded plugins
+curl http://localhost:8080/api/plugins
+
+# Get plugin statistics
+curl http://localhost:8080/api/plugins/stats
+
+# Reload all plugins
+curl -X POST http://localhost:8080/api/plugins/reload
+
+# Get details about a specific plugin
+curl http://localhost:8080/api/plugins/textTransform
+
+# Reload a specific plugin
+curl -X POST http://localhost:8080/api/plugins/textTransform/reload
+
+# Upload a plugin file (for cluster distribution)
+curl -X POST -F "plugin=@myPlugin.js" http://localhost:8080/api/plugins/upload
+
+# Delete a plugin file
+curl -X DELETE http://localhost:8080/api/plugins/textTransform
 ```
+
+**Example: Update and Reload a Plugin**
+
+```bash
+# 1. Edit your plugin file
+vim plugins/examples/textTransform.js
+
+# 2. Reload all plugins
+curl -X POST http://localhost:8080/api/plugins/reload
+
+# Check response
+{
+  "success": true,
+  "message": "All plugins reloaded successfully",
+  "stats": {
+    "total": 3,
+    "javascript": 1,
+    "grpc": 1,
+    "rest": 1,
+    "directory": "./plugins/examples"
+  }
+}
+```
+
+**Cluster Mode:**
+
+In cluster mode, you need to distribute plugin files to all nodes before reloading:
+
+```bash
+# 1. Upload plugin to all nodes
+for node in node1 node2 node3; do
+  curl -X POST -F "plugin=@newPlugin.js" http://$node:8080/api/plugins/upload
+done
+
+# 2. Reload plugins on all nodes
+for node in node1 node2 node3; do
+  curl -X POST http://$node:8080/api/plugins/reload
+done
+```
+
+**Important Notes:**
+
+- Hot-reload closes gRPC connections before reloading
+- Plugins are reloaded from the same directory specified at startup
+- In-flight workflow executions continue with the old plugin version
+- New executions use the reloaded plugins
+- Failed plugin loads are logged but don't crash the server
 
 ### Environment Variables
 
