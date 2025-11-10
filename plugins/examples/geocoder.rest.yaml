@@ -1,0 +1,64 @@
+# Geocoder Node - REST API Plugin Example
+# This demonstrates how to connect to an external REST API service for node execution
+
+name: geocoder
+description: Convert addresses to coordinates using geocoding service
+category: transform
+
+# REST API endpoint
+endpoint: http://localhost:8090/api/node/execute
+
+# HTTP method (default: POST)
+method: POST
+
+# Timeout for HTTP requests (optional, defaults to 30s)
+timeout: 30s
+
+# Additional headers (optional)
+headers:
+  X-API-Version: "1.0"
+  X-Node-Type: "geocoder"
+
+# Node parameters that will be shown in the UI
+parameters:
+  address:
+    type: string
+    required: true
+    description: The address to geocode
+
+  provider:
+    type: options
+    required: false
+    default: google
+    description: Geocoding service provider
+    options:
+      - google
+      - openstreetmap
+      - mapbox
+
+  includeTimezone:
+    type: boolean
+    required: false
+    default: false
+    description: Include timezone information
+
+  language:
+    type: string
+    required: false
+    default: en
+    description: Language for results
+
+# Expected REST API interface:
+# POST /api/node/execute
+# Request body:
+# {
+#   "inputData": [...],    // Array of data items
+#   "parameters": {...}    // Node parameters
+# }
+#
+# Response:
+# {
+#   "success": true/false,
+#   "outputData": [...],   // Array of result items
+#   "error": "..."         // Error message if success=false
+# }

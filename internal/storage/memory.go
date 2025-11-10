@@ -15,6 +15,7 @@ type MemoryStorage struct {
 	executions  map[string]*model.WorkflowExecution
 	credentials map[string]*Credential
 	tags        map[string]*Tag
+	rawData     map[string][]byte // For webhooks and other extensibility
 	mu          sync.RWMutex
 }
 
@@ -25,6 +26,7 @@ func NewMemoryStorage() *MemoryStorage {
 		executions:  make(map[string]*model.WorkflowExecution),
 		credentials: make(map[string]*Credential),
 		tags:        make(map[string]*Tag),
+		rawData:     make(map[string][]byte),
 	}
 }
 
@@ -394,6 +396,62 @@ func (s *MemoryStorage) DeleteTag(id string) error {
 	}
 
 	delete(s.tags, id)
+	return nil
+}
+
+// Raw key-value operations
+
+func (s *MemoryStorage) SaveRaw(key string, value []byte) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	// Make a copy to avoid external mutations
+	data := make([]byte, len(value))
+	copy(data, value)
+	s.rawData[key] = data
+
+	return nil
+}
+
+func (s *MemoryStorage) GetRaw(key string) ([]byte, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	data, exists := s.rawData[key]
+	if !exists {
+		return nil, fmt.Errorf("key not found: %s", key)
+	}
+
+	// Return a copy to avoid external mutations
+	result := make([]byte, len(data))
+	copy(result, data)
+
+	return result, nil
+}
+
+func (s *MemoryStorage) ListKeys(prefix string) ([]string, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	var keys []string
+	for key := range s.rawData {
+		if strings.HasPrefix(key, prefix) {
+			keys = append(keys, key)
+		}
+	}
+
+	return keys, nil
+}
+
+func (s *MemoryStorage) DeleteRaw(key string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if _, exists := s.rawData[key]; !exists {
+		return fmt.Errorf("key not found: %s", key)
+	}
+
+	delete(s.rawData, key)
 	return nil
 }
 

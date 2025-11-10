@@ -37,6 +37,12 @@ type WorkflowStorage interface {
 	UpdateTag(id string, tag *Tag) error
 	DeleteTag(id string) error
 
+	// Raw key-value operations (for webhooks and extensibility)
+	SaveRaw(key string, value []byte) error
+	GetRaw(key string) ([]byte, error)
+	ListKeys(prefix string) ([]string, error)
+	DeleteRaw(key string) error
+
 	// Close the storage connection
 	Close() error
 }

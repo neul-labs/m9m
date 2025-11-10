@@ -485,6 +485,78 @@ func (s *BadgerStorage) DeleteTag(id string) error {
 	return s.raft.Apply(cmd)
 }
 
+// Raw key-value operations
+
+func (s *BadgerStorage) SaveRaw(key string, value []byte) error {
+	cmd := consensus.RaftCommand{
+		Type:  "put",
+		Key:   key,
+		Value: json.RawMessage(value),
+	}
+
+	return s.raft.Apply(cmd)
+}
+
+func (s *BadgerStorage) GetRaw(key string) ([]byte, error) {
+	var value []byte
+
+	err := s.db.View(func(txn *badger.Txn) error {
+		item, err := txn.Get([]byte(key))
+		if err != nil {
+			return err
+		}
+
+		return item.Value(func(val []byte) error {
+			value = append([]byte{}, val...)
+			return nil
+		})
+	})
+
+	if err != nil {
+		if err == badger.ErrKeyNotFound {
+			return nil, fmt.Errorf("key not found: %s", key)
+		}
+		return nil, fmt.Errorf("failed to get raw value: %w", err)
+	}
+
+	return value, nil
+}
+
+func (s *BadgerStorage) ListKeys(prefix string) ([]string, error) {
+	var keys []string
+
+	err := s.db.View(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		opts.PrefetchValues = false // Only need keys
+		it := txn.NewIterator(opts)
+		defer it.Close()
+
+		prefixBytes := []byte(prefix)
+		for it.Seek(prefixBytes); it.ValidForPrefix(prefixBytes); it.Next() {
+			item := it.Item()
+			key := string(item.Key())
+			keys = append(keys, key)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to list keys: %w", err)
+	}
+
+	return keys, nil
+}
+
+func (s *BadgerStorage) DeleteRaw(key string) error {
+	cmd := consensus.RaftCommand{
+		Type: "delete",
+		Key:  key,
+	}
+
+	return s.raft.Apply(cmd)
+}
+
 // Close gracefully shuts down the storage
 func (s *BadgerStorage) Close() error {
 	if err := s.db.Close(); err != nil {

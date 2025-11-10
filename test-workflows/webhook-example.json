@@ -1,0 +1,91 @@
+{
+  "name": "Simple Webhook Example",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "test-webhook",
+        "httpMethod": "POST",
+        "responseMode": "onReceived",
+        "authentication": "none"
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "test-webhook-id"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "receivedMessage",
+              "value": "={{ $json.body.message }}"
+            },
+            {
+              "name": "processedAt",
+              "value": "={{ $now.toISO() }}"
+            },
+            {
+              "name": "status",
+              "value": "success"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Process Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "result",
+              "value": "={{ $json.receivedMessage }}"
+            },
+            {
+              "name": "timestamp",
+              "value": "={{ $json.processedAt }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Format Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [650, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Process Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Data": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {},
+  "id": "webhook-example-workflow"
+}

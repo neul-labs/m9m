@@ -618,6 +618,53 @@ func (s *SQLiteStorage) DeleteTag(id string) error {
 	return nil
 }
 
+// Raw key-value operations
+
+func (s *SQLiteStorage) SaveRaw(key string, value []byte) error {
+	_, err := s.db.Exec(`
+		INSERT INTO raw_data (key, value, created_at, updated_at)
+		VALUES (?, ?, datetime('now'), datetime('now'))
+		ON CONFLICT (key) DO UPDATE SET value = ?, updated_at = datetime('now')
+	`, key, value, value)
+
+	return err
+}
+
+func (s *SQLiteStorage) GetRaw(key string) ([]byte, error) {
+	var value []byte
+	err := s.db.QueryRow("SELECT value FROM raw_data WHERE key = ?", key).Scan(&value)
+
+	if err == sql.ErrNoRows {
+		return nil, fmt.Errorf("key not found: %s", key)
+	}
+
+	return value, err
+}
+
+func (s *SQLiteStorage) ListKeys(prefix string) ([]string, error) {
+	rows, err := s.db.Query("SELECT key FROM raw_data WHERE key LIKE ?", prefix+"%")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var keys []string
+	for rows.Next() {
+		var key string
+		if err := rows.Scan(&key); err != nil {
+			return nil, err
+		}
+		keys = append(keys, key)
+	}
+
+	return keys, rows.Err()
+}
+
+func (s *SQLiteStorage) DeleteRaw(key string) error {
+	_, err := s.db.Exec("DELETE FROM raw_data WHERE key = ?", key)
+	return err
+}
+
 // Close closes the database connection
 func (s *SQLiteStorage) Close() error {
 	return s.db.Close()

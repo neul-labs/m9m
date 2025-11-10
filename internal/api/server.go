@@ -82,12 +82,10 @@ func (s *APIServer) RegisterRoutes(router *mux.Router) {
 	// Settings
 	api.HandleFunc("/settings", s.GetSettings).Methods("GET", "OPTIONS")
 	api.HandleFunc("/settings", s.UpdateSettings).Methods("PATCH", "OPTIONS")
+	api.HandleFunc("/settings/license", s.GetLicense).Methods("GET", "OPTIONS")
+	api.HandleFunc("/settings/ldap", s.GetLDAP).Methods("GET", "OPTIONS")
 
-	// Tags
-	api.HandleFunc("/tags", s.ListTags).Methods("GET", "OPTIONS")
-	api.HandleFunc("/tags", s.CreateTag).Methods("POST", "OPTIONS")
-	api.HandleFunc("/tags/{id}", s.UpdateTag).Methods("PUT", "OPTIONS")
-	api.HandleFunc("/tags/{id}", s.DeleteTag).Methods("DELETE", "OPTIONS")
+	// Tags are now handled by dedicated tag handler (registered in main.go)
 
 	// System
 	api.HandleFunc("/version", s.GetVersion).Methods("GET", "OPTIONS")
@@ -170,6 +168,28 @@ func (s *APIServer) UpdateSettings(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: Persist settings
 	s.sendJSON(w, http.StatusOK, settings)
+}
+
+// GetLicense returns license information (enterprise feature stub)
+func (s *APIServer) GetLicense(w http.ResponseWriter, r *http.Request) {
+	// License management is an enterprise feature not implemented in open-source n8n-go
+	s.sendJSON(w, http.StatusOK, map[string]interface{}{
+		"licensed":       false,
+		"licenseType":    "community",
+		"features":       []string{},
+		"expiresAt":      nil,
+		"message":        "License management is an enterprise feature",
+	})
+}
+
+// GetLDAP returns LDAP configuration (enterprise feature stub)
+func (s *APIServer) GetLDAP(w http.ResponseWriter, r *http.Request) {
+	// LDAP is an enterprise feature not implemented in open-source n8n-go
+	s.sendJSON(w, http.StatusOK, map[string]interface{}{
+		"enabled":        false,
+		"configured":     false,
+		"message":        "LDAP is an enterprise feature",
+	})
 }
 
 // ListNodeTypes returns available node types

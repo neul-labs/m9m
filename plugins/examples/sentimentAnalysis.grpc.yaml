@@ -1,0 +1,58 @@
+# Sentiment Analysis Node - gRPC Plugin Example
+# This demonstrates how to connect to an external gRPC service for node execution
+
+name: sentimentAnalysis
+description: Analyze sentiment of text using external AI service
+category: ai
+
+# gRPC service address
+address: localhost:50051
+
+# Timeout for gRPC calls (optional, defaults to 30s)
+timeout: 30s
+
+# Node parameters that will be shown in the UI
+parameters:
+  text:
+    type: string
+    required: true
+    description: The text to analyze for sentiment
+
+  model:
+    type: options
+    required: false
+    default: standard
+    description: The sentiment analysis model to use
+    options:
+      - standard
+      - advanced
+      - multilingual
+
+  includeScore:
+    type: boolean
+    required: false
+    default: true
+    description: Include confidence scores in the output
+
+  language:
+    type: string
+    required: false
+    default: en
+    description: Language code (e.g., en, es, fr)
+
+# Expected gRPC service interface:
+# service NodeService {
+#   rpc Execute(ExecuteRequest) returns (ExecuteResponse);
+#   rpc Describe(DescribeRequest) returns (DescribeResponse);
+# }
+#
+# message ExecuteRequest {
+#   string inputData = 1;   // JSON-encoded input data
+#   string parameters = 2;  // JSON-encoded parameters
+# }
+#
+# message ExecuteResponse {
+#   bool success = 1;
+#   string outputData = 2;  // JSON-encoded output data
+#   string error = 3;       // Error message if success=false
+# }

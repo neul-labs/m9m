@@ -626,6 +626,53 @@ func (s *PostgresStorage) DeleteTag(id string) error {
 	return nil
 }
 
+// Raw key-value operations
+
+func (s *PostgresStorage) SaveRaw(key string, value []byte) error {
+	_, err := s.db.Exec(`
+		INSERT INTO raw_data (key, value, created_at, updated_at)
+		VALUES ($1, $2, NOW(), NOW())
+		ON CONFLICT (key) DO UPDATE SET value = $2, updated_at = NOW()
+	`, key, value)
+
+	return err
+}
+
+func (s *PostgresStorage) GetRaw(key string) ([]byte, error) {
+	var value []byte
+	err := s.db.QueryRow("SELECT value FROM raw_data WHERE key = $1", key).Scan(&value)
+
+	if err == sql.ErrNoRows {
+		return nil, fmt.Errorf("key not found: %s", key)
+	}
+
+	return value, err
+}
+
+func (s *PostgresStorage) ListKeys(prefix string) ([]string, error) {
+	rows, err := s.db.Query("SELECT key FROM raw_data WHERE key LIKE $1", prefix+"%")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var keys []string
+	for rows.Next() {
+		var key string
+		if err := rows.Scan(&key); err != nil {
+			return nil, err
+		}
+		keys = append(keys, key)
+	}
+
+	return keys, rows.Err()
+}
+
+func (s *PostgresStorage) DeleteRaw(key string) error {
+	_, err := s.db.Exec("DELETE FROM raw_data WHERE key = $1", key)
+	return err
+}
+
 // Close closes the database connection
 func (s *PostgresStorage) Close() error {
 	return s.db.Close()
