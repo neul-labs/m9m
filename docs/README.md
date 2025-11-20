@@ -1,50 +1,50 @@
 # n8n-go Documentation
 
-This directory contains comprehensive documentation for n8n-go, a high-performance workflow automation platform built in Go.
+Documentation for n8n-go, a high-performance workflow automation platform built in Go.
 
 ## Documentation Structure
 
 ### Getting Started
-- [Installation Guide](installation/README.md) - Complete installation instructions
-- [Quick Start](quickstart/README.md) - Get up and running in minutes
-- [Configuration](configuration/README.md) - System configuration reference
+- [Technical Specification](technical-spec.md) - System overview and architecture
+- [Performance Report](performance-report.md) - Benchmarks and optimization
 
-### Core Concepts
-- [Architecture Overview](architecture/README.md) - System design and components
-- [Workflow Engine](engine/README.md) - How workflows are executed
-- [Node System](nodes/README.md) - Understanding the node architecture
+### Architecture
+- [Architecture Overview](architecture/README.md) - System design
+- [Distributed Architecture](architecture/DISTRIBUTED_ARCHITECTURE.md) - Multi-node setup
+- [Cluster Implementation](architecture/CLUSTER_IMPLEMENTATION.md) - Clustering details
+- [Hybrid Architecture](architecture/HYBRID_ARCHITECTURE.md) - Deployment patterns
+- [Scalability Analysis](architecture/SCALABILITY_ANALYSIS.md) - Scaling considerations
 
-### Development
-- [Node Development](development/nodes.md) - Creating custom nodes
-- [API Reference](api/README.md) - REST API documentation
-- [Contributing Guide](CONTRIBUTING.md) - How to contribute to the project
+### API
+- [API Compatibility](api/API_COMPATIBILITY.md) - n8n API compatibility
+- [API Implementation](api/API_IMPLEMENTATION_SUMMARY.md) - Endpoint documentation
+- [Licensing & API](api/API_AND_LICENSING.md) - API access and licensing
+
+### Deployment
+- [Deployment Guide](deployment/DEPLOYMENT_GUIDE.md) - Getting started with deployment
+- [Production Guide](deployment/production.md) - Production-ready configuration
+- [Deployment Overview](deployment/README.md) - Deployment strategies
+
+### Features
+- [Plugin System](PLUGIN_SYSTEM.md) - Plugin development and usage
+- [Plugin Architecture](PLUGIN_ARCHITECTURE.md) - Internal plugin design
+- [Workflow Versions](WORKFLOW_VERSIONS.md) - Versioning workflows
+- [Variables & Environments](VARIABLES_AND_ENVIRONMENTS.md) - Configuration management
+
+### Nodes
+- [Node Overview](nodes/README.md) - Node system documentation
+- [Transform Nodes](nodes/transform/) - Data transformation nodes
+- [Trigger Nodes](nodes/trigger/) - Event trigger nodes
 
 ### Operations
-- [Deployment Guide](deployment/README.md) - Production deployment strategies
 - [Monitoring](monitoring/README.md) - Metrics and observability
-- [Scaling](scaling/README.md) - Horizontal scaling configuration
-
-### Migration
-- [n8n Migration](migration/README.md) - Migrating from n8n to n8n-go
-- [Compatibility](compatibility/README.md) - Feature compatibility matrix
+- [Security Review](security/security-review.md) - Security considerations
+- [Migration from n8n](migration/from-n8n.md) - Migration guide
 
 ### Reference
-- [Environment Variables](reference/environment.md) - Complete environment variable reference
-- [Command Line](reference/cli.md) - CLI command reference
-- [Node Catalog](reference/nodes.md) - Available nodes and their capabilities
-
-## Current Status
-
-n8n-go provides **95% backend feature parity** with n8n, including:
-
-- **Core Features**: Workflow execution, node system, credential management
-- **Enterprise Features**: Horizontal scaling, monitoring, distributed tracing
-- **Advanced Integrations**: 100+ services including cloud platforms, databases, messaging
-- **Performance**: 5-10x faster execution with 70% lower memory usage
-
-### Missing Components
-- **Web UI**: Command-line interface only (web UI planned for future release)
-- **Some Advanced Nodes**: Certain specialized nodes from n8n's 400+ catalog
+- [n8n Feature Comparison](N8N_FEATURE_COMPARISON.md) - Feature parity matrix
+- [Roadmap](roadmap.md) - Future development plans
+- [Contributing](CONTRIBUTING.md) - How to contribute
 
 ## Key Advantages
 
@@ -59,19 +59,6 @@ n8n-go provides **95% backend feature parity** with n8n, including:
 - OpenTelemetry distributed tracing
 - Horizontal scaling with queue systems
 - Git-based workflow versioning
-- Multiple authentication methods
-
-### Developer Experience
-- Single binary deployment
-- No runtime dependencies
-- Native Go performance
-- Embedded Python runtime
-
-## Support and Community
-
-- **GitHub Issues**: Bug reports and feature requests
-- **Documentation**: Comprehensive guides and references
-- **Enterprise Support**: Available for production deployments
 
 ## License
 

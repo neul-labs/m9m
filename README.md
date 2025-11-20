@@ -318,11 +318,13 @@ make build
 
 ## Documentation
 
-- [API Reference](docs/api/README.md)
-- [Node Development Guide](docs/nodes/README.md)
-- [Deployment Guide](docs/deployment/README.md)
-- [Configuration Reference](docs/configuration/README.md)
-- [Migration Guide](docs/migration/README.md)
+- [Documentation Index](docs/README.md)
+- [Architecture](docs/architecture/README.md)
+- [API Reference](docs/api/API_COMPATIBILITY.md)
+- [Deployment Guide](docs/deployment/DEPLOYMENT_GUIDE.md)
+- [Node Development](docs/nodes/README.md)
+- [Migration Guide](docs/migration/from-n8n.md)
+- [Contributing](docs/CONTRIBUTING.md)
 
 ## License
 
@@ -337,4 +339,4 @@ n8n-go is released under the Apache 2.0 License. See [LICENSE](LICENSE) for deta
 
 ## Roadmap
 
-See our [Project Roadmap](docs/ROADMAP.md) for planned features and improvements.
+See our [Project Roadmap](docs/roadmap.md) for planned features and improvements.
