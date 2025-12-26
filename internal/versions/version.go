@@ -3,7 +3,7 @@ package versions
 import (
 	"time"
 
-	"github.com/dipankar/n8n-go/internal/model"
+	"github.com/dipankar/m9m/internal/model"
 )
 
 // WorkflowVersion represents a snapshot of a workflow at a point in time

@@ -3,7 +3,7 @@
   "name": "Multi-Cloud Backup Automation",
   "description": "Comprehensive backup automation template that synchronizes files across multiple cloud storage providers (AWS S3, Google Cloud Storage, Azure Blob Storage) with encryption, versioning, and automated cleanup policies.",
   "version": "2.0.0",
-  "author": "n8n-go Team",
+  "author": "m9m Team",
   "category": "integrations",
   "tags": ["backup", "cloud", "aws", "gcp", "azure", "storage", "sync", "encryption"],
   "parameters": {
@@ -542,8 +542,8 @@
       "screenshots/cloud-backup-config.png",
       "screenshots/cloud-backup-monitoring.png"
     ],
-    "documentation": "https://docs.n8n-go.dev/templates/cloud-backup-automation",
-    "repository": "https://github.com/n8n-go/templates",
+    "documentation": "https://docs.m9m.dev/templates/cloud-backup-automation",
+    "repository": "https://github.com/m9m/templates",
     "license": "MIT",
     "keywords": [
       "backup",

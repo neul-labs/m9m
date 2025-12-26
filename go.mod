@@ -1,4 +1,4 @@
-module github.com/dipankar/n8n-go
+module github.com/dipankar/m9m
 
 go 1.24.0
 

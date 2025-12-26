@@ -2,6 +2,7 @@ package email
 
 import (
 	"crypto/tls"
+	"encoding/base64"
 	"fmt"
 	"mime"
 	"net/smtp"
@@ -9,9 +10,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dipankar/n8n-go/internal/expressions"
-	"github.com/dipankar/n8n-go/internal/model"
-	"github.com/dipankar/n8n-go/internal/nodes/base"
+	"github.com/dipankar/m9m/internal/expressions"
+	"github.com/dipankar/m9m/internal/model"
+	"github.com/dipankar/m9m/internal/nodes/base"
 )
 
 // SMTPNode sends emails via SMTP
@@ -91,18 +92,37 @@ func (n *SMTPNode) Execute(inputData []model.DataItem, nodeParams map[string]int
 		}
 
 		// Add attachments from binary data if available
-		if item.Binary != nil {
-			attachmentName, _ := nodeParams["attachmentName"].(string)
-			if attachmentName == "" {
-				attachmentName = "attachment.bin"
-			}
+		if item.Binary != nil && len(item.Binary) > 0 {
+			for binaryKey, bd := range item.Binary {
+				attachmentName := bd.FileName
+				if attachmentName == "" {
+					attachmentName, _ = nodeParams["attachmentName"].(string)
+					if attachmentName == "" {
+						attachmentName = binaryKey + ".bin"
+					}
+				}
 
-			attachment := EmailAttachment{
-				Name:     attachmentName,
-				Content:  item.Binary,
-				MimeType: n.detectMimeType(attachmentName),
+				// Decode base64 binary data
+				content, err := base64.StdEncoding.DecodeString(bd.Data)
+				if err != nil {
+					return nil, n.CreateError("failed to decode binary attachment", map[string]interface{}{
+						"key":   binaryKey,
+						"error": err.Error(),
+					})
+				}
+
+				mimeType := bd.MimeType
+				if mimeType == "" {
+					mimeType = n.detectMimeType(attachmentName)
+				}
+
+				attachment := EmailAttachment{
+					Name:     attachmentName,
+					Content:  content,
+					MimeType: mimeType,
+				}
+				message.Attachments = append(message.Attachments, attachment)
 			}
-			message.Attachments = append(message.Attachments, attachment)
 		}
 
 		// Send email

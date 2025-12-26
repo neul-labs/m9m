@@ -8,7 +8,7 @@ import (
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/dipankar/n8n-go/internal/model"
+	"github.com/dipankar/m9m/internal/model"
 )
 
 // SQLiteStorage provides SQLite-backed workflow storage

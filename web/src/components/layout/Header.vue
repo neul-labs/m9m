@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import {
   SunIcon,
@@ -7,9 +7,12 @@ import {
   BellIcon,
   UserCircleIcon,
   MagnifyingGlassIcon,
+  SignalIcon,
+  SignalSlashIcon,
 } from '@heroicons/vue/24/outline'
 import { Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue'
 import { useThemeStore, useAuthStore, useExecutionStore } from '@/stores'
+import { wsConnection } from '@/api/websocket'
 
 const route = useRoute()
 const themeStore = useThemeStore()
@@ -17,10 +20,56 @@ const authStore = useAuthStore()
 const executionStore = useExecutionStore()
 
 const pageTitle = computed(() => {
-  return (route.meta.title as string) || 'n8n-go'
+  return (route.meta.title as string) || 'm9m'
 })
 
 const hasNotifications = computed(() => executionStore.hasRunningExecutions)
+
+// WebSocket connection state
+const wsConnected = ref(false)
+const wsReconnecting = ref(false)
+let connectionCheckInterval: ReturnType<typeof setInterval> | null = null
+
+function updateConnectionState() {
+  wsConnected.value = wsConnection.isConnected()
+  wsReconnecting.value = !wsConnected.value && wsConnection.isConnected() === false
+}
+
+onMounted(() => {
+  updateConnectionState()
+  // Check connection state periodically
+  connectionCheckInterval = setInterval(updateConnectionState, 1000)
+
+  // Listen for connection events
+  wsConnection.on('connected', () => {
+    wsConnected.value = true
+    wsReconnecting.value = false
+  })
+
+  wsConnection.on('error', () => {
+    wsConnected.value = false
+    wsReconnecting.value = true
+  })
+})
+
+onUnmounted(() => {
+  if (connectionCheckInterval) {
+    clearInterval(connectionCheckInterval)
+  }
+})
+
+// Connection status text
+const connectionStatus = computed(() => {
+  if (wsConnected.value) return 'Connected'
+  if (wsReconnecting.value) return 'Reconnecting...'
+  return 'Disconnected'
+})
+
+const connectionStatusColor = computed(() => {
+  if (wsConnected.value) return 'text-green-500'
+  if (wsReconnecting.value) return 'text-amber-500'
+  return 'text-red-500'
+})
 </script>
 
 <template>
@@ -46,6 +95,32 @@ const hasNotifications = computed(() => executionStore.hasRunningExecutions)
 
     <!-- Right: Actions -->
     <div class="flex items-center gap-2">
+      <!-- WebSocket Connection Status -->
+      <div
+        class="flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium"
+        :class="wsConnected ? 'bg-green-50 dark:bg-green-900/20' : 'bg-amber-50 dark:bg-amber-900/20'"
+        :title="connectionStatus"
+      >
+        <span
+          class="relative flex h-2 w-2"
+        >
+          <span
+            v-if="wsReconnecting"
+            class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+            :class="connectionStatusColor.replace('text-', 'bg-')"
+          />
+          <span
+            class="relative inline-flex rounded-full h-2 w-2"
+            :class="connectionStatusColor.replace('text-', 'bg-')"
+          />
+        </span>
+        <component
+          :is="wsConnected ? SignalIcon : SignalSlashIcon"
+          class="w-4 h-4"
+          :class="connectionStatusColor"
+        />
+      </div>
+
       <!-- Theme Toggle -->
       <button
         @click="themeStore.toggleTheme"

@@ -1,8 +1,8 @@
-# Makefile for n8n-go
+# Makefile for m9m
 
 # Build variables
-BINARY_NAME=n8n-go
-MAIN_FILE=cmd/n8n-go/main.go
+BINARY_NAME=m9m
+MAIN_FILE=cmd/m9m/main.go
 
 # Default target
 .PHONY: all
@@ -86,7 +86,7 @@ build-with-frontend: web-build
 # Run development mode (backend + frontend proxy)
 .PHONY: dev
 dev:
-	@echo "Starting n8n-go in development mode..."
+	@echo "Starting m9m in development mode..."
 	@echo "Run 'make web-dev' in another terminal for frontend hot-reload"
 	./${BINARY_NAME} --mode control
 

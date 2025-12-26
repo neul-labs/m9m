@@ -1,6 +1,6 @@
 # Monitoring and Observability
 
-n8n-go provides comprehensive monitoring and observability features built for production environments. This includes Prometheus metrics, OpenTelemetry tracing, structured logging, and health monitoring.
+m9m provides comprehensive monitoring and observability features built for production environments. This includes Prometheus metrics, OpenTelemetry tracing, structured logging, and health monitoring.
 
 ## Overview
 
@@ -99,8 +99,8 @@ monitoring:
 
 #### Environment Variables
 ```bash
-N8N_GO_METRICS_PORT=9090
-N8N_GO_ENABLE_METRICS=true
+M9M_METRICS_PORT=9090
+M9M_ENABLE_METRICS=true
 ```
 
 ### Prometheus Configuration
@@ -111,9 +111,9 @@ global:
   evaluation_interval: 15s
 
 scrape_configs:
-  - job_name: 'n8n-go'
+  - job_name: 'm9m'
     static_configs:
-      - targets: ['n8n-go:9090']
+      - targets: ['m9m:9090']
     metrics_path: '/metrics'
     scrape_interval: 10s
     scrape_timeout: 10s
@@ -127,16 +127,16 @@ scrape_configs:
 monitoring:
   tracing:
     endpoint: "http://jaeger:14268/api/traces"
-    service_name: "n8n-go"
+    service_name: "m9m"
     sampling_rate: 1.0
     exporter_type: "jaeger"  # or "otlp"
 ```
 
 ### Environment Variables
 ```bash
-N8N_GO_TRACING_ENDPOINT=http://jaeger:14268/api/traces
-N8N_GO_TRACING_SERVICE_NAME=n8n-go
-N8N_GO_TRACING_SAMPLING_RATE=1.0
+M9M_TRACING_ENDPOINT=http://jaeger:14268/api/traces
+M9M_TRACING_SERVICE_NAME=m9m
+M9M_TRACING_SAMPLING_RATE=1.0
 ```
 
 ### Trace Structure
@@ -232,7 +232,7 @@ readinessProbe:
 ```json
 {
   "dashboard": {
-    "title": "n8n-go Workflow Performance",
+    "title": "m9m Workflow Performance",
     "panels": [
       {
         "title": "Workflow Execution Rate",
@@ -279,7 +279,7 @@ readinessProbe:
 ```json
 {
   "dashboard": {
-    "title": "n8n-go System Resources",
+    "title": "m9m System Resources",
     "panels": [
       {
         "title": "Memory Usage",
@@ -319,7 +319,7 @@ readinessProbe:
 ```yaml
 # alerts.yml
 groups:
-- name: n8n-go.rules
+- name: m9m.rules
   rules:
   # High error rate
   - alert: HighWorkflowErrorRate
@@ -353,13 +353,13 @@ groups:
 
   # Service down
   - alert: ServiceDown
-    expr: up{job="n8n-go"} == 0
+    expr: up{job="m9m"} == 0
     for: 1m
     labels:
       severity: critical
     annotations:
-      summary: "n8n-go service is down"
-      description: "n8n-go instance {{ $labels.instance }} is down"
+      summary: "m9m service is down"
+      description: "m9m instance {{ $labels.instance }} is down"
 ```
 
 ### Alertmanager Configuration
@@ -380,7 +380,7 @@ receivers:
   email_configs:
   - to: 'admin@company.com'
     from: 'alerts@company.com'
-    subject: 'n8n-go Alert: {{ .GroupLabels.alertname }}'
+    subject: 'm9m Alert: {{ .GroupLabels.alertname }}'
     body: |
       {{ range .Alerts }}
       Alert: {{ .Annotations.summary }}
@@ -390,7 +390,7 @@ receivers:
   slack_configs:
   - api_url: 'YOUR_SLACK_WEBHOOK_URL'
     channel: '#alerts'
-    title: 'n8n-go Alert'
+    title: 'm9m Alert'
     text: '{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}'
 ```
 
@@ -402,7 +402,7 @@ logging:
   level: "info"  # debug, info, warn, error
   format: "json"  # json, text
   output: "stdout"  # stdout, file
-  file_path: "/var/log/n8n-go.log"
+  file_path: "/var/log/m9m.log"
   max_size: 100  # MB
   max_backups: 5
   max_age: 30  # days
@@ -440,7 +440,7 @@ filebeat.inputs:
 
 output.elasticsearch:
   hosts: ["elasticsearch:9200"]
-  index: "n8n-go-logs-%{+yyyy.MM.dd}"
+  index: "m9m-logs-%{+yyyy.MM.dd}"
 ```
 
 ## Performance Profiling
@@ -448,7 +448,7 @@ output.elasticsearch:
 ### Enable Profiling
 ```bash
 # Start with profiling enabled
-N8N_GO_ENABLE_PPROF=true n8n-go serve
+M9M_ENABLE_PPROF=true m9m serve
 ```
 
 ### Profiling Endpoints

@@ -7,13 +7,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"sort"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/dipankar/n8n-go/internal/expressions"
+	"github.com/dipankar/m9m/internal/expressions"
 )
 
 type MarketplaceManager struct {
@@ -251,7 +250,7 @@ func NewSecurityScanner() *SecurityScanner {
 		rules:     make(map[string]*SecurityRule),
 		whitelist: make(map[string]bool),
 		blacklist: make(map[string]bool),
-		evaluator: expressions.NewGojaExpressionEvaluator(),
+		evaluator: expressions.NewGojaExpressionEvaluator(expressions.DefaultEvaluatorConfig()),
 	}
 
 	scanner.initializeSecurityRules()
@@ -277,7 +276,7 @@ func (mm *MarketplaceManager) AddRepository(repo *Repository) error {
 
 func (mm *MarketplaceManager) SyncRepository(repoID string) error {
 	mm.mu.RLock()
-	repo, exists := mm.repositories[repoID]
+	_, exists := mm.repositories[repoID]
 	mm.mu.RUnlock()
 
 	if !exists {

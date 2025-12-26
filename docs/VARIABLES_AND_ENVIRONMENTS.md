@@ -1,6 +1,6 @@
 # Variables and Environments
 
-The n8n-go variables and environments system provides centralized configuration management with encryption support, allowing you to manage secrets, environment-specific settings, and workflow-specific variables.
+The m9m variables and environments system provides centralized configuration management with encryption support, allowing you to manage secrets, environment-specific settings, and workflow-specific variables.
 
 ## Overview
 
@@ -384,7 +384,7 @@ Variables marked as `encrypted: true` are encrypted using **AES-256-GCM** before
 
 **Set encryption key via CLI:**
 ```bash
-./n8n-go --encryption-key "your-32-byte-encryption-key-here"
+./m9m --encryption-key "your-32-byte-encryption-key-here"
 ```
 
 **Important**:
@@ -405,7 +405,7 @@ Variables marked as `encrypted: true` are encrypted using **AES-256-GCM** before
 2. **Use environment variables for the encryption key**:
    ```bash
    export ENCRYPTION_KEY="$(openssl rand -base64 32)"
-   ./n8n-go --encryption-key "$ENCRYPTION_KEY"
+   ./m9m --encryption-key "$ENCRYPTION_KEY"
    ```
 
 3. **Rotate encryption keys periodically**:
@@ -504,11 +504,11 @@ Example expressions:
 
 ## Storage Backends
 
-The variables system supports all n8n-go storage backends:
+The variables system supports all m9m storage backends:
 
 ### Memory Storage (Default)
 ```bash
-./n8n-go --db memory
+./m9m --db memory
 ```
 - Fast, ephemeral
 - Variables lost on restart
@@ -516,7 +516,7 @@ The variables system supports all n8n-go storage backends:
 
 ### BadgerDB Storage
 ```bash
-./n8n-go --db badger --data-dir ./data
+./m9m --db badger --data-dir ./data
 ```
 - Persistent, embedded
 - Variables survive restarts
@@ -524,7 +524,7 @@ The variables system supports all n8n-go storage backends:
 
 ### PostgreSQL Storage
 ```bash
-./n8n-go --db postgres --db-url "postgres://user:pass@localhost/n8n"
+./m9m --db postgres --db-url "postgres://user:pass@localhost/n8n"
 ```
 - Persistent, relational
 - Scalable, production-ready
@@ -532,7 +532,7 @@ The variables system supports all n8n-go storage backends:
 
 ### SQLite Storage
 ```bash
-./n8n-go --db sqlite --db-url ./n8n.db
+./m9m --db sqlite --db-url ./n8n.db
 ```
 - Persistent, file-based
 - Simple, reliable
@@ -773,5 +773,5 @@ def list_variables(var_type=None):
 ## Support
 
 For issues or questions:
-- GitHub Issues: https://github.com/dipankar/n8n-go/issues
-- Documentation: https://github.com/dipankar/n8n-go/docs
+- GitHub Issues: https://github.com/dipankar/m9m/issues
+- Documentation: https://github.com/dipankar/m9m/docs

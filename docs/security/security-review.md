@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-This document provides a comprehensive security analysis of n8n-go and recommendations for security hardening in production environments. n8n-go implements multiple layers of security controls to protect against common attack vectors while maintaining the flexibility required for workflow automation.
+This document provides a comprehensive security analysis of m9m and recommendations for security hardening in production environments. m9m implements multiple layers of security controls to protect against common attack vectors while maintaining the flexibility required for workflow automation.
 
 ## Security Architecture
 
@@ -300,8 +300,8 @@ export WEBHOOK_SECRET=$(openssl rand -hex 16)
 export DB_PASSWORD_FILE=/run/secrets/db_password
 
 # TLS configuration
-export TLS_CERT_FILE=/etc/ssl/certs/n8n-go.crt
-export TLS_KEY_FILE=/etc/ssl/private/n8n-go.key
+export TLS_CERT_FILE=/etc/ssl/certs/m9m.crt
+export TLS_KEY_FILE=/etc/ssl/private/m9m.key
 
 # Security headers
 export SECURITY_HEADERS=true
@@ -378,7 +378,7 @@ tls:
 # Allow only necessary ports
 ufw allow 443/tcp  # HTTPS
 ufw allow 22/tcp   # SSH (restrict to management IPs)
-ufw deny 3000/tcp  # Block direct access to n8n-go
+ufw deny 3000/tcp  # Block direct access to m9m
 ufw enable
 ```
 
@@ -387,27 +387,27 @@ ufw enable
 **User and Permissions:**
 ```bash
 # Create dedicated user
-useradd -r -s /bin/false -d /opt/n8n-go n8n-go
+useradd -r -s /bin/false -d /opt/m9m m9m
 
 # Set file permissions
-chown -R n8n-go:n8n-go /opt/n8n-go
-chmod 750 /opt/n8n-go
-chmod 640 /opt/n8n-go/config.yaml
-chmod 600 /opt/n8n-go/credentials/*
+chown -R m9m:m9m /opt/m9m
+chmod 750 /opt/m9m
+chmod 640 /opt/m9m/config.yaml
+chmod 600 /opt/m9m/credentials/*
 ```
 
 **Systemd Service:**
 ```ini
 [Unit]
-Description=n8n-go Workflow Engine
+Description=m9m Workflow Engine
 After=network.target
 
 [Service]
 Type=simple
-User=n8n-go
-Group=n8n-go
-WorkingDirectory=/opt/n8n-go
-ExecStart=/opt/n8n-go/n8n-go server --config /opt/n8n-go/config.yaml
+User=m9m
+Group=m9m
+WorkingDirectory=/opt/m9m
+ExecStart=/opt/m9m/m9m server --config /opt/m9m/config.yaml
 Restart=always
 RestartSec=5
 
@@ -415,7 +415,7 @@ RestartSec=5
 NoNewPrivileges=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/opt/n8n-go/data
+ReadWritePaths=/opt/m9m/data
 PrivateTmp=true
 ProtectKernelTunables=true
 ProtectControlGroups=true
@@ -437,14 +437,14 @@ FROM scratch
 USER 65534:65534
 
 # Copy only necessary files
-COPY --chown=65534:65534 n8n-go /n8n-go
+COPY --chown=65534:65534 m9m /m9m
 COPY --chown=65534:65534 config.yaml /config.yaml
 
 # Security labels
 LABEL security.level="production"
 LABEL security.scan="passed"
 
-ENTRYPOINT ["/n8n-go"]
+ENTRYPOINT ["/m9m"]
 CMD ["server", "--config", "/config.yaml"]
 ```
 
@@ -452,8 +452,8 @@ CMD ["server", "--config", "/config.yaml"]
 ```yaml
 version: '3.8'
 services:
-  n8n-go:
-    image: n8n-go:latest
+  m9m:
+    image: m9m:latest
     security_opt:
       - no-new-privileges:true
     cap_drop:
@@ -504,13 +504,13 @@ monitoring:
 **Log Analysis:**
 ```bash
 # Monitor for security events
-tail -f /var/log/n8n-go.log | jq 'select(.level == "warn" or .level == "error")'
+tail -f /var/log/m9m.log | jq 'select(.level == "warn" or .level == "error")'
 
 # Check for authentication failures
-grep "authentication_failure" /var/log/n8n-go.log | tail -20
+grep "authentication_failure" /var/log/m9m.log | tail -20
 
 # Monitor resource usage
-grep "resource_limit" /var/log/n8n-go.log | tail -20
+grep "resource_limit" /var/log/m9m.log | tail -20
 ```
 
 ## Security Testing
@@ -630,9 +630,9 @@ func TestExpressionSandboxSecurity(t *testing.T) {
 7. Document lessons learned
 
 **Contact Information:**
-- **Security Team**: security@n8n-go.com
+- **Security Team**: security@m9m.com
 - **Emergency**: +1-555-SECURITY
-- **Bug Bounty**: bounty@n8n-go.com
+- **Bug Bounty**: bounty@m9m.com
 
 ## Security Assessment Summary
 
@@ -658,4 +658,4 @@ func TestExpressionSandboxSecurity(t *testing.T) {
 
 ### Conclusion
 
-n8n-go implements a robust security architecture with multiple layers of protection. The combination of input validation, expression sandboxing, authentication mechanisms, and resource controls provides strong protection against common attack vectors. Regular security assessments and adherence to security best practices ensure continued protection in production environments.
+m9m implements a robust security architecture with multiple layers of protection. The combination of input validation, expression sandboxing, authentication mechanisms, and resource controls provides strong protection against common attack vectors. Regular security assessments and adherence to security best practices ensure continued protection in production environments.

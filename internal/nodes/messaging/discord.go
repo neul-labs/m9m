@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/dipankar/n8n-go/internal/model"
-	"github.com/dipankar/n8n-go/internal/nodes/base"
+	"github.com/dipankar/m9m/internal/model"
+	"github.com/dipankar/m9m/internal/nodes/base"
 )
 
 // DiscordNode sends messages to Discord

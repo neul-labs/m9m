@@ -1,20 +1,21 @@
 package azure
 
 import (
-	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/url"
+	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/Azure/azure-storage-blob-go/azblob"
 
-	"github.com/dipankar/n8n-go/internal/expressions"
-	"github.com/dipankar/n8n-go/internal/model"
-	"github.com/dipankar/n8n-go/internal/nodes/base"
+	"github.com/dipankar/m9m/internal/expressions"
+	"github.com/dipankar/m9m/internal/model"
+	"github.com/dipankar/m9m/internal/nodes/base"
 )
 
 // BlobStorageNode provides Azure Blob Storage operations
@@ -146,8 +147,8 @@ type BlobOperationResult struct {
 // NewBlobStorageNode creates a new Blob Storage operations node
 func NewBlobStorageNode() *BlobStorageNode {
 	return &BlobStorageNode{
-		BaseNode:      base.NewBaseNode("Azure Blob Storage", "n8n-nodes-base.azureBlobStorage"),
-		evaluator:     expressions.NewGojaExpressionEvaluator(),
+		BaseNode:      base.NewBaseNode(base.NodeDescription{Name: "Azure Blob Storage", Description: "Azure Blob Storage operations", Category: "cloud"}),
+		evaluator:     expressions.NewGojaExpressionEvaluator(expressions.DefaultEvaluatorConfig()),
 		containerURLs: make(map[string]*azblob.ContainerURL),
 		ctx:           context.Background(),
 	}
@@ -182,17 +183,17 @@ func (n *BlobStorageNode) Execute(inputData []model.DataItem, nodeParams map[str
 
 	for index, item := range inputData {
 		// Create expression context
-		context := &expressions.ExpressionContext{
+		exprContext := &expressions.ExpressionContext{
 			ActiveNodeName:      "Azure Blob Storage",
 			RunIndex:           0,
 			ItemIndex:          index,
 			Mode:               expressions.ModeManual,
 			ConnectionInputData: []model.DataItem{item},
-			AdditionalKeys:     make(map[string]interface{}),
+			AdditionalKeys:     &expressions.AdditionalKeys{},
 		}
 
 		// Execute blob operation
-		result, err := n.executeBlobOperation(operation, context, item)
+		result, err := n.executeBlobOperation(operation, exprContext, item)
 		if err != nil {
 			return nil, n.CreateError("Blob Storage operation failed", map[string]interface{}{
 				"operation": operation.Operation,
@@ -200,15 +201,45 @@ func (n *BlobStorageNode) Execute(inputData []model.DataItem, nodeParams map[str
 			})
 		}
 
-		// Create result item
+		// Create result item - convert BlobOperationResult to map
+		resultJSON := map[string]interface{}{
+			"operation":     result.Operation,
+			"success":       result.Success,
+			"container":     result.Container,
+			"blob":          result.Blob,
+			"size":          result.Size,
+			"contentType":   result.ContentType,
+			"etag":          result.ETag,
+			"url":           result.URL,
+			"executionTime": result.ExecutionTime.String(),
+		}
+		if result.LeaseID != "" {
+			resultJSON["leaseId"] = result.LeaseID
+		}
+		if len(result.Blobs) > 0 {
+			resultJSON["blobs"] = result.Blobs
+		}
+		if len(result.Containers) > 0 {
+			resultJSON["containers"] = result.Containers
+		}
+		if result.Error != "" {
+			resultJSON["error"] = result.Error
+		}
+
 		resultItem := model.DataItem{
-			JSON: result,
+			JSON: resultJSON,
 		}
 
 		// Add binary data if operation downloaded data
 		if operation.Operation == "download" && result.Data != nil {
 			if dataBytes, ok := result.Data.([]byte); ok {
-				resultItem.Binary = dataBytes
+				resultItem.Binary = map[string]model.BinaryData{
+					"data": {
+						Data:     base64.StdEncoding.EncodeToString(dataBytes),
+						MimeType: result.ContentType,
+						FileName: filepath.Base(result.Blob),
+					},
+				}
 			}
 		}
 
@@ -312,9 +343,19 @@ func (n *BlobStorageNode) uploadBlob(operation *BlobOperation, context *expressi
 			data = jsonData
 			contentType = "application/json"
 		}
-	} else if item.Binary != nil {
-		// Use binary data from item
-		data = item.Binary
+	} else if item.Binary != nil && len(item.Binary) > 0 {
+		// Use binary data from item - get first binary entry
+		for _, bd := range item.Binary {
+			decoded, err := base64.StdEncoding.DecodeString(bd.Data)
+			if err != nil {
+				return fmt.Errorf("failed to decode binary data: %w", err)
+			}
+			data = decoded
+			if bd.MimeType != "" && contentType == "" {
+				contentType = bd.MimeType
+			}
+			break
+		}
 	} else {
 		// Use JSON data from item
 		jsonData, err := json.Marshal(item.JSON)
@@ -364,12 +405,6 @@ func (n *BlobStorageNode) uploadBlob(operation *BlobOperation, context *expressi
 	// Set metadata
 	if len(operation.Metadata) > 0 {
 		uploadOptions.Metadata = operation.Metadata
-	}
-
-	// Set access tier
-	if operation.AccessTier != "" {
-		tier := azblob.AccessTierType(operation.AccessTier)
-		uploadOptions.AccessTier = tier
 	}
 
 	// Upload blob
@@ -524,20 +559,20 @@ func (n *BlobStorageNode) listBlobs(operation *BlobOperation, context *expressio
 			if blobInfo.Properties.CacheControl != nil {
 				blob.CacheControl = *blobInfo.Properties.CacheControl
 			}
-			if blobInfo.Properties.AccessTier != nil {
-				blob.AccessTier = string(*blobInfo.Properties.AccessTier)
+			if blobInfo.Properties.AccessTier != "" {
+				blob.AccessTier = string(blobInfo.Properties.AccessTier)
 			}
-			if blobInfo.Properties.ArchiveStatus != nil {
-				blob.ArchiveStatus = string(*blobInfo.Properties.ArchiveStatus)
+			if blobInfo.Properties.ArchiveStatus != "" {
+				blob.ArchiveStatus = string(blobInfo.Properties.ArchiveStatus)
 			}
-			if blobInfo.Properties.LeaseStatus != nil {
-				blob.LeaseStatus = string(*blobInfo.Properties.LeaseStatus)
+			if blobInfo.Properties.LeaseStatus != "" {
+				blob.LeaseStatus = string(blobInfo.Properties.LeaseStatus)
 			}
-			if blobInfo.Properties.LeaseState != nil {
-				blob.LeaseState = string(*blobInfo.Properties.LeaseState)
+			if blobInfo.Properties.LeaseState != "" {
+				blob.LeaseState = string(blobInfo.Properties.LeaseState)
 			}
-			if blobInfo.Properties.LeaseDuration != nil {
-				blob.LeaseDuration = string(*blobInfo.Properties.LeaseDuration)
+			if blobInfo.Properties.LeaseDuration != "" {
+				blob.LeaseDuration = string(blobInfo.Properties.LeaseDuration)
 			}
 
 			// Add metadata
@@ -649,7 +684,7 @@ func (n *BlobStorageNode) getBlobProperties(operation *BlobOperation, context *e
 		CacheControl:    props.CacheControl(),
 		BlobType:        string(props.BlobType()),
 		CreationTime:    props.CreationTime(),
-		ServerEncrypted: props.IsServerEncrypted(),
+		ServerEncrypted: props.IsServerEncrypted() == "true",
 	}
 
 	result.Data = blobInfo
@@ -798,11 +833,7 @@ func (n *BlobStorageNode) deleteContainer(operation *BlobOperation, context *exp
 
 func (n *BlobStorageNode) listContainers(operation *BlobOperation, context *expressions.ExpressionContext, item model.DataItem, result *BlobOperationResult) error {
 	// Prepare list options
-	listOptions := azblob.ListContainersSegmentOptions{
-		Details: azblob.ListContainersDetail{
-			Metadata: true,
-		},
-	}
+	listOptions := azblob.ListContainersSegmentOptions{}
 
 	// Handle pagination
 	if maxResults, ok := operation.Options["maxResults"].(int); ok {
@@ -821,20 +852,26 @@ func (n *BlobStorageNode) listContainers(operation *BlobOperation, context *expr
 
 		for _, containerInfo := range listResponse.ContainerItems {
 			container := ContainerInfo{
-				Name:                        containerInfo.Name,
-				LastModified:                containerInfo.Properties.LastModified,
-				ETag:                        string(containerInfo.Properties.Etag),
-				LeaseStatus:                 string(containerInfo.Properties.LeaseStatus),
-				LeaseState:                  string(containerInfo.Properties.LeaseState),
-				PublicAccess:                string(containerInfo.Properties.PublicAccess),
-				HasImmutabilityPolicy:       *containerInfo.Properties.HasImmutabilityPolicy,
-				HasLegalHold:                *containerInfo.Properties.HasLegalHold,
-				DenyEncryptionScopeOverride: *containerInfo.Properties.PreventEncryptionScopeOverride,
+				Name:         containerInfo.Name,
+				LastModified: containerInfo.Properties.LastModified,
+				ETag:         string(containerInfo.Properties.Etag),
+				LeaseStatus:  string(containerInfo.Properties.LeaseStatus),
+				LeaseState:   string(containerInfo.Properties.LeaseState),
+				PublicAccess: string(containerInfo.Properties.PublicAccess),
 			}
 
-			// Add optional properties
-			if containerInfo.Properties.LeaseDuration != nil {
-				container.LeaseDuration = string(*containerInfo.Properties.LeaseDuration)
+			// Add optional properties (handle pointer fields)
+			if containerInfo.Properties.HasImmutabilityPolicy != nil {
+				container.HasImmutabilityPolicy = *containerInfo.Properties.HasImmutabilityPolicy
+			}
+			if containerInfo.Properties.HasLegalHold != nil {
+				container.HasLegalHold = *containerInfo.Properties.HasLegalHold
+			}
+			if containerInfo.Properties.PreventEncryptionScopeOverride != nil {
+				container.DenyEncryptionScopeOverride = *containerInfo.Properties.PreventEncryptionScopeOverride
+			}
+			if containerInfo.Properties.LeaseDuration != "" {
+				container.LeaseDuration = string(containerInfo.Properties.LeaseDuration)
 			}
 			if containerInfo.Properties.DefaultEncryptionScope != nil {
 				container.DefaultEncryptionScope = *containerInfo.Properties.DefaultEncryptionScope
@@ -1008,6 +1045,12 @@ func (n *BlobStorageNode) generateSASURL(operation *BlobOperation, context *expr
 	// Get blob URL
 	blobURL := containerURL.NewBlobURL(result.Blob)
 
+	// Check if credential supports SAS generation
+	storageAccountCred, ok := n.credential.(azblob.StorageAccountCredential)
+	if !ok {
+		return fmt.Errorf("SAS URL generation requires a storage account credential with account key")
+	}
+
 	// Generate SAS token
 	sasQueryParams, err := azblob.BlobSASSignatureValues{
 		Protocol:      azblob.SASProtocolHTTPS,
@@ -1015,16 +1058,18 @@ func (n *BlobStorageNode) generateSASURL(operation *BlobOperation, context *expr
 		ContainerName: operation.Container,
 		BlobName:      result.Blob,
 		Permissions:   permissions,
-	}.NewSASQueryParameters(n.credential)
+	}.NewSASQueryParameters(storageAccountCred)
 
 	if err != nil {
 		return fmt.Errorf("failed to generate SAS token: %w", err)
 	}
 
 	// Build URL with SAS token
-	urlParts := azblob.NewBlobURLParts(blobURL.URL())
+	blobURLValue := blobURL.URL()
+	urlParts := azblob.NewBlobURLParts(blobURLValue)
 	urlParts.SAS = sasQueryParams
-	result.URL = urlParts.URL().String()
+	sasURL := urlParts.URL()
+	result.URL = sasURL.String()
 
 	return nil
 }
@@ -1166,16 +1211,33 @@ func (n *BlobStorageNode) parseBlobOperation(nodeParams map[string]interface{}) 
 }
 
 func (n *BlobStorageNode) initializeBlobClient(config *AzureConfig) error {
-	var err error
 	var serviceURL azblob.ServiceURL
 
 	if config.ConnectionString != "" {
-		// Use connection string
-		serviceURL, err = azblob.NewServiceURLFromConnectionString(config.ConnectionString)
-		if err != nil {
-			return fmt.Errorf("failed to create service URL from connection string: %w", err)
+		// Parse connection string manually
+		connStr := config.ConnectionString
+		accountName, accountKey, endpoint := parseConnectionString(connStr)
+		if accountName != "" && accountKey != "" {
+			credential, err := azblob.NewSharedKeyCredential(accountName, accountKey)
+			if err != nil {
+				return fmt.Errorf("failed to create shared key credential from connection string: %w", err)
+			}
+			n.credential = credential
+
+			if endpoint == "" {
+				endpoint = fmt.Sprintf("https://%s.blob.core.windows.net", accountName)
+			}
+
+			u, err := url.Parse(endpoint)
+			if err != nil {
+				return fmt.Errorf("failed to parse endpoint URL: %w", err)
+			}
+
+			p := azblob.NewPipeline(credential, azblob.PipelineOptions{})
+			serviceURL = azblob.NewServiceURL(*u, p)
+		} else {
+			return fmt.Errorf("invalid connection string: missing account name or key")
 		}
-		n.credential = azblob.NewAnonymousCredential()
 	} else if config.AccountKey != "" {
 		// Use account key
 		credential, err := azblob.NewSharedKeyCredential(config.AccountName, config.AccountKey)
@@ -1211,6 +1273,35 @@ func (n *BlobStorageNode) initializeBlobClient(config *AzureConfig) error {
 
 func (n *BlobStorageNode) evaluateExpression(expr string, context *expressions.ExpressionContext) (interface{}, error) {
 	return n.evaluator.EvaluateExpression(expr, context)
+}
+
+// parseConnectionString parses an Azure Storage connection string and extracts AccountName, AccountKey, and BlobEndpoint
+func parseConnectionString(connStr string) (accountName, accountKey, endpoint string) {
+	parts := strings.Split(connStr, ";")
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		if part == "" {
+			continue
+		}
+
+		idx := strings.Index(part, "=")
+		if idx == -1 {
+			continue
+		}
+
+		key := strings.TrimSpace(part[:idx])
+		value := strings.TrimSpace(part[idx+1:])
+
+		switch strings.ToLower(key) {
+		case "accountname":
+			accountName = value
+		case "accountkey":
+			accountKey = value
+		case "blobendpoint":
+			endpoint = value
+		}
+	}
+	return
 }
 
 // ValidateParameters validates the node parameters

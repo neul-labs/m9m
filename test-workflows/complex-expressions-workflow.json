@@ -94,7 +94,7 @@
           "object": [
             {
               "name": "metadata",
-              "value": "={{ {\"processed\": true, \"source\": \"n8n-go\", \"timestamp\": now()} }}"
+              "value": "={{ {\"processed\": true, \"source\": \"m9m\", \"timestamp\": now()} }}"
             }
           ]
         }

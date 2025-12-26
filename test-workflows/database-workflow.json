@@ -10,7 +10,7 @@
       "parameters": {
         "filename": ":memory:",
         "operation": "executeQuery",
-        "query": "SELECT 'Hello n8n-go' as message, 42 as number"
+        "query": "SELECT 'Hello m9m' as message, 42 as number"
       }
     }
   ],

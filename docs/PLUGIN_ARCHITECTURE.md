@@ -1,8 +1,8 @@
-# n8n-go Plugin Architecture: Dynamic Node Loading
+# m9m Plugin Architecture: Dynamic Node Loading
 
 ## Overview
 
-This document explores options for **adding nodes without recompiling** the n8n-go system. Currently, nodes are statically compiled into the binary. This analysis covers multiple plugin approaches.
+This document explores options for **adding nodes without recompiling** the m9m system. Currently, nodes are statically compiled into the binary. This analysis covers multiple plugin approaches.
 
 ## Table of Contents
 
@@ -21,7 +21,7 @@ This document explores options for **adding nodes without recompiling** the n8n-
 
 **How it works now**:
 ```go
-// In cmd/n8n-go/main.go
+// In cmd/m9m/main.go
 slackNode := msgnodes.NewSlackNode()
 eng.RegisterNodeExecutor("n8n-nodes-base.slack", slackNode)
 ```
@@ -152,7 +152,7 @@ module.exports = {
 // plugins/mycustomnode/node.go
 package main
 
-import "github.com/dipankar/n8n-go/internal/nodes/base"
+import "github.com/dipankar/m9m/internal/nodes/base"
 
 type MyCustomNode struct {
     *base.BaseNode
@@ -171,7 +171,7 @@ var NodeExecutor base.NodeExecutor = NewNode()
 ```
 
 ```go
-// In n8n-go main.go
+// In m9m main.go
 p, err := plugin.Open("plugins/mycustomnode.so")
 nodeFactory, err := p.Lookup("NodeExecutor")
 eng.RegisterNodeExecutor("custom.myNode", nodeFactory.(base.NodeExecutor))
@@ -203,7 +203,7 @@ eng.RegisterNodeExecutor("custom.myNode", nodeFactory.(base.NodeExecutor))
 **Architecture**:
 ```
 ┌─────────────────┐         gRPC         ┌──────────────────┐
-│   n8n-go Core   │ ◄─────────────────► │  External Node   │
+│   m9m Core   │ ◄─────────────────► │  External Node   │
 │                 │                      │  (any language)  │
 └─────────────────┘                      └──────────────────┘
 ```
@@ -278,7 +278,7 @@ pub extern "C" fn execute(input_ptr: *const u8, input_len: usize) -> *mut u8 {
 
 ### Option 5: REST API-Based Nodes
 
-**Description**: Nodes are HTTP endpoints that n8n-go calls
+**Description**: Nodes are HTTP endpoints that m9m calls
 
 **Implementation**:
 ```yaml
@@ -324,7 +324,7 @@ parameters:
 **Architecture**:
 ```
 ┌─────────────────────────────────────────────┐
-│            n8n-go Core Engine               │
+│            m9m Core Engine               │
 ├─────────────────────────────────────────────┤
 │                                             │
 │  ┌─────────────┐  ┌──────────┐  ┌───────┐ │
@@ -463,8 +463,8 @@ plugins/
 ├── data-processor.js
 └── notification-node.js
 
-# Start n8n-go with plugins
-./n8n-go --plugin-dir ./plugins
+# Start m9m with plugins
+./m9m --plugin-dir ./plugins
 ```
 
 **Configuration**:
@@ -820,4 +820,4 @@ cp template.js plugins/my-node.js
 
 *Last Updated: November 10, 2025*
 *Version: 1.0*
-*Author: n8n-go Development Team*
+*Author: m9m Development Team*

@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/dop251/goja"
-	"github.com/dipankar/n8n-go/internal/model"
+	"github.com/dipankar/m9m/internal/model"
 )
 
 // N8n-specific helper functions that provide the familiar n8n syntax
@@ -215,9 +215,10 @@ func (js *JavaScriptRuntime) createDollarHelper() interface{} {
 
 func (js *JavaScriptRuntime) createMomentHelper() interface{} {
 	// Enhanced moment.js compatible helper
-	momentFunc := func(call goja.FunctionCall) goja.Value {
+	var momentFunc func(call goja.FunctionCall) goja.Value
+	momentFunc = func(call goja.FunctionCall) goja.Value {
 		var date time.Time
-		if call.ArgumentCount() > 0 {
+		if len(call.Arguments) > 0 {
 			input := call.Argument(0).String()
 			parsed, err := time.Parse(time.RFC3339, input)
 			if err != nil {
@@ -238,14 +239,14 @@ func (js *JavaScriptRuntime) createMomentHelper() interface{} {
 
 		momentObj.Set("format", func(call goja.FunctionCall) goja.Value {
 			format := "2006-01-02 15:04:05"
-			if call.ArgumentCount() > 0 {
+			if len(call.Arguments) > 0 {
 				format = js.convertMomentFormat(call.Argument(0).String())
 			}
 			return js.vm.ToValue(date.Format(format))
 		})
 
 		momentObj.Set("add", func(call goja.FunctionCall) goja.Value {
-			if call.ArgumentCount() >= 2 {
+			if len(call.Arguments) >= 2 {
 				amount := call.Argument(0).ToInteger()
 				unit := call.Argument(1).String()
 
@@ -271,12 +272,28 @@ func (js *JavaScriptRuntime) createMomentHelper() interface{} {
 		})
 
 		momentObj.Set("subtract", func(call goja.FunctionCall) goja.Value {
-			if call.ArgumentCount() >= 2 {
+			if len(call.Arguments) >= 2 {
 				amount := -call.Argument(0).ToInteger()
 				unit := call.Argument(1).String()
 
-				newCall := goja.FunctionCall{Arguments: []goja.Value{js.vm.ToValue(amount), js.vm.ToValue(unit)}}
-				return momentObj.Get("add").(func(goja.FunctionCall) goja.Value)(newCall)
+				// Call add with negated amount
+				newDate := date
+				switch unit {
+				case "days", "day", "d":
+					newDate = newDate.AddDate(0, 0, int(amount))
+				case "hours", "hour", "h":
+					newDate = newDate.Add(time.Duration(amount) * time.Hour)
+				case "minutes", "minute", "m":
+					newDate = newDate.Add(time.Duration(amount) * time.Minute)
+				case "seconds", "second", "s":
+					newDate = newDate.Add(time.Duration(amount) * time.Second)
+				case "months", "month", "M":
+					newDate = newDate.AddDate(0, int(amount), 0)
+				case "years", "year", "y":
+					newDate = newDate.AddDate(int(amount), 0, 0)
+				}
+				newCall := goja.FunctionCall{Arguments: []goja.Value{js.vm.ToValue(newDate.Format(time.RFC3339))}}
+				return momentFunc(newCall)
 			}
 			return js.vm.ToValue(momentObj)
 		})
@@ -298,14 +315,14 @@ func (js *JavaScriptRuntime) createMomentHelper() interface{} {
 		})
 
 		momentObj.Set("diff", func(call goja.FunctionCall) goja.Value {
-			if call.ArgumentCount() > 0 {
-				otherMoment := call.Argument(0)
+			if len(call.Arguments) > 0 {
+				_ = call.Argument(0) // otherMoment - not used in this simplified impl
 				// Extract date from other moment object
 				otherDate := time.Now() // Mock implementation
 				diff := date.Sub(otherDate)
 
 				unit := "milliseconds"
-				if call.ArgumentCount() > 1 {
+				if len(call.Arguments) > 1 {
 					unit = call.Argument(1).String()
 				}
 

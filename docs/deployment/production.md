@@ -1,6 +1,6 @@
 # Production Deployment Guide
 
-This comprehensive guide covers deploying n8n-go in production environments, including infrastructure setup, security configuration, monitoring, and operational best practices.
+This comprehensive guide covers deploying m9m in production environments, including infrastructure setup, security configuration, monitoring, and operational best practices.
 
 ## Table of Contents
 
@@ -28,7 +28,7 @@ This comprehensive guide covers deploying n8n-go in production environments, inc
           │                       │                       │
           ▼                       ▼                       ▼
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   n8n-go-1      │    │   n8n-go-2      │    │   Log Aggregator│
+│   m9m-1      │    │   m9m-2      │    │   Log Aggregator│
 │   (Primary)     │────│   (Secondary)   │────│    (Fluentd)    │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
           │                       │                       │
@@ -42,7 +42,7 @@ This comprehensive guide covers deploying n8n-go in production environments, inc
 ### Key Components
 
 - **Load Balancer**: Distributes traffic and provides SSL termination
-- **n8n-go Instances**: Multiple instances for high availability
+- **m9m Instances**: Multiple instances for high availability
 - **Database**: PostgreSQL for persistent storage
 - **Monitoring**: Prometheus + Grafana for observability
 - **Logging**: Centralized logging with Fluentd/ELK stack
@@ -70,7 +70,7 @@ This comprehensive guide covers deploying n8n-go in production environments, inc
 # Inbound ports
 443/tcp   # HTTPS (external)
 80/tcp    # HTTP (redirect to HTTPS)
-3000/tcp  # n8n-go API (internal)
+3000/tcp  # m9m API (internal)
 9090/tcp  # Metrics (internal)
 8080/tcp  # Health checks (internal)
 
@@ -89,52 +89,52 @@ This comprehensive guide covers deploying n8n-go in production environments, inc
 
 ```bash
 # Create installation directory
-sudo mkdir -p /opt/n8n-go
-cd /opt/n8n-go
+sudo mkdir -p /opt/m9m
+cd /opt/m9m
 
 # Download latest release
-LATEST_VERSION=$(curl -s https://api.github.com/repos/n8n-go/n8n-go/releases/latest | grep tag_name | cut -d '"' -f 4)
-curl -L "https://github.com/n8n-go/n8n-go/releases/download/${LATEST_VERSION}/n8n-go-linux-amd64" -o n8n-go
+LATEST_VERSION=$(curl -s https://api.github.com/repos/m9m/m9m/releases/latest | grep tag_name | cut -d '"' -f 4)
+curl -L "https://github.com/m9m/m9m/releases/download/${LATEST_VERSION}/m9m-linux-amd64" -o m9m
 
 # Make executable
-chmod +x n8n-go
+chmod +x m9m
 
 # Create directories
-sudo mkdir -p /opt/n8n-go/{config,data,logs,workflows,credentials}
+sudo mkdir -p /opt/m9m/{config,data,logs,workflows,credentials}
 
 # Set ownership
-sudo useradd -r -s /bin/false -d /opt/n8n-go n8n-go
-sudo chown -R n8n-go:n8n-go /opt/n8n-go
+sudo useradd -r -s /bin/false -d /opt/m9m m9m
+sudo chown -R m9m:m9m /opt/m9m
 ```
 
 #### Create Systemd Service
 
 ```bash
-sudo tee /etc/systemd/system/n8n-go.service << 'EOF'
+sudo tee /etc/systemd/system/m9m.service << 'EOF'
 [Unit]
-Description=n8n-go Workflow Automation Engine
-Documentation=https://docs.n8n-go.com
+Description=m9m Workflow Automation Engine
+Documentation=https://docs.m9m.com
 After=network.target postgresql.service
 Wants=postgresql.service
 
 [Service]
 Type=simple
-User=n8n-go
-Group=n8n-go
-WorkingDirectory=/opt/n8n-go
-ExecStart=/opt/n8n-go/n8n-go server --config /opt/n8n-go/config/production.yaml
+User=m9m
+Group=m9m
+WorkingDirectory=/opt/m9m
+ExecStart=/opt/m9m/m9m server --config /opt/m9m/config/production.yaml
 ExecReload=/bin/kill -HUP $MAINPID
 Restart=always
 RestartSec=5
 StandardOutput=journal
 StandardError=journal
-SyslogIdentifier=n8n-go
+SyslogIdentifier=m9m
 
 # Security settings
 NoNewPrivileges=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/opt/n8n-go/data /opt/n8n-go/logs
+ReadWritePaths=/opt/m9m/data /opt/m9m/logs
 PrivateTmp=true
 ProtectKernelTunables=true
 ProtectControlGroups=true
@@ -144,7 +144,7 @@ LimitNOFILE=65536
 
 # Environment
 Environment=NODE_ENV=production
-EnvironmentFile=-/opt/n8n-go/config/.env
+EnvironmentFile=-/opt/m9m/config/.env
 
 [Install]
 WantedBy=multi-user.target
@@ -152,7 +152,7 @@ EOF
 
 # Enable and start service
 sudo systemctl daemon-reload
-sudo systemctl enable n8n-go
+sudo systemctl enable m9m
 ```
 
 ### Method 2: Docker Deployment
@@ -164,9 +164,9 @@ sudo systemctl enable n8n-go
 version: '3.8'
 
 services:
-  n8n-go:
-    image: n8n-go:latest
-    container_name: n8n-go
+  m9m:
+    image: m9m:latest
+    container_name: m9m
     restart: unless-stopped
     ports:
       - "3000:3000"
@@ -240,7 +240,7 @@ services:
       - ./nginx/ssl:/etc/nginx/ssl:ro
       - ./nginx/logs:/var/log/nginx:rw
     depends_on:
-      - n8n-go
+      - m9m
     networks:
       - n8n-network
 
@@ -322,16 +322,16 @@ docker-compose -f docker-compose.prod.yml up -d
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: n8n-go
+  name: m9m
   labels:
-    name: n8n-go
+    name: m9m
 ---
 # k8s/configmap.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: n8n-go-config
-  namespace: n8n-go
+  name: m9m-config
+  namespace: m9m
 data:
   production.yaml: |
     server:
@@ -374,10 +374,10 @@ data:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: n8n-go
-  namespace: n8n-go
+  name: m9m
+  namespace: m9m
   labels:
-    app: n8n-go
+    app: m9m
 spec:
   replicas: 3
   strategy:
@@ -387,20 +387,20 @@ spec:
       maxSurge: 1
   selector:
     matchLabels:
-      app: n8n-go
+      app: m9m
   template:
     metadata:
       labels:
-        app: n8n-go
+        app: m9m
     spec:
-      serviceAccountName: n8n-go
+      serviceAccountName: m9m
       securityContext:
         runAsNonRoot: true
         runAsUser: 65534
         fsGroup: 65534
       containers:
-      - name: n8n-go
-        image: n8n-go:latest
+      - name: m9m
+        image: m9m:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 3000
@@ -415,12 +415,12 @@ spec:
         - name: DB_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: n8n-go-secrets
+              name: m9m-secrets
               key: db-password
         - name: ENCRYPTION_KEY
           valueFrom:
             secretKeyRef:
-              name: n8n-go-secrets
+              name: m9m-secrets
               key: encryption-key
         volumeMounts:
         - name: config
@@ -460,10 +460,10 @@ spec:
       volumes:
       - name: config
         configMap:
-          name: n8n-go-config
+          name: m9m-config
       - name: data
         persistentVolumeClaim:
-          claimName: n8n-go-data
+          claimName: m9m-data
 ```
 
 ## Configuration
@@ -472,7 +472,7 @@ spec:
 
 ```yaml
 # config/production.yaml
-# n8n-go Production Configuration
+# m9m Production Configuration
 
 # Server settings
 server:
@@ -504,8 +504,8 @@ security:
   # TLS configuration
   tls:
     enabled: true
-    certFile: "${TLS_CERT_FILE:/etc/ssl/certs/n8n-go.crt}"
-    keyFile: "${TLS_KEY_FILE:/etc/ssl/private/n8n-go.key}"
+    certFile: "${TLS_CERT_FILE:/etc/ssl/certs/m9m.crt}"
+    keyFile: "${TLS_KEY_FILE:/etc/ssl/private/m9m.key}"
     minVersion: "1.3"
     cipherSuites:
       - "TLS_AES_256_GCM_SHA384"
@@ -578,7 +578,7 @@ monitoring:
 logging:
   level: "info"
   format: "json"
-  output: "/opt/n8n-go/logs/n8n-go.log"
+  output: "/opt/m9m/logs/m9m.log"
   maxSize: 100  # MB
   maxBackups: 10
   maxAge: 30    # days
@@ -587,7 +587,7 @@ logging:
   # Audit logging
   audit:
     enabled: true
-    logFile: "/opt/n8n-go/logs/audit.log"
+    logFile: "/opt/m9m/logs/audit.log"
     events:
       - "authentication"
       - "authorization"
@@ -658,8 +658,8 @@ DB_PASSWORD=secure-password
 
 # Security
 ENCRYPTION_KEY=your-32-byte-encryption-key-here
-TLS_CERT_FILE=/etc/ssl/certs/n8n-go.crt
-TLS_KEY_FILE=/etc/ssl/private/n8n-go.key
+TLS_CERT_FILE=/etc/ssl/certs/m9m.crt
+TLS_KEY_FILE=/etc/ssl/private/m9m.key
 
 # External services
 JAEGER_ENDPOINT=http://jaeger:14268/api/traces
@@ -679,30 +679,30 @@ WEBHOOK_TIMEOUT=30s
 
 ```bash
 # Self-signed certificate (development)
-openssl req -x509 -newkey rsa:4096 -keyout n8n-go.key -out n8n-go.crt -days 365 -nodes \
-  -subj "/C=US/ST=State/L=City/O=Organization/CN=n8n-go.example.com"
+openssl req -x509 -newkey rsa:4096 -keyout m9m.key -out m9m.crt -days 365 -nodes \
+  -subj "/C=US/ST=State/L=City/O=Organization/CN=m9m.example.com"
 
 # Let's Encrypt certificate (production)
-certbot certonly --standalone -d n8n-go.example.com
+certbot certonly --standalone -d m9m.example.com
 ```
 
 #### Nginx SSL Configuration
 
 ```nginx
-# /etc/nginx/sites-available/n8n-go
+# /etc/nginx/sites-available/m9m
 server {
     listen 80;
-    server_name n8n-go.example.com;
+    server_name m9m.example.com;
     return 301 https://$server_name$request_uri;
 }
 
 server {
     listen 443 ssl http2;
-    server_name n8n-go.example.com;
+    server_name m9m.example.com;
 
     # SSL configuration
-    ssl_certificate /etc/letsencrypt/live/n8n-go.example.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/n8n-go.example.com/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/m9m.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/m9m.example.com/privkey.pem;
     ssl_protocols TLSv1.3 TLSv1.2;
     ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384;
     ssl_prefer_server_ciphers off;
@@ -842,7 +842,7 @@ defaults
 
 frontend n8n_frontend
     bind *:80
-    bind *:443 ssl crt /etc/ssl/certs/n8n-go.pem
+    bind *:443 ssl crt /etc/ssl/certs/m9m.pem
 
     # Redirect HTTP to HTTPS
     redirect scheme https code 301 if !{ ssl_fc }
@@ -868,9 +868,9 @@ backend n8n_backend
     default-server check inter 5s rise 2 fall 3
 
     # Backend servers
-    server n8n-go-1 10.0.1.10:3000 check
-    server n8n-go-2 10.0.1.11:3000 check
-    server n8n-go-3 10.0.1.12:3000 check backup
+    server m9m-1 10.0.1.10:3000 check
+    server m9m-2 10.0.1.11:3000 check
+    server m9m-3 10.0.1.12:3000 check backup
 
 # Statistics
 listen stats
@@ -941,7 +941,7 @@ log_autovacuum_min_duration = 0
 #### Database Schema
 
 ```sql
--- n8n-go database schema
+-- m9m database schema
 CREATE TABLE IF NOT EXISTS workflows (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
@@ -1018,7 +1018,7 @@ rule_files:
   - "n8n_rules.yml"
 
 scrape_configs:
-  - job_name: 'n8n-go'
+  - job_name: 'm9m'
     static_configs:
       - targets: ['localhost:9090']
     scrape_interval: 15s
@@ -1045,8 +1045,8 @@ alerting:
 {
   "dashboard": {
     "id": null,
-    "title": "n8n-go Production Dashboard",
-    "tags": ["n8n-go", "production"],
+    "title": "m9m Production Dashboard",
+    "tags": ["m9m", "production"],
     "timezone": "browser",
     "panels": [
       {
@@ -1100,8 +1100,8 @@ alerting:
 # fluentd/fluent.conf
 <source>
   @type tail
-  path /opt/n8n-go/logs/n8n-go.log
-  pos_file /var/log/fluentd/n8n-go.log.pos
+  path /opt/m9m/logs/m9m.log
+  pos_file /var/log/fluentd/m9m.log.pos
   tag n8n.application
   format json
   time_key timestamp
@@ -1110,7 +1110,7 @@ alerting:
 
 <source>
   @type tail
-  path /opt/n8n-go/logs/audit.log
+  path /opt/m9m/logs/audit.log
   pos_file /var/log/fluentd/audit.log.pos
   tag n8n.audit
   format json
@@ -1122,7 +1122,7 @@ alerting:
   @type record_transformer
   <record>
     hostname ${hostname}
-    service n8n-go
+    service m9m
   </record>
 </filter>
 
@@ -1130,7 +1130,7 @@ alerting:
   @type elasticsearch
   host elasticsearch.example.com
   port 9200
-  index_name n8n-go
+  index_name m9m
   type_name _doc
   include_tag_key true
   tag_key @log_name
@@ -1162,24 +1162,24 @@ gzip "$BACKUP_ROOT/database/n8n_db_$TIMESTAMP.dump"
 
 # Workflows backup
 echo "Backing up workflows..."
-tar -czf "$BACKUP_ROOT/workflows/workflows_$TIMESTAMP.tar.gz" -C /opt/n8n-go workflows/
+tar -czf "$BACKUP_ROOT/workflows/workflows_$TIMESTAMP.tar.gz" -C /opt/m9m workflows/
 
 # Credentials backup
 echo "Backing up credentials..."
-tar -czf "$BACKUP_ROOT/credentials/credentials_$TIMESTAMP.tar.gz" -C /opt/n8n-go credentials/
+tar -czf "$BACKUP_ROOT/credentials/credentials_$TIMESTAMP.tar.gz" -C /opt/m9m credentials/
 
 # Configuration backup
 echo "Backing up configuration..."
-tar -czf "$BACKUP_ROOT/config/config_$TIMESTAMP.tar.gz" -C /opt/n8n-go config/
+tar -czf "$BACKUP_ROOT/config/config_$TIMESTAMP.tar.gz" -C /opt/m9m config/
 
 # Log backup
 echo "Backing up logs..."
-tar -czf "$BACKUP_ROOT/logs/logs_$TIMESTAMP.tar.gz" -C /opt/n8n-go logs/
+tar -czf "$BACKUP_ROOT/logs/logs_$TIMESTAMP.tar.gz" -C /opt/m9m logs/
 
 # Upload to cloud storage (optional)
 if command -v aws &> /dev/null; then
     echo "Uploading to S3..."
-    aws s3 sync "$BACKUP_ROOT" s3://your-backup-bucket/n8n-go/
+    aws s3 sync "$BACKUP_ROOT" s3://your-backup-bucket/m9m/
 fi
 
 # Cleanup old backups
@@ -1208,20 +1208,20 @@ fi
 case $RECOVERY_TYPE in
     "database")
         echo "Recovering database from $BACKUP_FILE..."
-        systemctl stop n8n-go
+        systemctl stop m9m
         sudo -u postgres dropdb n8n
         sudo -u postgres createdb n8n -O n8n
         gunzip -c "$BACKUP_FILE" | pg_restore -h localhost -U n8n -d n8n
-        systemctl start n8n-go
+        systemctl start m9m
         ;;
 
     "workflows")
         echo "Recovering workflows from $BACKUP_FILE..."
-        systemctl stop n8n-go
-        rm -rf /opt/n8n-go/workflows/*
-        tar -xzf "$BACKUP_FILE" -C /opt/n8n-go/
-        chown -R n8n-go:n8n-go /opt/n8n-go/workflows/
-        systemctl start n8n-go
+        systemctl stop m9m
+        rm -rf /opt/m9m/workflows/*
+        tar -xzf "$BACKUP_FILE" -C /opt/m9m/
+        chown -R m9m:m9m /opt/m9m/workflows/
+        systemctl start m9m
         ;;
 
     "full")
@@ -1242,28 +1242,28 @@ esac
 version: '3.8'
 
 services:
-  n8n-go-1:
-    image: n8n-go:latest
+  m9m-1:
+    image: m9m:latest
     environment:
-      - INSTANCE_ID=n8n-go-1
+      - INSTANCE_ID=m9m-1
       - CLUSTER_MODE=true
     depends_on:
       - postgres
       - redis
 
-  n8n-go-2:
-    image: n8n-go:latest
+  m9m-2:
+    image: m9m:latest
     environment:
-      - INSTANCE_ID=n8n-go-2
+      - INSTANCE_ID=m9m-2
       - CLUSTER_MODE=true
     depends_on:
       - postgres
       - redis
 
-  n8n-go-3:
-    image: n8n-go:latest
+  m9m-3:
+    image: m9m:latest
     environment:
-      - INSTANCE_ID=n8n-go-3
+      - INSTANCE_ID=m9m-3
       - CLUSTER_MODE=true
     depends_on:
       - postgres
@@ -1333,11 +1333,11 @@ performance:
 
 ```bash
 # Check memory usage
-ps aux | grep n8n-go
-top -p $(pgrep n8n-go)
+ps aux | grep m9m
+top -p $(pgrep m9m)
 
 # Enable memory profiling
-./n8n-go server --profile-memory --config /opt/n8n-go/config/production.yaml
+./m9m server --profile-memory --config /opt/m9m/config/production.yaml
 
 # Analyze memory profile
 go tool pprof http://localhost:6060/debug/pprof/heap
@@ -1360,7 +1360,7 @@ curl http://localhost:9090/metrics | grep n8n_db_connections
 
 ```bash
 # Enable performance profiling
-./n8n-go server --profile-cpu --config /opt/n8n-go/config/production.yaml
+./m9m server --profile-cpu --config /opt/m9m/config/production.yaml
 
 # Analyze CPU profile
 go tool pprof http://localhost:6060/debug/pprof/profile
@@ -1375,13 +1375,13 @@ curl http://localhost:9090/metrics | grep n8n_workflow_execution
 #!/bin/bash
 # diagnostic.sh
 
-echo "=== n8n-go System Diagnostics ==="
+echo "=== m9m System Diagnostics ==="
 echo "Date: $(date)"
 echo "Host: $(hostname)"
 echo
 
 echo "=== Service Status ==="
-systemctl status n8n-go
+systemctl status m9m
 echo
 
 echo "=== Resource Usage ==="
@@ -1392,15 +1392,15 @@ echo "Memory Usage:"
 free -h
 
 echo "Disk Usage:"
-df -h /opt/n8n-go
+df -h /opt/m9m
 echo
 
 echo "=== Network Connections ==="
-netstat -tlnp | grep n8n-go
+netstat -tlnp | grep m9m
 echo
 
 echo "=== Recent Logs ==="
-journalctl -u n8n-go --no-pager -n 20
+journalctl -u m9m --no-pager -n 20
 echo
 
 echo "=== Database Status ==="
@@ -1422,7 +1422,7 @@ curl -s http://localhost:9090/metrics | grep -E "n8n_workflow|n8n_execution" | h
 #!/bin/bash
 # performance-monitor.sh
 
-LOGFILE="/var/log/n8n-go-performance.log"
+LOGFILE="/var/log/m9m-performance.log"
 
 while true; do
     TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
@@ -1447,7 +1447,7 @@ done
 
 ## Conclusion
 
-This production deployment guide provides comprehensive instructions for deploying n8n-go in enterprise environments. Key considerations for successful deployment include:
+This production deployment guide provides comprehensive instructions for deploying m9m in enterprise environments. Key considerations for successful deployment include:
 
 1. **Security First**: Implement all security measures before going live
 2. **Monitoring**: Set up comprehensive monitoring and alerting
@@ -1456,4 +1456,4 @@ This production deployment guide provides comprehensive instructions for deployi
 5. **High Availability**: Plan for redundancy and failover
 6. **Documentation**: Maintain operational runbooks and procedures
 
-For additional support or specific deployment scenarios, consult the documentation or reach out to the n8n-go community.
+For additional support or specific deployment scenarios, consult the documentation or reach out to the m9m community.

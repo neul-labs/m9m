@@ -2,9 +2,11 @@ package gcp
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -12,9 +14,9 @@ import (
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 
-	"github.com/dipankar/n8n-go/internal/expressions"
-	"github.com/dipankar/n8n-go/internal/model"
-	"github.com/dipankar/n8n-go/internal/nodes/base"
+	"github.com/dipankar/m9m/internal/expressions"
+	"github.com/dipankar/m9m/internal/model"
+	"github.com/dipankar/m9m/internal/nodes/base"
 )
 
 // CloudStorageNode provides Google Cloud Storage operations
@@ -194,8 +196,8 @@ type StorageOperationResult struct {
 // NewCloudStorageNode creates a new Cloud Storage operations node
 func NewCloudStorageNode() *CloudStorageNode {
 	return &CloudStorageNode{
-		BaseNode:  base.NewBaseNode("Google Cloud Storage", "n8n-nodes-base.googleCloudStorage"),
-		evaluator: expressions.NewGojaExpressionEvaluator(),
+		BaseNode:  base.NewBaseNode(base.NodeDescription{Name: "Google Cloud Storage", Description: "Google Cloud Storage operations", Category: "cloud"}),
+		evaluator: expressions.NewGojaExpressionEvaluator(expressions.DefaultEvaluatorConfig()),
 		ctx:       context.Background(),
 	}
 }
@@ -230,17 +232,17 @@ func (n *CloudStorageNode) Execute(inputData []model.DataItem, nodeParams map[st
 
 	for index, item := range inputData {
 		// Create expression context
-		context := &expressions.ExpressionContext{
+		exprContext := &expressions.ExpressionContext{
 			ActiveNodeName:      "Google Cloud Storage",
 			RunIndex:           0,
 			ItemIndex:          index,
 			Mode:               expressions.ModeManual,
 			ConnectionInputData: []model.DataItem{item},
-			AdditionalKeys:     make(map[string]interface{}),
+			AdditionalKeys:     &expressions.AdditionalKeys{},
 		}
 
 		// Execute storage operation
-		result, err := n.executeStorageOperation(operation, context, item)
+		result, err := n.executeStorageOperation(operation, exprContext, item)
 		if err != nil {
 			return nil, n.CreateError("Cloud Storage operation failed", map[string]interface{}{
 				"operation": operation.Operation,
@@ -248,15 +250,42 @@ func (n *CloudStorageNode) Execute(inputData []model.DataItem, nodeParams map[st
 			})
 		}
 
-		// Create result item
+		// Create result item - convert StorageOperationResult to map
+		resultJSON := map[string]interface{}{
+			"operation":     result.Operation,
+			"success":       result.Success,
+			"bucket":        result.Bucket,
+			"object":        result.Object,
+			"size":          result.Size,
+			"contentType":   result.ContentType,
+			"generation":    result.Generation,
+			"url":           result.URL,
+			"executionTime": result.ExecutionTime.String(),
+		}
+		if len(result.Objects) > 0 {
+			resultJSON["objects"] = result.Objects
+		}
+		if len(result.Buckets) > 0 {
+			resultJSON["buckets"] = result.Buckets
+		}
+		if result.Error != "" {
+			resultJSON["error"] = result.Error
+		}
+
 		resultItem := model.DataItem{
-			JSON: result,
+			JSON: resultJSON,
 		}
 
 		// Add binary data if operation downloaded data
 		if operation.Operation == "download" && result.Data != nil {
 			if dataBytes, ok := result.Data.([]byte); ok {
-				resultItem.Binary = dataBytes
+				resultItem.Binary = map[string]model.BinaryData{
+					"data": {
+						Data:     base64.StdEncoding.EncodeToString(dataBytes),
+						MimeType: result.ContentType,
+						FileName: filepath.Base(result.Object),
+					},
+				}
 			}
 		}
 
@@ -354,9 +383,19 @@ func (n *CloudStorageNode) uploadObject(operation *StorageOperation, context *ex
 			data = jsonData
 			contentType = "application/json"
 		}
-	} else if item.Binary != nil {
-		// Use binary data from item
-		data = item.Binary
+	} else if item.Binary != nil && len(item.Binary) > 0 {
+		// Use binary data from item - get first binary entry
+		for _, bd := range item.Binary {
+			decoded, err := base64.StdEncoding.DecodeString(bd.Data)
+			if err != nil {
+				return fmt.Errorf("failed to decode binary data: %w", err)
+			}
+			data = decoded
+			if bd.MimeType != "" && contentType == "" {
+				contentType = bd.MimeType
+			}
+			break
+		}
 	} else {
 		// Use JSON data from item
 		jsonData, err := json.Marshal(item.JSON)
@@ -535,8 +574,8 @@ func (n *CloudStorageNode) listObjects(operation *StorageOperation, context *exp
 		if len(attrs.MD5) > 0 {
 			obj.MD5 = string(attrs.MD5)
 		}
-		if len(attrs.CRC32C) > 0 {
-			obj.CRC32C = string(attrs.CRC32C)
+		if attrs.CRC32C != 0 {
+			obj.CRC32C = fmt.Sprintf("%d", attrs.CRC32C)
 		}
 
 		objects = append(objects, obj)
@@ -816,8 +855,9 @@ func (n *CloudStorageNode) setBucketLifecycle(operation *StorageOperation, conte
 	bucket := n.storageClient.Bucket(operation.Bucket)
 
 	// Prepare bucket attributes update
+	lifecycle := n.convertToGCSLifecycle(operation.Lifecycle)
 	bucketAttrsToUpdate := storage.BucketAttrsToUpdate{
-		Lifecycle: n.convertToGCSLifecycle(operation.Lifecycle),
+		Lifecycle: &lifecycle,
 	}
 
 	// Update bucket attributes
@@ -849,9 +889,8 @@ func (n *CloudStorageNode) generateSignedURL(operation *StorageOperation, contex
 		method = strings.ToUpper(m)
 	}
 
-	// Get bucket and object handles
+	// Get bucket handle
 	bucket := n.storageClient.Bucket(operation.Bucket)
-	obj := bucket.Object(result.Object)
 
 	// Generate signed URL
 	opts := &storage.SignedURLOptions{
@@ -860,7 +899,7 @@ func (n *CloudStorageNode) generateSignedURL(operation *StorageOperation, contex
 		Expires: time.Now().Add(expiration),
 	}
 
-	signedURL, err := obj.SignedURL(opts)
+	signedURL, err := bucket.SignedURL(result.Object, opts)
 	if err != nil {
 		return fmt.Errorf("failed to generate signed URL: %w", err)
 	}

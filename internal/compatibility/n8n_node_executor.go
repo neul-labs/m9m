@@ -8,51 +8,51 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dipankar/n8n-go/internal/nodes/base"
-	"github.com/dipankar/n8n-go/internal/runtime"
-	"github.com/dipankar/n8n-go/internal/model"
+	"github.com/dipankar/m9m/internal/model"
+	"github.com/dipankar/m9m/internal/nodes/base"
+	"github.com/dipankar/m9m/internal/runtime"
 )
 
 type N8nNodeExecutor struct {
 	*base.BaseNode
-	jsRuntime     *runtime.JavaScriptRuntime
-	nodeDefinition *N8nNodeDefinition
-	nodeCode      string
+	jsRuntime          *runtime.JavaScriptRuntime
+	nodeDefinition     *N8nNodeDefinition
+	nodeCode           string
 	credentialsManager *CredentialsManager
 }
 
 type N8nNodeDefinition struct {
-	Name          string                  `json:"name"`
-	DisplayName   string                  `json:"displayName"`
-	Description   string                  `json:"description"`
-	Version       float64                 `json:"version"`
-	Icon          string                  `json:"icon"`
-	Group         []string                `json:"group"`
-	Defaults      map[string]interface{}  `json:"defaults"`
-	Inputs        []string                `json:"inputs"`
-	Outputs       []string                `json:"outputs"`
-	Properties    []N8nNodeProperty       `json:"properties"`
-	Credentials   []N8nCredentialType     `json:"credentials"`
-	Hooks         map[string]interface{}  `json:"hooks"`
-	Methods       map[string]interface{}  `json:"methods"`
-	Webhooks      []N8nWebhookConfig      `json:"webhooks"`
-	Polling       bool                    `json:"polling"`
-	TriggerPanel  interface{}             `json:"triggerPanel"`
+	Name        string                 `json:"name"`
+	DisplayName string                 `json:"displayName"`
+	Description string                 `json:"description"`
+	Version     float64                `json:"version"`
+	Icon        string                 `json:"icon"`
+	Group       []string               `json:"group"`
+	Defaults    map[string]interface{} `json:"defaults"`
+	Inputs      []string               `json:"inputs"`
+	Outputs     []string               `json:"outputs"`
+	Properties  []N8nNodeProperty      `json:"properties"`
+	Credentials []N8nCredentialType    `json:"credentials"`
+	Hooks       map[string]interface{} `json:"hooks"`
+	Methods     map[string]interface{} `json:"methods"`
+	Webhooks    []N8nWebhookConfig     `json:"webhooks"`
+	Polling     bool                   `json:"polling"`
+	TriggerPanel interface{}           `json:"triggerPanel"`
 }
 
 type N8nNodeProperty struct {
-	DisplayName     string                 `json:"displayName"`
-	Name            string                 `json:"name"`
-	Type            string                 `json:"type"`
-	Default         interface{}            `json:"default"`
-	Required        bool                   `json:"required"`
-	Description     string                 `json:"description"`
-	Options         []N8nPropertyOption    `json:"options"`
-	DisplayOptions  map[string]interface{} `json:"displayOptions"`
-	TypeOptions     map[string]interface{} `json:"typeOptions"`
-	Placeholder     string                 `json:"placeholder"`
-	ExtractValue    map[string]interface{} `json:"extractValue"`
-	LoadOptions     map[string]interface{} `json:"loadOptions"`
+	DisplayName    string                 `json:"displayName"`
+	Name           string                 `json:"name"`
+	Type           string                 `json:"type"`
+	Default        interface{}            `json:"default"`
+	Required       bool                   `json:"required"`
+	Description    string                 `json:"description"`
+	Options        []N8nPropertyOption    `json:"options"`
+	DisplayOptions map[string]interface{} `json:"displayOptions"`
+	TypeOptions    map[string]interface{} `json:"typeOptions"`
+	Placeholder    string                 `json:"placeholder"`
+	ExtractValue   map[string]interface{} `json:"extractValue"`
+	LoadOptions    map[string]interface{} `json:"loadOptions"`
 }
 
 type N8nPropertyOption struct {
@@ -69,28 +69,28 @@ type N8nCredentialType struct {
 }
 
 type N8nWebhookConfig struct {
-	Name        string `json:"name"`
-	HttpMethod  string `json:"httpMethod"`
-	Path        string `json:"path"`
-	IsFullPath  bool   `json:"isFullPath"`
+	Name       string `json:"name"`
+	HttpMethod string `json:"httpMethod"`
+	Path       string `json:"path"`
+	IsFullPath bool   `json:"isFullPath"`
 }
 
 type N8nExecutionContext struct {
 	*runtime.ExecutionContext
-	Helpers           *N8nExecutionHelpers   `json:"helpers"`
-	GetNodeParameter  func(string, int) interface{} `json:"getNodeParameter"`
-	GetCredentials    func(string, string) (interface{}, error) `json:"getCredentials"`
-	GetInputData      func(int) []interface{} `json:"getInputData"`
-	PrepareOutputData func([]interface{}) []interface{} `json:"prepareOutputData"`
+	Helpers          *N8nExecutionHelpers
+	GetNodeParameter func(string, int) interface{}
+	GetCredentials   func(string, string) (interface{}, error)
+	GetInputData     func(int) []interface{}
+	PrepareOutputData func([]interface{}) []interface{}
 }
 
 type N8nExecutionHelpers struct {
-	HttpRequest         func(interface{}) (interface{}, error) `json:"httpRequest"`
-	HttpRequestWithAuth func(string, interface{}) (interface{}, error) `json:"httpRequestWithAuth"`
-	RequestOAuth1       func(string, interface{}) (interface{}, error) `json:"requestOAuth1"`
-	RequestOAuth2       func(string, interface{}) (interface{}, error) `json:"requestOAuth2"`
-	ReturnJsonArray     func(interface{}) []interface{} `json:"returnJsonArray"`
-	ConstructExecutionMetaData func([]interface{}, map[string]interface{}) []interface{} `json:"constructExecutionMetaData"`
+	HttpRequest                 func(interface{}) (interface{}, error)
+	HttpRequestWithAuth         func(string, interface{}) (interface{}, error)
+	RequestOAuth1               func(string, interface{}) (interface{}, error)
+	RequestOAuth2               func(string, interface{}) (interface{}, error)
+	ReturnJsonArray             func(interface{}) []interface{}
+	ConstructExecutionMetaData  func([]interface{}, map[string]interface{}) []interface{}
 }
 
 type CredentialsManager struct {
@@ -131,11 +131,11 @@ func NewN8nNodeExecutor(nodePath string, jsRuntime *runtime.JavaScriptRuntime) (
 	}
 
 	executor := &N8nNodeExecutor{
-		BaseNode: base.NewBaseNode(
-			definition.Name,
-			definition.Description,
-			fmt.Sprintf("%.1f", definition.Version),
-		),
+		BaseNode: base.NewBaseNode(base.NodeDescription{
+			Name:        definition.Name,
+			Description: definition.Description,
+			Category:    strings.Join(definition.Group, ","),
+		}),
 		jsRuntime:          jsRuntime,
 		nodeDefinition:     &definition,
 		nodeCode:           string(nodeCode),
@@ -145,7 +145,13 @@ func NewN8nNodeExecutor(nodePath string, jsRuntime *runtime.JavaScriptRuntime) (
 	return executor, nil
 }
 
-func (n *N8nNodeExecutor) Execute(input *model.NodeExecutionInput) (*model.NodeExecutionOutput, error) {
+// GetNodeDefinition returns the node definition
+func (n *N8nNodeExecutor) GetNodeDefinition() *N8nNodeDefinition {
+	return n.nodeDefinition
+}
+
+// Execute implements the standard node interface
+func (n *N8nNodeExecutor) Execute(inputData []model.DataItem, nodeParams map[string]interface{}) ([]model.DataItem, error) {
 	// Prepare execution context
 	context := &N8nExecutionContext{
 		ExecutionContext: &runtime.ExecutionContext{
@@ -163,13 +169,8 @@ func (n *N8nNodeExecutor) Execute(input *model.NodeExecutionInput) (*model.NodeE
 	}
 
 	// Set up parameter access function
-	var nodeConfig map[string]interface{}
-	if err := json.Unmarshal(input.Config, &nodeConfig); err != nil {
-		nodeConfig = make(map[string]interface{})
-	}
-
 	context.GetNodeParameter = func(parameterName string, itemIndex int) interface{} {
-		if value, exists := nodeConfig[parameterName]; exists {
+		if value, exists := nodeParams[parameterName]; exists {
 			return value
 		}
 		return nil
@@ -181,7 +182,7 @@ func (n *N8nNodeExecutor) Execute(input *model.NodeExecutionInput) (*model.NodeE
 
 	context.GetInputData = func(inputIndex int) []interface{} {
 		var result []interface{}
-		for _, item := range input.Items {
+		for _, item := range inputData {
 			result = append(result, map[string]interface{}{
 				"json": item.JSON,
 			})
@@ -200,30 +201,18 @@ func (n *N8nNodeExecutor) Execute(input *model.NodeExecutionInput) (*model.NodeE
 	executionCode := n.prepareExecutionCode(context)
 
 	// Execute the node
-	result, err := n.jsRuntime.Execute(executionCode, context.ExecutionContext, input.Items)
+	result, err := n.jsRuntime.Execute(executionCode, context.ExecutionContext, inputData)
 	if err != nil {
-		return &model.NodeExecutionOutput{
-			Items: []model.DataItem{},
-			Error: fmt.Sprintf("Node execution failed: %s", err.Error()),
-		}, nil
+		return nil, fmt.Errorf("node execution failed: %w", err)
 	}
 
 	// Convert result back to n8n-go format
 	outputItems, err := n.convertResultToItems(result)
 	if err != nil {
-		return &model.NodeExecutionOutput{
-			Items: []model.DataItem{},
-			Error: fmt.Sprintf("Result conversion failed: %s", err.Error()),
-		}, nil
+		return nil, fmt.Errorf("result conversion failed: %w", err)
 	}
 
-	return &model.NodeExecutionOutput{
-		Items: outputItems,
-		Metadata: map[string]interface{}{
-			"n8n_node": n.nodeDefinition.Name,
-			"version":  n.nodeDefinition.Version,
-		},
-	}, nil
+	return outputItems, nil
 }
 
 func (n *N8nNodeExecutor) prepareExecutionCode(context *N8nExecutionContext) string {
@@ -253,7 +242,7 @@ func (n *N8nNodeExecutor) prepareExecutionCode(context *N8nExecutionContext) str
 		const helpers = context.helpers;
 
 		// Set up this context for the node
-		const this = {
+		const thisContext = {
 			getNodeParameter: getNodeParameter,
 			getCredentials: getCredentials,
 			getInputData: getInputData,
@@ -268,9 +257,9 @@ func (n *N8nNodeExecutor) prepareExecutionCode(context *N8nExecutionContext) str
 		let nodeResult;
 		try {
 			if (typeof execute === 'function') {
-				nodeResult = execute.call(this);
-			} else if (typeof this.execute === 'function') {
-				nodeResult = this.execute.call(this);
+				nodeResult = execute.call(thisContext);
+			} else if (typeof thisContext.execute === 'function') {
+				nodeResult = thisContext.execute.call(thisContext);
 			} else {
 				throw new Error('No execute function found in node');
 			}
@@ -288,9 +277,9 @@ func (n *N8nNodeExecutor) prepareExecutionCode(context *N8nExecutionContext) str
 func (n *N8nNodeExecutor) contextToJSON(context *N8nExecutionContext) string {
 	// Convert execution context to JSON for JavaScript
 	contextData := map[string]interface{}{
-		"getNodeParameter": "function(parameterName, itemIndex) { return getNodeParameter(parameterName, itemIndex); }",
-		"getCredentials":   "function(credentialType, nodeCredentialName) { return getCredentials(credentialType, nodeCredentialName); }",
-		"getInputData":     "function(inputIndex) { return getInputData(inputIndex); }",
+		"getNodeParameter":  "function(parameterName, itemIndex) { return getNodeParameter(parameterName, itemIndex); }",
+		"getCredentials":    "function(credentialType, nodeCredentialName) { return getCredentials(credentialType, nodeCredentialName); }",
+		"getInputData":      "function(inputIndex) { return getInputData(inputIndex); }",
 		"prepareOutputData": "function(outputData) { return prepareOutputData(outputData); }",
 		"helpers": map[string]string{
 			"httpRequest":         "function(options) { return helpers.httpRequest(options); }",
@@ -396,44 +385,6 @@ func (n *N8nNodeExecutor) convertResultToItems(result interface{}) ([]model.Data
 	return items, nil
 }
 
-func (n *N8nNodeExecutor) GetNodeDefinition() *model.NodeDefinition {
-	properties := []model.NodeProperty{}
-
-	for _, prop := range n.nodeDefinition.Properties {
-		options := []model.NodePropertyOption{}
-		for _, opt := range prop.Options {
-			options = append(options, model.NodePropertyOption{
-				Name:  opt.Name,
-				Value: fmt.Sprintf("%v", opt.Value),
-			})
-		}
-
-		properties = append(properties, model.NodeProperty{
-			Name:         prop.Name,
-			DisplayName:  prop.DisplayName,
-			Type:         prop.Type,
-			Required:     prop.Required,
-			Default:      prop.Default,
-			Description:  prop.Description,
-			Options:      options,
-			DisplayOptions: prop.DisplayOptions,
-		})
-	}
-
-	return &model.NodeDefinition{
-		Name:        n.nodeDefinition.Name,
-		DisplayName: n.nodeDefinition.DisplayName,
-		Description: n.nodeDefinition.Description,
-		Version:     fmt.Sprintf("%.1f", n.nodeDefinition.Version),
-		Category:    strings.Join(n.nodeDefinition.Group, ","),
-		Icon:        n.nodeDefinition.Icon,
-		Color:       "#000000", // Default color
-		Properties:  properties,
-		Inputs:      n.nodeDefinition.Inputs,
-		Outputs:     n.nodeDefinition.Outputs,
-	}
-}
-
 // Credentials Management
 func (cm *CredentialsManager) SetCredentials(credentialType, name string, credentials map[string]interface{}) {
 	if cm.credentials[credentialType] == nil {
@@ -455,7 +406,7 @@ func (cm *CredentialsManager) ListCredentials() map[string][]string {
 	result := make(map[string][]string)
 	for credType, credentials := range cm.credentials {
 		var names []string
-		for name := range credentials.(map[string]interface{}) {
+		for name := range credentials {
 			names = append(names, name)
 		}
 		result[credType] = names

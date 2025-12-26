@@ -12,8 +12,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dipankar/n8n-go/internal/engine"
-	"github.com/dipankar/n8n-go/internal/queue"
+	"github.com/dipankar/m9m/internal/engine"
+	"github.com/dipankar/m9m/internal/queue"
 	"go.nanomsg.org/mangos/v3"
 	"go.nanomsg.org/mangos/v3/protocol/pull"
 	"go.nanomsg.org/mangos/v3/protocol/push"

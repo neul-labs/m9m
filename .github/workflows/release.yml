@@ -52,7 +52,7 @@ jobs:
 
             ### Docker
             ```bash
-            docker pull dipankar/n8n-go:${{ steps.get_version.outputs.version }}
+            docker pull dipankar/m9m:${{ steps.get_version.outputs.version }}
             ```
 
             ### Binary
@@ -60,8 +60,8 @@ jobs:
 
             ### From Source
             ```bash
-            git clone https://github.com/dipankar/n8n-go.git
-            cd n8n-go
+            git clone https://github.com/dipankar/m9m.git
+            cd m9m
             git checkout v${{ steps.get_version.outputs.version }}
             make build
             ```
@@ -81,23 +81,23 @@ jobs:
           - os: ubuntu-latest
             goos: linux
             goarch: amd64
-            artifact_name: n8n-go-linux-amd64
+            artifact_name: m9m-linux-amd64
           - os: ubuntu-latest
             goos: linux
             goarch: arm64
-            artifact_name: n8n-go-linux-arm64
+            artifact_name: m9m-linux-arm64
           - os: macos-latest
             goos: darwin
             goarch: amd64
-            artifact_name: n8n-go-darwin-amd64
+            artifact_name: m9m-darwin-amd64
           - os: macos-latest
             goos: darwin
             goarch: arm64
-            artifact_name: n8n-go-darwin-arm64
+            artifact_name: m9m-darwin-arm64
           - os: windows-latest
             goos: windows
             goarch: amd64
-            artifact_name: n8n-go-windows-amd64.exe
+            artifact_name: m9m-windows-amd64.exe
 
     steps:
       - name: Checkout code
@@ -114,7 +114,7 @@ jobs:
           GOARCH: ${{ matrix.goarch }}
           CGO_ENABLED: 1
         run: |
-          go build -ldflags="-w -s -X main.Version=${{ needs.release.outputs.version }}" -o ${{ matrix.artifact_name }} ./cmd/n8n-go
+          go build -ldflags="-w -s -X main.Version=${{ needs.release.outputs.version }}" -o ${{ matrix.artifact_name }} ./cmd/m9m
 
       - name: Generate checksum
         run: |
@@ -178,7 +178,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            dipankar/n8n-go
+            dipankar/m9m
             ghcr.io/${{ github.repository }}
           tags: |
             type=semver,pattern={{version}}
@@ -215,13 +215,13 @@ jobs:
       - name: Update formula
         run: |
           VERSION=${{ needs.release.outputs.version }}
-          sed -i "s/version \".*\"/version \"$VERSION\"/" Formula/n8n-go.rb
-          sed -i "s|url \".*\"|url \"https://github.com/dipankar/n8n-go/releases/download/v$VERSION/n8n-go-darwin-amd64\"|" Formula/n8n-go.rb
+          sed -i "s/version \".*\"/version \"$VERSION\"/" Formula/m9m.rb
+          sed -i "s|url \".*\"|url \"https://github.com/dipankar/m9m/releases/download/v$VERSION/m9m-darwin-amd64\"|" Formula/m9m.rb
 
       - name: Commit and push
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
-          git add Formula/n8n-go.rb
-          git commit -m "Update n8n-go to v${{ needs.release.outputs.version }}"
+          git add Formula/m9m.rb
+          git commit -m "Update m9m to v${{ needs.release.outputs.version }}"
           git push

@@ -3,7 +3,7 @@
   "name": "Basic HTTP to Email Automation",
   "description": "A simple automation template that monitors an HTTP endpoint and sends email notifications when specific conditions are met. Perfect for API monitoring and alerting scenarios.",
   "version": "1.0.0",
-  "author": "n8n-go Team",
+  "author": "m9m Team",
   "category": "automation",
   "tags": ["http", "email", "monitoring", "alerting", "api"],
   "parameters": {
@@ -205,8 +205,8 @@
       "screenshots/basic-automation-overview.png",
       "screenshots/basic-automation-config.png"
     ],
-    "documentation": "https://docs.n8n-go.dev/templates/basic-automation",
-    "repository": "https://github.com/n8n-go/templates",
+    "documentation": "https://docs.m9m.dev/templates/basic-automation",
+    "repository": "https://github.com/m9m/templates",
     "license": "MIT",
     "keywords": [
       "monitoring",

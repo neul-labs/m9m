@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/dop251/goja"
-	"github.com/dipankar/n8n-go/internal/model"
-	"github.com/dipankar/n8n-go/internal/nodes/base"
+	"github.com/dipankar/m9m/internal/model"
+	"github.com/dipankar/m9m/internal/nodes/base"
 )
 
 // JavaScriptNodePlugin represents a node implemented in JavaScript

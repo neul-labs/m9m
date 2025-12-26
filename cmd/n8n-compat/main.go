@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/dipankar/n8n-go/internal/compatibility"
-	"github.com/dipankar/n8n-go/internal/runtime"
-	"github.com/dipankar/n8n-go/internal/model"
+	"github.com/dipankar/m9m/internal/compatibility"
+	"github.com/dipankar/m9m/internal/runtime"
+	"github.com/dipankar/m9m/internal/model"
 )
 
 var (
@@ -386,8 +386,8 @@ func evaluateExpression(cmd *cobra.Command, args []string) {
 	jsRuntime := runtime.NewJavaScriptRuntime(nodeModulesPath)
 	defer jsRuntime.Dispose()
 
-	// Create test context
-	context := map[string]interface{}{
+	// Create test context (for future use with expression evaluation)
+	_ = map[string]interface{}{
 		"json": map[string]interface{}{
 			"name": "Test User",
 			"age":  30,
@@ -529,7 +529,7 @@ func listNodes(cmd *cobra.Command, args []string) {
 		fmt.Printf("• %s\n", nodeType)
 		fmt.Printf("  Name: %s\n", definition.DisplayName)
 		fmt.Printf("  Description: %s\n", definition.Description)
-		fmt.Printf("  Version: %s\n", definition.Version)
+		fmt.Printf("  Version: %.1f\n", definition.Version)
 		fmt.Printf("  Properties: %d\n", len(definition.Properties))
 		fmt.Printf("  Inputs: %v\n", definition.Inputs)
 		fmt.Printf("  Outputs: %v\n", definition.Outputs)
@@ -557,15 +557,13 @@ func testNode(cmd *cobra.Command, args []string) {
 	fmt.Printf("🧪 Testing Node: %s\n", nodeType)
 
 	// Test basic execution
-	input := &model.NodeExecutionInput{
-		Items: []model.DataItem{
-			{JSON: map[string]interface{}{"test": true}},
-		},
-		Config: []byte(`{}`),
+	inputData := []model.DataItem{
+		{JSON: map[string]interface{}{"test": true}},
 	}
+	nodeParams := map[string]interface{}{}
 
 	start := time.Now()
-	output, err := executor.Execute(input)
+	output, err := executor.Execute(inputData, nodeParams)
 	duration := time.Since(start)
 
 	if err != nil {
@@ -573,16 +571,12 @@ func testNode(cmd *cobra.Command, args []string) {
 	}
 
 	fmt.Printf("✅ Node executed successfully in %v\n", duration)
-	fmt.Printf("Input Items: %d\n", len(input.Items))
-	fmt.Printf("Output Items: %d\n", len(output.Items))
+	fmt.Printf("Input Items: %d\n", len(inputData))
+	fmt.Printf("Output Items: %d\n", len(output))
 
-	if output.Error != "" {
-		fmt.Printf("❌ Error: %s\n", output.Error)
-	}
-
-	if verbose && len(output.Items) > 0 {
+	if verbose && len(output) > 0 {
 		fmt.Printf("Sample Output:\n")
-		sampleOutput, _ := json.MarshalIndent(output.Items[0], "", "  ")
+		sampleOutput, _ := json.MarshalIndent(output[0], "", "  ")
 		fmt.Println(string(sampleOutput))
 	}
 }
@@ -606,7 +600,7 @@ func loadNode(cmd *cobra.Command, args []string) {
 	fmt.Printf("Name: %s\n", definition.DisplayName)
 	fmt.Printf("Type: %s\n", definition.Name)
 	fmt.Printf("Description: %s\n", definition.Description)
-	fmt.Printf("Version: %s\n", definition.Version)
+	fmt.Printf("Version: %.1f\n", definition.Version)
 
 	if len(definition.Properties) > 0 {
 		fmt.Printf("\nProperties:\n")

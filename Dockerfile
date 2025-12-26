@@ -20,7 +20,7 @@ COPY . .
 # CGO is needed for sqlite3
 RUN CGO_ENABLED=1 GOOS=linux go build -a -installsuffix cgo \
     -ldflags="-w -s -extldflags '-static'" \
-    -o n8n-go ./cmd/n8n-go
+    -o m9m ./cmd/m9m
 
 # Runtime stage
 FROM alpine:latest
@@ -35,7 +35,7 @@ RUN addgroup -g 1000 n8n && \
 WORKDIR /app
 
 # Copy binary from builder
-COPY --from=builder /build/n8n-go .
+COPY --from=builder /build/m9m .
 
 # Copy example workflows and templates (optional)
 COPY --from=builder /build/examples ./examples
@@ -69,5 +69,5 @@ ENV N8N_GO_PORT=8080 \
 VOLUME ["/app/data", "/app/logs", "/app/config"]
 
 # Run the application
-ENTRYPOINT ["/app/n8n-go"]
+ENTRYPOINT ["/app/m9m"]
 CMD ["serve"]

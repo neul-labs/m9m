@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# Test script for n8n-go webhook functionality
+# Test script for m9m webhook functionality
 
 set -e
 
-echo "🧪 n8n-go Webhook Test Script"
+echo "🧪 m9m Webhook Test Script"
 echo "=============================="
 echo
 

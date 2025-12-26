@@ -1,8 +1,8 @@
-# n8n-go Deployment Guide
+# m9m Deployment Guide
 
 ## Single Binary, Multiple Modes
 
-**Binary**: `n8n-go` (35MB)
+**Binary**: `m9m` (35MB)
 **Version**: 0.4.0
 **Architecture**: Hybrid control plane + worker pool
 
@@ -12,10 +12,10 @@
 
 ```bash
 # Download or build
-go build ./cmd/n8n-go
+go build ./cmd/m9m
 
 # Run in default mode (single-node, no workers)
-./n8n-go
+./m9m
 
 # Access at http://localhost:8080
 ```
@@ -40,9 +40,9 @@ The single binary supports **4 operating modes**:
 **Best for**: Development, small deployments (<1,000 workflows/min)
 
 ```bash
-./n8n-go
+./m9m
 # OR explicitly:
-./n8n-go --mode control
+./m9m --mode control
 ```
 
 **What it does**:
@@ -68,7 +68,7 @@ The single binary supports **4 operating modes**:
 ```
 Control Plane Cluster (3 nodes)     Worker Pool (5-100+ nodes)
 ┌─────────────────────────┐         ┌──────────────────────┐
-│  ./n8n-go        │         │  ./n8n-go     │
+│  ./m9m        │         │  ./m9m     │
 │  --mode control         │ ←─────→ │  --mode worker       │
 │  --cluster              │  NNG    │  --control-plane...  │
 │  --raft-addr...         │  Queue  │  --max-concurrent 20 │
@@ -80,7 +80,7 @@ Control Plane Cluster (3 nodes)     Worker Pool (5-100+ nodes)
 
 **Control Node 1** (bootstrap):
 ```bash
-./n8n-go \
+./m9m \
   --mode control \
   --cluster \
   --node-id=control1 \
@@ -92,7 +92,7 @@ Control Plane Cluster (3 nodes)     Worker Pool (5-100+ nodes)
 
 **Control Node 2**:
 ```bash
-./n8n-go \
+./m9m \
   --mode control \
   --cluster \
   --node-id=control2 \
@@ -106,7 +106,7 @@ Control Plane Cluster (3 nodes)     Worker Pool (5-100+ nodes)
 
 **Control Node 3**:
 ```bash
-./n8n-go \
+./m9m \
   --mode control \
   --cluster \
   --node-id=control3 \
@@ -122,7 +122,7 @@ Control Plane Cluster (3 nodes)     Worker Pool (5-100+ nodes)
 
 **Worker 1**:
 ```bash
-./n8n-go \
+./m9m \
   --mode worker \
   --worker-id=worker1 \
   --control-plane=10.0.1.1,10.0.1.2,10.0.1.3 \
@@ -131,7 +131,7 @@ Control Plane Cluster (3 nodes)     Worker Pool (5-100+ nodes)
 
 **Worker 2**:
 ```bash
-./n8n-go \
+./m9m \
   --mode worker \
   --worker-id=worker2 \
   --control-plane=10.0.1.1,10.0.1.2,10.0.1.3 \
@@ -168,7 +168,7 @@ Control Plane Cluster (3 nodes)     Worker Pool (5-100+ nodes)
 **Best for**: Small distributed deployments
 
 ```bash
-./n8n-go --mode hybrid
+./m9m --mode hybrid
 ```
 
 **Status**: Not yet implemented (placeholder)
@@ -198,13 +198,13 @@ Control Plane Cluster (3 nodes)     Worker Pool (5-100+ nodes)
 
 ```bash
 # Control (localhost)
-./n8n-go --mode control --cluster \
+./m9m --mode control --cluster \
   --node-id=control1 --raft-addr=localhost:7000 \
   --nng-pub=tcp://localhost:8000
 
 # Workers (same or different machines)
 for i in {1..5}; do
-  ./n8n-go --mode worker \
+  ./m9m --mode worker \
     --worker-id=worker$i \
     --control-plane=localhost \
     --max-concurrent=20 &
@@ -331,9 +331,9 @@ spec:
     spec:
       containers:
       - name: n8n-control
-        image: n8n-go:0.4.0
+        image: m9m:0.4.0
         command:
-          - /app/n8n-go
+          - /app/m9m
           - --mode=control
           - --cluster
           - --node-id=$(POD_NAME)
@@ -378,9 +378,9 @@ spec:
     spec:
       containers:
       - name: n8n-worker
-        image: n8n-go:0.4.0
+        image: m9m:0.4.0
         command:
-          - /app/n8n-go
+          - /app/m9m
           - --mode=worker
           - --control-plane=n8n-control-0.n8n-control,n8n-control-1.n8n-control,n8n-control-2.n8n-control
           - --max-concurrent=20
@@ -479,18 +479,18 @@ telnet <control-ip> 9002
 
 **From**:
 ```bash
-./n8n-go
+./m9m
 ```
 
 **To** (with workers):
 ```bash
 # 1. Start control plane with work queue
-./n8n-go --mode control --cluster \
+./m9m --mode control --cluster \
   --node-id=control1 --raft-addr=localhost:7000 \
   --nng-pub=tcp://localhost:8000
 
 # 2. Start workers
-./n8n-go --mode worker \
+./m9m --mode worker \
   --worker-id=worker1 --control-plane=localhost \
   --max-concurrent=20
 ```
@@ -501,11 +501,11 @@ telnet <control-ip> 9002
 
 ## Summary
 
-**Single Binary** = `n8n-go` (35MB)
+**Single Binary** = `m9m` (35MB)
 
 **Deployment Options**:
 
-1. **Single-node**: `./n8n-go` → 1,000 workflows/min
+1. **Single-node**: `./m9m` → 1,000 workflows/min
 2. **Distributed**: Control cluster + workers → 200,000 workflows/min
 3. **Kubernetes**: StatefulSet + Deployment → Infinite scale
 

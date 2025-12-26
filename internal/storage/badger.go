@@ -14,8 +14,8 @@ import (
 	"time"
 
 	"github.com/dgraph-io/badger/v4"
-	"github.com/dipankar/n8n-go/internal/consensus"
-	"github.com/dipankar/n8n-go/internal/model"
+	"github.com/dipankar/m9m/internal/consensus"
+	"github.com/dipankar/m9m/internal/model"
 )
 
 // BadgerStorage implements WorkflowStorage using BadgerDB with Raft replication

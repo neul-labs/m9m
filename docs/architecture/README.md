@@ -1,11 +1,11 @@
 # Architecture Overview
 
-n8n-go is built with a modular, scalable architecture designed for high-performance workflow automation in cloud-native environments.
+m9m is built with a modular, scalable architecture designed for high-performance workflow automation in cloud-native environments.
 
 ## Core Components
 
 ### 1. Workflow Engine
-The heart of n8n-go, responsible for:
+The heart of m9m, responsible for:
 - Workflow parsing and validation
 - Node execution orchestration
 - Data flow management
@@ -193,7 +193,7 @@ Workflow Request → Queue Manager → Worker Pool → Node Execution → Result
 
 ## Comparison with n8n
 
-| Aspect | n8n | n8n-go |
+| Aspect | n8n | m9m |
 |--------|-----|---------|
 | Runtime | Node.js | Go |
 | Memory Usage | ~512MB | ~150MB |

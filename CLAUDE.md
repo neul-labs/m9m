@@ -1,10 +1,10 @@
 # CLAUDE.md
 
-This file provides comprehensive guidance to Claude Code when working with the n8n-go repository - a high-performance workflow automation platform built in Go.
+This file provides comprehensive guidance to Claude Code when working with the m9m repository - a high-performance workflow automation platform built in Go.
 
 ## Project Overview
 
-n8n-go is a cloud-native workflow automation platform that provides 95% backend feature parity with n8n while offering significant performance improvements. It's built using Go for maximum performance and minimal resource usage, targeting enterprise and developer environments.
+m9m is a cloud-native workflow automation platform that provides 95% backend feature parity with n8n while offering significant performance improvements. It's built using Go for maximum performance and minimal resource usage, targeting enterprise and developer environments.
 
 **Key Characteristics:**
 - **Performance**: 5-10x faster execution than n8n
@@ -99,9 +99,9 @@ make fmt vet lint test
 ### Core Architecture
 
 ```
-n8n-go/
+m9m/
 ├── cmd/                    # Application entry points
-│   ├── n8n-go/            # Main application
+│   ├── m9m/            # Main application
 │   ├── benchmark/         # Performance benchmarking
 │   ├── integration-test/  # Integration testing
 │   └── template-cli/      # Template management
@@ -165,7 +165,7 @@ func NewCustomNode() *CustomNode {
 
 #### Registration Pattern
 
-Nodes are registered in `cmd/n8n-go/main.go`:
+Nodes are registered in `cmd/m9m/main.go`:
 
 ```go
 func registerNodeTypes(engine engine.WorkflowEngine) {
@@ -299,8 +299,8 @@ import (
     "github.com/external/package"
 
     // Internal packages last
-    "github.com/yourusername/n8n-go/internal/base"
-    "github.com/yourusername/n8n-go/internal/model"
+    "github.com/yourusername/m9m/internal/base"
+    "github.com/yourusername/m9m/internal/model"
 )
 ```
 
@@ -346,12 +346,12 @@ import (
 
 1. **Enable debug logging**:
    ```bash
-   export N8N_GO_LOG_LEVEL=debug
+   export M9M_LOG_LEVEL=debug
    ```
 
 2. **Run with test data**:
    ```bash
-   ./n8n-go execute test-workflows/debug-workflow.json
+   ./m9m execute test-workflows/debug-workflow.json
    ```
 
 3. **Use test workflows** in `test-workflows/` directory
@@ -421,22 +421,22 @@ func (n *MyNode) Execute(inputData []model.DataItem, nodeParams map[string]inter
 Key environment variables for development:
 ```bash
 # Core configuration
-N8N_GO_PORT=8080
-N8N_GO_HOST=0.0.0.0
-N8N_GO_LOG_LEVEL=info
+M9M_PORT=8080
+M9M_HOST=0.0.0.0
+M9M_LOG_LEVEL=info
 
 # Queue configuration
-N8N_GO_QUEUE_TYPE=redis
-N8N_GO_QUEUE_URL=redis://localhost:6379
-N8N_GO_MAX_WORKERS=10
+M9M_QUEUE_TYPE=redis
+M9M_QUEUE_URL=redis://localhost:6379
+M9M_MAX_WORKERS=10
 
 # Monitoring configuration
-N8N_GO_METRICS_PORT=9090
-N8N_GO_TRACING_ENDPOINT=http://localhost:14268/api/traces
+M9M_METRICS_PORT=9090
+M9M_TRACING_ENDPOINT=http://localhost:14268/api/traces
 
 # Development flags
-N8N_GO_DEV_MODE=true
-N8N_GO_ENABLE_PPROF=true
+M9M_DEV_MODE=true
+M9M_ENABLE_PPROF=true
 ```
 
 ### Configuration Files
@@ -461,10 +461,10 @@ monitoring:
 ### Docker Development
 ```bash
 # Build development image
-docker build -t n8n-go:dev .
+docker build -t m9m:dev .
 
 # Run with development configuration
-docker run -p 8080:8080 -v $(pwd)/config:/app/config n8n-go:dev
+docker run -p 8080:8080 -v $(pwd)/config:/app/config m9m:dev
 ```
 
 ### Local Development
@@ -473,7 +473,7 @@ docker run -p 8080:8080 -v $(pwd)/config:/app/config n8n-go:dev
 make dev-watch
 
 # Or run manually
-./n8n-go serve --config config.yaml
+./m9m serve --config config.yaml
 ```
 
 ## Compatibility with n8n
@@ -495,7 +495,7 @@ make dev-watch
 ./cmd/n8n-compat/n8n-compat --workflow n8n-export.json
 
 # Validate workflow execution
-./n8n-go execute --validate n8n-workflow.json
+./m9m execute --validate n8n-workflow.json
 ```
 
 ## Best Practices
@@ -541,10 +541,10 @@ curl http://localhost:8080/health
 curl http://localhost:9090/metrics
 
 # Check logs
-tail -f /var/log/n8n-go.log
+tail -f /var/log/m9m.log
 
 # Test workflow execution
-./n8n-go execute --debug examples/debug-workflow.json
+./m9m execute --debug examples/debug-workflow.json
 ```
 
 ## Contributing Guidelines

@@ -13,8 +13,8 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/dipankar/n8n-go/internal/messaging"
-	"github.com/dipankar/n8n-go/internal/model"
+	"github.com/dipankar/m9m/internal/messaging"
+	"github.com/dipankar/m9m/internal/model"
 )
 
 // DistributedWebSocketManager manages WebSocket connections across cluster nodes

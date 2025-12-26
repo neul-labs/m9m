@@ -1,4 +1,4 @@
-# n8n-go Scalability Analysis
+# m9m Scalability Analysis
 
 ## Executive Summary
 
@@ -15,7 +15,7 @@
 
 **Current Capability:**
 ```
-Single n8n-go-server instance can handle:
+Single m9m-server instance can handle:
 - 10,000+ HTTP requests/second
 - 100+ concurrent workflow executions
 - 1,000+ workflows in database
@@ -49,9 +49,9 @@ Heavy:    ~8GB RAM,   80% CPU (500 workflows/min)
 ```bash
 # Multiple instances behind load balancer
 [Load Balancer]
-    ├─→ n8n-go-server-1 (handles API requests)
-    ├─→ n8n-go-server-2 (handles API requests)
-    └─→ n8n-go-server-3 (handles API requests)
+    ├─→ m9m-server-1 (handles API requests)
+    ├─→ m9m-server-2 (handles API requests)
+    └─→ m9m-server-3 (handles API requests)
 
 # All share PostgreSQL database
 # API requests can go to any instance
@@ -135,7 +135,7 @@ User's WebSocket is on Instance 1 → No update received!
 
 ```
 ┌────────────────────────────────────────┐
-│         n8n-go-server                   │
+│         m9m-server                   │
 ├────────────────────────────────────────┤
 │  In-Memory State:                      │
 │  • wsClients map[string]*websocket.Conn│
@@ -162,7 +162,7 @@ User's WebSocket is on Instance 1 → No update received!
 ```bash
 # Run on large EC2/GCP instance
 # 16 cores, 32GB RAM
-./n8n-go-server \
+./m9m-server \
   -db postgres \
   -db-url "postgres://high-performance-db/n8n"
 ```
@@ -205,14 +205,14 @@ If primary fails → promote secondary
 **Implementation:**
 ```bash
 # Primary (active)
-./n8n-go-server -db postgres -db-url "..." &
+./m9m-server -db postgres -db-url "..." &
 
 # Secondary (standby, monitoring primary)
 # Start with health check script
 while true; do
   if ! curl -f http://primary:8080/health; then
     echo "Primary down, starting secondary"
-    ./n8n-go-server -db postgres -db-url "..."
+    ./m9m-server -db postgres -db-url "..."
   fi
   sleep 10
 done
@@ -390,14 +390,14 @@ func (s *PostgresStorage) ActivateWorkflow(id string) error {
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: n8n-go-api
+  name: m9m-api
 spec:
   replicas: 5  # Scale as needed
   template:
     spec:
       containers:
-      - name: n8n-go-api
-        image: n8n-go:latest
+      - name: m9m-api
+        image: m9m:latest
         args: ["serve-api"]  # API-only mode
 
 ---
@@ -405,14 +405,14 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: n8n-go-scheduler
+  name: m9m-scheduler
 spec:
   replicas: 3  # Leader election
   template:
     spec:
       containers:
-      - name: n8n-go-scheduler
-        image: n8n-go:latest
+      - name: m9m-scheduler
+        image: m9m:latest
         args: ["serve-scheduler"]  # Scheduler-only mode
 
 ---
@@ -420,14 +420,14 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: n8n-go-worker
+  name: m9m-worker
 spec:
   replicas: 10  # Scale based on queue depth
   template:
     spec:
       containers:
-      - name: n8n-go-worker
-        image: n8n-go:latest
+      - name: m9m-worker
+        image: m9m:latest
         args: ["worker"]  # Worker-only mode
 ```
 
@@ -436,10 +436,10 @@ spec:
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: n8n-go-worker-hpa
+  name: m9m-worker-hpa
 spec:
   scaleTargetRef:
-    name: n8n-go-worker
+    name: m9m-worker
   minReplicas: 5
   maxReplicas: 50
   metrics:
@@ -464,7 +464,7 @@ spec:
 ```bash
 # Single powerful instance
 EC2 c6i.4xlarge (16 cores, 32GB RAM)
-./n8n-go-server -db postgres
+./m9m-server -db postgres
 ```
 
 **Cost:** ~$500/month
@@ -570,9 +570,9 @@ Example:
 
 ---
 
-## Comparison: n8n vs n8n-go Scalability
+## Comparison: n8n vs m9m Scalability
 
-| Aspect | n8n (Node.js) | n8n-go (Current) | n8n-go (Future) |
+| Aspect | n8n (Node.js) | m9m (Current) | m9m (Future) |
 |--------|---------------|------------------|-----------------|
 | **Single Instance** | 100 workflows/min | 1,000 workflows/min | 2,000 workflows/min |
 | **Memory (idle)** | 512 MB | 150 MB | 150 MB |
@@ -613,7 +613,7 @@ Example:
 **Very Large (> 1,000 workflows/minute):**
 ```bash
 ⚠️ Use: Horizontal scaling with queue (requires code changes)
-⚠️ OR: Multiple smaller n8n-go instances with partitioned workloads
+⚠️ OR: Multiple smaller m9m instances with partitioned workloads
 ✅ Cost: ~$2,000-5,000/month
 ✅ Complexity: High (requires 2-3 weeks development)
 ```
@@ -739,6 +739,6 @@ var (
 
 ---
 
-**Current Status**: The n8n-go binary is **production-ready** for **vertical scaling** and can handle workloads up to **1,000-2,000 workflows/minute** on a single powerful machine. True horizontal scaling requires development work but is architecturally feasible.
+**Current Status**: The m9m binary is **production-ready** for **vertical scaling** and can handle workloads up to **1,000-2,000 workflows/minute** on a single powerful machine. True horizontal scaling requires development work but is architecturally feasible.
 
-**Bottom Line**: You can confidently deploy n8n-go for most real-world workloads today. For massive scale (> 1,000 workflows/minute), plan for 2-3 weeks of horizontal scaling development.
+**Bottom Line**: You can confidently deploy m9m for most real-world workloads today. For massive scale (> 1,000 workflows/minute), plan for 2-3 weeks of horizontal scaling development.

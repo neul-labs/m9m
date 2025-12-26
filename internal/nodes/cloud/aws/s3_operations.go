@@ -2,8 +2,9 @@ package aws
 
 import (
 	"bytes"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
-	"io"
 	"path/filepath"
 	"strings"
 	"time"
@@ -14,9 +15,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 
-	"github.com/dipankar/n8n-go/internal/expressions"
-	"github.com/dipankar/n8n-go/internal/model"
-	"github.com/dipankar/n8n-go/internal/nodes/base"
+	"github.com/dipankar/m9m/internal/expressions"
+	"github.com/dipankar/m9m/internal/model"
+	"github.com/dipankar/m9m/internal/nodes/base"
 )
 
 // S3OperationsNode provides comprehensive S3 operations
@@ -146,8 +147,8 @@ type S3OperationResult struct {
 // NewS3OperationsNode creates a new S3 operations node
 func NewS3OperationsNode() *S3OperationsNode {
 	return &S3OperationsNode{
-		BaseNode:  base.NewBaseNode("AWS S3", "n8n-nodes-base.awsS3"),
-		evaluator: expressions.NewGojaExpressionEvaluator(),
+		BaseNode:  base.NewBaseNode(base.NodeDescription{Name: "AWS S3", Description: "Amazon S3 storage operations", Category: "cloud"}),
+		evaluator: expressions.NewGojaExpressionEvaluator(expressions.DefaultEvaluatorConfig()),
 	}
 }
 
@@ -186,7 +187,7 @@ func (n *S3OperationsNode) Execute(inputData []model.DataItem, nodeParams map[st
 			ItemIndex:          index,
 			Mode:               expressions.ModeManual,
 			ConnectionInputData: []model.DataItem{item},
-			AdditionalKeys:     make(map[string]interface{}),
+			AdditionalKeys:     &expressions.AdditionalKeys{},
 		}
 
 		// Execute S3 operation
@@ -198,15 +199,44 @@ func (n *S3OperationsNode) Execute(inputData []model.DataItem, nodeParams map[st
 			})
 		}
 
-		// Create result item
+		// Create result item - convert S3OperationResult to map
+		resultJSON := map[string]interface{}{
+			"operation":     result.Operation,
+			"success":       result.Success,
+			"bucket":        result.Bucket,
+			"key":           result.Key,
+			"size":          result.Size,
+			"etag":          result.ETag,
+			"versionId":     result.VersionID,
+			"location":      result.Location,
+			"contentType":   result.ContentType,
+			"executionTime": result.ExecutionTime.String(),
+		}
+		if result.Error != "" {
+			resultJSON["error"] = result.Error
+		}
+		if len(result.Objects) > 0 {
+			resultJSON["objects"] = result.Objects
+		}
+		if result.Metadata != nil {
+			resultJSON["metadata"] = result.Metadata
+		}
+
 		resultItem := model.DataItem{
-			JSON: result,
+			JSON: resultJSON,
 		}
 
 		// Add binary data if operation downloaded data
 		if operation.Operation == "download" && result.Data != nil {
 			if dataBytes, ok := result.Data.([]byte); ok {
-				resultItem.Binary = dataBytes
+				// Store binary data in the proper format
+				resultItem.Binary = map[string]model.BinaryData{
+					"data": {
+						Data:     base64.StdEncoding.EncodeToString(dataBytes),
+						MimeType: result.ContentType,
+						FileName: filepath.Base(result.Key),
+					},
+				}
 			}
 		}
 
@@ -303,9 +333,19 @@ func (n *S3OperationsNode) uploadObject(operation *S3Operation, context *express
 			data = jsonData
 			contentType = "application/json"
 		}
-	} else if item.Binary != nil {
-		// Use binary data from item
-		data = item.Binary
+	} else if item.Binary != nil && len(item.Binary) > 0 {
+		// Use binary data from item - get first binary entry
+		for _, bd := range item.Binary {
+			decoded, err := base64.StdEncoding.DecodeString(bd.Data)
+			if err != nil {
+				return fmt.Errorf("failed to decode binary data: %w", err)
+			}
+			data = decoded
+			if bd.MimeType != "" && contentType == "" {
+				contentType = bd.MimeType
+			}
+			break
+		}
 	} else {
 		// Use JSON data from item
 		jsonData, err := json.Marshal(item.JSON)

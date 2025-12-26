@@ -1,0 +1,73 @@
+{
+  "active": true,
+  "connections": {
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "index": 0,
+            "node": "Send Email",
+            "type": "main"
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "index": 0,
+            "node": "HTTP Request",
+            "type": "main"
+          }
+        ]
+      ]
+    }
+  },
+  "id": "basic-http-email",
+  "name": "Basic HTTP to Email",
+  "nodes": [
+    {
+      "id": "webhook",
+      "name": "Webhook",
+      "parameters": {
+        "path": "webhook-test"
+      },
+      "position": [
+        100,
+        200
+      ],
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1
+    },
+    {
+      "id": "http",
+      "name": "HTTP Request",
+      "parameters": {
+        "method": "GET",
+        "url": "{{ $json.url }}"
+      },
+      "position": [
+        300,
+        200
+      ],
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1
+    },
+    {
+      "id": "email",
+      "name": "Send Email",
+      "parameters": {
+        "subject": "HTTP Request Result",
+        "text": "{{ $json }}",
+        "to": "admin@example.com"
+      },
+      "position": [
+        500,
+        200
+      ],
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1
+    }
+  ]
+}

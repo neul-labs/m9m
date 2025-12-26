@@ -1,51 +1,51 @@
 version: '3.8'
 
 services:
-  # n8n-go backend (high-performance Go implementation)
-  n8n-go:
+  # m9m backend (high-performance Go implementation)
+  m9m:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: n8n-go
+    container_name: m9m
     ports:
       - "5678:8080"  # Map to n8n's default port for frontend compatibility
       - "9090:9090"  # Metrics/monitoring
     environment:
       # Server configuration
-      - N8N_GO_PORT=8080
-      - N8N_GO_HOST=0.0.0.0
-      - N8N_GO_LOG_LEVEL=info
+      - M9M_PORT=8080
+      - M9M_HOST=0.0.0.0
+      - M9M_LOG_LEVEL=info
 
       # Database configuration
-      - N8N_GO_DB_TYPE=postgres
-      - N8N_GO_DB_POSTGRES_HOST=postgres
-      - N8N_GO_DB_POSTGRES_PORT=5432
-      - N8N_GO_DB_POSTGRES_DATABASE=n8n
-      - N8N_GO_DB_POSTGRES_USER=n8n
-      - N8N_GO_DB_POSTGRES_PASSWORD=n8n_password
+      - M9M_DB_TYPE=postgres
+      - M9M_DB_POSTGRES_HOST=postgres
+      - M9M_DB_POSTGRES_PORT=5432
+      - M9M_DB_POSTGRES_DATABASE=n8n
+      - M9M_DB_POSTGRES_USER=n8n
+      - M9M_DB_POSTGRES_PASSWORD=n8n_password
 
       # Queue configuration
-      - N8N_GO_QUEUE_TYPE=redis
-      - N8N_GO_QUEUE_URL=redis://redis:6379
-      - N8N_GO_MAX_WORKERS=10
+      - M9M_QUEUE_TYPE=redis
+      - M9M_QUEUE_URL=redis://redis:6379
+      - M9M_MAX_WORKERS=10
 
       # MongoDB for workflow storage (optional)
-      - N8N_GO_MONGODB_URL=mongodb://mongo:27017/n8n
+      - M9M_MONGODB_URL=mongodb://mongo:27017/n8n
 
       # RabbitMQ for advanced queuing (optional)
-      - N8N_GO_RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - M9M_RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
 
       # Monitoring
-      - N8N_GO_METRICS_PORT=9090
-      - N8N_GO_ENABLE_TRACING=false
+      - M9M_METRICS_PORT=9090
+      - M9M_ENABLE_TRACING=false
 
       # n8n API compatibility mode (for frontend integration)
-      - N8N_GO_COMPATIBILITY_MODE=true
-      - N8N_GO_API_VERSION=v1
+      - M9M_COMPATIBILITY_MODE=true
+      - M9M_API_VERSION=v1
 
     volumes:
-      - n8n-go-data:/app/data
-      - n8n-go-logs:/app/logs
+      - m9m-data:/app/data
+      - m9m-logs:/app/logs
       - ./config:/app/config:ro
     depends_on:
       - postgres
@@ -63,20 +63,20 @@ services:
       start_period: 10s
 
   # n8n frontend (original n8n UI)
-  # This connects to n8n-go backend via API compatibility layer
+  # This connects to m9m backend via API compatibility layer
   n8n-frontend:
     image: n8nio/n8n:latest
     container_name: n8n-frontend
     ports:
       - "5679:5678"  # Frontend on different port for testing
     environment:
-      # Point to n8n-go backend
-      - N8N_BACKEND_URL=http://n8n-go:8080
+      # Point to m9m backend
+      - N8N_BACKEND_URL=http://m9m:8080
       - N8N_HOST=0.0.0.0
       - N8N_PORT=5678
       - N8N_PROTOCOL=http
 
-      # Database (same as n8n-go)
+      # Database (same as m9m)
       - DB_TYPE=postgresdb
       - DB_POSTGRESDB_HOST=postgres
       - DB_POSTGRESDB_PORT=5432
@@ -84,7 +84,7 @@ services:
       - DB_POSTGRESDB_USER=n8n
       - DB_POSTGRESDB_PASSWORD=n8n_password
 
-      # Queue (same as n8n-go)
+      # Queue (same as m9m)
       - QUEUE_BULL_REDIS_HOST=redis
       - QUEUE_BULL_REDIS_PORT=6379
       - EXECUTIONS_MODE=queue
@@ -99,7 +99,7 @@ services:
     volumes:
       - n8n-frontend-data:/home/node/.n8n
     depends_on:
-      - n8n-go
+      - m9m
       - postgres
       - redis
     networks:
@@ -196,7 +196,7 @@ services:
       - n8n-network
     restart: unless-stopped
     depends_on:
-      - n8n-go
+      - m9m
 
   # Grafana for visualization (optional)
   grafana:
@@ -221,9 +221,9 @@ networks:
     driver: bridge
 
 volumes:
-  n8n-go-data:
+  m9m-data:
     driver: local
-  n8n-go-logs:
+  m9m-logs:
     driver: local
   n8n-frontend-data:
     driver: local

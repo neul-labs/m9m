@@ -6,6 +6,7 @@ import (
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/exporters/jaeger"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
@@ -182,7 +183,7 @@ func (tm *TracingManager) StartDatabaseSpan(ctx context.Context, dbType, operati
 func (tm *TracingManager) RecordError(span oteltrace.Span, err error) {
 	if span != nil && err != nil {
 		span.RecordError(err)
-		span.SetStatus(oteltrace.StatusError, err.Error())
+		span.SetStatus(codes.Error, err.Error())
 	}
 }
 

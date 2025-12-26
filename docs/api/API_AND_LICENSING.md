@@ -1,4 +1,4 @@
-# n8n-go: API Compatibility & Licensing Guide
+# m9m: API Compatibility & Licensing Guide
 
 ## API Compatibility Level
 
@@ -86,7 +86,7 @@
 }
 ```
 
-n8n workflows work **as-is** in n8n-go!
+n8n workflows work **as-is** in m9m!
 
 **Node Compatibility**: 11 core nodes implemented
 - HTTP Request
@@ -103,7 +103,7 @@ n8n workflows work **as-is** in n8n-go!
 
 **Missing**: ~200+ community nodes (can add as needed)
 
-### Can n8n Frontend Work with n8n-go Backend?
+### Can n8n Frontend Work with m9m Backend?
 
 **Answer**: **YES, for core workflows!**
 
@@ -122,8 +122,8 @@ n8n workflows work **as-is** in n8n-go!
 ❌ Webhook triggers (partial)
 
 **Recommendation**: 
-- **For core automation**: Use n8n frontend + n8n-go backend ✅
-- **For advanced features**: Use n8n-go API directly or build custom UI
+- **For core automation**: Use n8n frontend + m9m backend ✅
+- **For advanced features**: Use m9m API directly or build custom UI
 
 ---
 
@@ -149,7 +149,7 @@ n8n workflows work **as-is** in n8n-go!
 - Paid enterprise license from n8n.io
 - Typical cost: $500-$5,000+/month depending on scale
 
-### n8n-go License (This Project)
+### m9m License (This Project)
 
 **License**: Apache 2.0
 
@@ -176,9 +176,9 @@ n8n workflows work **as-is** in n8n-go!
 
 ### Critical Legal Distinction
 
-**n8n-go is NOT a fork of n8n!**
+**m9m is NOT a fork of n8n!**
 
-| Aspect | n8n | n8n-go |
+| Aspect | n8n | m9m |
 |--------|-----|--------|
 | **Codebase** | Node.js/TypeScript | Go (from scratch) |
 | **License** | Sustainable Use (restrictive) | Apache 2.0 (permissive) |
@@ -209,7 +209,7 @@ n8n workflows work **as-is** in n8n-go!
 **n8n** is a trademark of n8n.io
 
 **Safe Practices**:
-✅ Call it "n8n-go" (different name)
+✅ Call it "m9m" (different name)
 ✅ Say "compatible with n8n workflows"
 ✅ Say "supports n8n workflow format"
 ✅ Make clear it's a separate project
@@ -227,14 +227,14 @@ Add to README and documentation:
 ```markdown
 ## Legal Notice
 
-n8n-go is an independent, Apache 2.0 licensed workflow automation 
+m9m is an independent, Apache 2.0 licensed workflow automation 
 platform built from scratch in Go. It is designed to be compatible 
 with n8n workflow formats and API structure for interoperability.
 
-n8n-go is NOT affiliated with, endorsed by, or derived from n8n.io. 
+m9m is NOT affiliated with, endorsed by, or derived from n8n.io. 
 n8n is a trademark of n8n.io GmbH.
 
-n8n-go is a clean-room implementation with no code sharing.
+m9m is a clean-room implementation with no code sharing.
 ```
 
 ---
@@ -245,7 +245,7 @@ n8n-go is a clean-room implementation with no code sharing.
 
 #### Build Internal Automation
 
-| Scenario | n8n | n8n-go |
+| Scenario | n8n | m9m |
 |----------|-----|--------|
 | Internal company use | ✅ Free (self-hosted) | ✅ Free |
 | 10 users | ✅ Free | ✅ Free |
@@ -254,7 +254,7 @@ n8n-go is a clean-room implementation with no code sharing.
 
 #### Build a SaaS Product
 
-| Scenario | n8n | n8n-go |
+| Scenario | n8n | m9m |
 |----------|-----|--------|
 | Workflow automation SaaS | ❌ Requires license ($$$) | ✅ Free |
 | Multi-tenant platform | ❌ Requires license | ✅ Free |
@@ -263,7 +263,7 @@ n8n-go is a clean-room implementation with no code sharing.
 
 #### Sell as Product
 
-| Scenario | n8n | n8n-go |
+| Scenario | n8n | m9m |
 |----------|-----|--------|
 | Sell as software | ❌ Requires license | ✅ Free (Apache) |
 | Bundle with hardware | ⚠️ Unclear | ✅ Free |
@@ -272,7 +272,7 @@ n8n-go is a clean-room implementation with no code sharing.
 
 #### Hosting Service
 
-| Scenario | n8n | n8n-go |
+| Scenario | n8n | m9m |
 |----------|-----|--------|
 | Managed hosting | ❌ Requires license | ✅ Free |
 | Workflow-as-a-Service | ❌ Prohibited | ✅ Free |
@@ -284,14 +284,14 @@ n8n-go is a clean-room implementation with no code sharing.
 
 ### Low Risk ✅
 
-- Using n8n-go for any commercial purpose (Apache 2.0)
+- Using m9m for any commercial purpose (Apache 2.0)
 - API/workflow format compatibility (legal precedent)
 - Clean-room implementation (no code copied)
 - Using "compatible with n8n workflows" language
 
 ### Medium Risk ⚠️
 
-- Using n8n frontend with n8n-go backend (frontend is n8n licensed)
+- Using n8n frontend with m9m backend (frontend is n8n licensed)
 - Saying "n8n-compatible" prominently in marketing (trademark)
 - Using exact same API paths (functional, but visible)
 
@@ -308,15 +308,15 @@ n8n-go is a clean-room implementation with no code sharing.
 
 ### For Commercial Use
 
-1. ✅ **Use n8n-go** - Fully permissive Apache 2.0
+1. ✅ **Use m9m** - Fully permissive Apache 2.0
 2. ✅ **Build your own UI** - Avoid n8n frontend licensing
-3. ✅ **Contribute back** - Help n8n-go improve (optional)
+3. ✅ **Contribute back** - Help m9m improve (optional)
 4. ✅ **Clear disclaimers** - Not affiliated with n8n.io
 
 ### For Frontend Compatibility
 
 **Option 1: Build Custom UI** (Recommended)
-- Use n8n-go REST API
+- Use m9m REST API
 - Create your own workflow editor
 - Full control, no licensing concerns
 
@@ -383,6 +383,6 @@ If building commercial product:
 
 ---
 
-**Bottom Line**: n8n-go provides ~70% API compatibility with **100% commercial freedom** through clean-room implementation and Apache 2.0 licensing. Perfect for building commercial automation platforms without licensing costs! 🚀
+**Bottom Line**: m9m provides ~70% API compatibility with **100% commercial freedom** through clean-room implementation and Apache 2.0 licensing. Perfect for building commercial automation platforms without licensing costs! 🚀
 
 **Disclaimer**: This is technical/general information, not legal advice. Consult a lawyer for specific legal questions about your use case.

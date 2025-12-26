@@ -1,8 +1,8 @@
-# n8n-go Distributed Cluster Implementation
+# m9m Distributed Cluster Implementation
 
 ## Overview
 
-This document describes the complete implementation of distributed cluster support for n8n-go using **BadgerDB**, **Raft**, and **NNG** - all within a single binary with **zero external dependencies**.
+This document describes the complete implementation of distributed cluster support for m9m using **BadgerDB**, **Raft**, and **NNG** - all within a single binary with **zero external dependencies**.
 
 **Version**: 0.3.0
 **Implementation Date**: November 2025
@@ -199,7 +199,7 @@ func (m *DistributedWebSocketManager) BroadcastExecutionUpdate(execution *model.
 ---
 
 ### 6. Updated Main with Cluster Support
-**File**: `cmd/n8n-go-server/main.go` (360 lines)
+**File**: `cmd/m9m-server/main.go` (360 lines)
 
 **New Command-Line Flags**:
 ```bash
@@ -228,16 +228,16 @@ func (m *DistributedWebSocketManager) BroadcastExecutionUpdate(execution *model.
 
 ### Single-Node Mode (Default)
 ```bash
-./n8n-go-server --port 8080
+./m9m-server --port 8080
 ```
 
 Output:
 ```
-Starting n8n-go API server v0.3.0
+Starting m9m API server v0.3.0
 🔗 Cluster mode: DISABLED (single-node)
 Using in-memory storage (data will not persist)
 Registered 11 node types
-🚀 n8n-go API server listening on 0.0.0.0:8080
+🚀 m9m API server listening on 0.0.0.0:8080
 ```
 
 ---
@@ -246,7 +246,7 @@ Registered 11 node types
 
 **Node 1 (Bootstrap/Leader)**:
 ```bash
-./n8n-go-server \
+./m9m-server \
   --cluster \
   --node-id=node1 \
   --port=8080 \
@@ -257,7 +257,7 @@ Registered 11 node types
 
 **Node 2**:
 ```bash
-./n8n-go-server \
+./m9m-server \
   --cluster \
   --node-id=node2 \
   --port=8081 \
@@ -270,7 +270,7 @@ Registered 11 node types
 
 **Node 3**:
 ```bash
-./n8n-go-server \
+./m9m-server \
   --cluster \
   --node-id=node3 \
   --port=8082 \
@@ -511,6 +511,6 @@ The distributed cluster implementation provides:
 
 ## Conclusion
 
-This implementation transforms n8n-go from a single-node application into a production-ready distributed system capable of horizontal scaling while maintaining **zero external dependencies** and a **single binary** deployment model.
+This implementation transforms m9m from a single-node application into a production-ready distributed system capable of horizontal scaling while maintaining **zero external dependencies** and a **single binary** deployment model.
 
 The combination of BadgerDB (storage), Raft (consensus), and NNG (messaging) provides a robust foundation for building highly available, scalable workflow automation at enterprise scale.

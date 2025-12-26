@@ -1,10 +1,10 @@
 # Plugin System - Technical Documentation
 
-This document provides technical details about n8n-go's plugin architecture implementation.
+This document provides technical details about m9m's plugin architecture implementation.
 
 ## Overview
 
-The n8n-go plugin system enables dynamic node loading without recompilation, supporting three plugin types:
+The m9m plugin system enables dynamic node loading without recompilation, supporting three plugin types:
 - **JavaScript** - Embedded execution using Goja runtime
 - **gRPC** - External service communication via gRPC protocol
 - **REST API** - External service communication via HTTP/REST
@@ -957,13 +957,13 @@ HTTP request failed with status 404
 
 Enable verbose logging:
 ```bash
-export N8N_GO_LOG_LEVEL=debug
-./n8n-go --plugin-dir ./plugins
+export M9M_LOG_LEVEL=debug
+./m9m --plugin-dir ./plugins
 ```
 
 Check plugin loading:
 ```bash
-./n8n-go --plugin-dir ./plugins 2>&1 | grep -i plugin
+./m9m --plugin-dir ./plugins 2>&1 | grep -i plugin
 ```
 
 Test individual plugin:

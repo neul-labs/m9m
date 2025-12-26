@@ -1,8 +1,8 @@
-# n8n-go API Compatibility Layer
+# m9m API Compatibility Layer
 
 ## Overview
 
-The n8n-go API server provides a fully compatible REST API that allows the original n8n frontend to work seamlessly with the high-performance Go backend. This provides the best of both worlds: n8n's polished UI with n8n-go's superior performance.
+The m9m API server provides a fully compatible REST API that allows the original n8n frontend to work seamlessly with the high-performance Go backend. This provides the best of both worlds: n8n's polished UI with m9m's superior performance.
 
 ## Quick Start
 
@@ -10,16 +10,16 @@ The n8n-go API server provides a fully compatible REST API that allows the origi
 
 ```bash
 # Development mode (in-memory storage)
-./n8n-go-server
+./m9m-server
 
 # With PostgreSQL
-./n8n-go-server -db postgres -db-url "postgres://user:pass@localhost:5432/n8n"
+./m9m-server -db postgres -db-url "postgres://user:pass@localhost:5432/n8n"
 
 # With SQLite (persistent file-based storage)
-./n8n-go-server -db sqlite -db-url "./n8n-go.db"
+./m9m-server -db sqlite -db-url "./m9m.db"
 
 # Custom configuration
-./n8n-go-server \
+./m9m-server \
   -port 5678 \
   -host 0.0.0.0 \
   -cors-origin "http://localhost:5679" \
@@ -50,7 +50,7 @@ curl http://localhost:8080/api/v1/node-types
          │ HTTP REST API
          ▼
 ┌─────────────────┐
-│  n8n-go Server  │ (Go-based API server)
+│  m9m Server  │ (Go-based API server)
 │   Port: 8080    │
 ├─────────────────┤
 │  API Layer      │ ◄── n8n-compatible endpoints
@@ -71,7 +71,7 @@ Check if server is running.
 ```json
 {
   "status": "ok",
-  "service": "n8n-go",
+  "service": "m9m",
   "version": "0.2.0",
   "time": "2025-11-10T10:00:00Z"
 }
@@ -108,7 +108,7 @@ Get version and compatibility information.
 {
   "n8nVersion": "1.0.0-compatible",
   "serverVersion": "0.2.0",
-  "implementation": "n8n-go",
+  "implementation": "m9m",
   "compatibility": {
     "workflows": true,
     "nodes": true,
@@ -134,7 +134,7 @@ Get system settings (n8n-compatible format).
   "versionNotifications": {
     "enabled": false
   },
-  "instanceId": "n8n-go-instance",
+  "instanceId": "m9m-instance",
   "telemetry": {
     "enabled": false
   }
@@ -573,7 +573,7 @@ WebSocket endpoint for real-time updates.
 
 ### Memory Storage (Development)
 ```bash
-./n8n-go-server -db memory
+./m9m-server -db memory
 ```
 - Fast and simple
 - Data lost on restart
@@ -581,7 +581,7 @@ WebSocket endpoint for real-time updates.
 
 ### PostgreSQL (Production Recommended)
 ```bash
-./n8n-go-server \
+./m9m-server \
   -db postgres \
   -db-url "postgres://user:password@localhost:5432/n8n?sslmode=disable"
 ```
@@ -592,9 +592,9 @@ WebSocket endpoint for real-time updates.
 
 ### SQLite (Lightweight Production)
 ```bash
-./n8n-go-server \
+./m9m-server \
   -db sqlite \
-  -db-url "./data/n8n-go.db"
+  -db-url "./data/m9m.db"
 ```
 - Single-file database
 - Good for small deployments
@@ -620,20 +620,20 @@ WebSocket endpoint for real-time updates.
 export DATABASE_URL="postgres://localhost/n8n"
 
 # Server configuration
-export N8N_GO_PORT="8080"
-export N8N_GO_HOST="0.0.0.0"
-export N8N_GO_CORS_ORIGIN="*"
+export M9M_PORT="8080"
+export M9M_HOST="0.0.0.0"
+export M9M_CORS_ORIGIN="*"
 ```
 
 ## Integration with n8n Frontend
 
 ### Using Docker Compose (Recommended)
 
-The project includes a complete docker-compose.yml that sets up both the n8n-go backend and n8n frontend:
+The project includes a complete docker-compose.yml that sets up both the m9m backend and n8n frontend:
 
 ```yaml
 services:
-  n8n-go:
+  m9m:
     build: .
     ports:
       - "8080:8080"
@@ -648,12 +648,12 @@ services:
     ports:
       - "5678:5678"
     environment:
-      - N8N_BACKEND_URL=http://n8n-go:8080
+      - N8N_BACKEND_URL=http://m9m:8080
       - N8N_PROTOCOL=http
       - N8N_HOST=localhost
       - N8N_PORT=5678
     depends_on:
-      - n8n-go
+      - m9m
 
   postgres:
     image: postgres:15
@@ -673,16 +673,16 @@ docker-compose up -d
 http://localhost:5678
 ```
 
-The n8n frontend will automatically connect to the n8n-go backend!
+The n8n frontend will automatically connect to the m9m backend!
 
 ### Manual Integration
 
-1. **Start n8n-go server:**
+1. **Start m9m server:**
    ```bash
-   ./n8n-go-server -port 8080
+   ./m9m-server -port 8080
    ```
 
-2. **Configure n8n frontend to use n8n-go backend:**
+2. **Configure n8n frontend to use m9m backend:**
    ```bash
    docker run -it --rm \
      -p 5678:5678 \
@@ -714,7 +714,7 @@ The n8n frontend will automatically connect to the n8n-go backend!
 
 ### vs Original n8n
 
-| Metric | n8n (Node.js) | n8n-go |
+| Metric | n8n (Node.js) | m9m |
 |--------|---------------|---------|
 | Startup time | ~3s | ~500ms (6x faster) |
 | Memory usage | ~512MB | ~150MB (70% less) |
@@ -753,7 +753,7 @@ All API endpoints return consistent error responses:
 
 ### Production Mode
 ```bash
-./n8n-go-server \
+./m9m-server \
   -cors-origin "https://app.yourdomain.com" \
   -db postgres \
   -db-url "postgres://secure-connection"
@@ -805,10 +805,10 @@ Server logs include:
 
 Example log output:
 ```
-2025/11/10 10:00:00 Starting n8n-go API server v0.2.0
+2025/11/10 10:00:00 Starting m9m API server v0.2.0
 2025/11/10 10:00:00 Using PostgreSQL storage
 2025/11/10 10:00:00 Registered 11 node types
-2025/11/10 10:00:00 🚀 n8n-go API server listening on 0.0.0.0:8080
+2025/11/10 10:00:00 🚀 m9m API server listening on 0.0.0.0:8080
 2025/11/10 10:00:01 GET /api/v1/workflows 200 12ms
 2025/11/10 10:00:05 POST /api/v1/workflows/exec_123/execute 200 1.2s
 ```
@@ -824,7 +824,7 @@ lsof -i :8080
 
 **Try different port:**
 ```bash
-./n8n-go-server -port 8081
+./m9m-server -port 8081
 ```
 
 ### Database connection fails
@@ -835,24 +835,24 @@ lsof -i :8080
 psql "postgres://user:pass@localhost/n8n"
 
 # Check logs
-./n8n-go-server -db postgres -db-url "..." 2>&1 | grep -i error
+./m9m-server -db postgres -db-url "..." 2>&1 | grep -i error
 ```
 
 **SQLite:**
 ```bash
 # Check file permissions
-ls -l ./n8n-go.db
+ls -l ./m9m.db
 
 # Create directory if needed
 mkdir -p ./data
-./n8n-go-server -db sqlite -db-url "./data/n8n-go.db"
+./m9m-server -db sqlite -db-url "./data/m9m.db"
 ```
 
 ### CORS errors from frontend
 
 **Allow specific origin:**
 ```bash
-./n8n-go-server -cors-origin "http://localhost:5678"
+./m9m-server -cors-origin "http://localhost:5678"
 ```
 
 **Allow multiple origins:** Use a reverse proxy (nginx, Caddy)
@@ -866,7 +866,7 @@ mkdir -p ./data
 
 **Enable debug logging:**
 ```bash
-./n8n-go-server 2>&1 | tee debug.log
+./m9m-server 2>&1 | tee debug.log
 ```
 
 ## Examples

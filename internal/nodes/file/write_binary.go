@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dipankar/n8n-go/internal/expressions"
-	"github.com/dipankar/n8n-go/internal/model"
-	"github.com/dipankar/n8n-go/internal/nodes/base"
+	"github.com/dipankar/m9m/internal/expressions"
+	"github.com/dipankar/m9m/internal/model"
+	"github.com/dipankar/m9m/internal/nodes/base"
 )
 
 // WriteBinaryFileNode writes binary data to files on the filesystem with enhanced security
@@ -208,8 +208,24 @@ func (n *WriteBinaryFileNode) extractDataToWrite(item model.DataItem, nodeParams
 	switch dataSource {
 	case "binary":
 		// Use binary data from the item
-		if item.Binary != nil {
-			return item.Binary, nil
+		if item.Binary != nil && len(item.Binary) > 0 {
+			// Get the first binary data entry (or use a specific key if provided)
+			binaryKey, _ := nodeParams["binaryPropertyName"].(string)
+			if binaryKey == "" {
+				// Use the first available key
+				for key := range item.Binary {
+					binaryKey = key
+					break
+				}
+			}
+			if bd, ok := item.Binary[binaryKey]; ok {
+				// BinaryData.Data is base64 encoded, decode it
+				decoded, err := base64.StdEncoding.DecodeString(bd.Data)
+				if err != nil {
+					return nil, fmt.Errorf("failed to decode binary data: %w", err)
+				}
+				return decoded, nil
+			}
 		}
 		return nil, fmt.Errorf("no binary data available in item")
 

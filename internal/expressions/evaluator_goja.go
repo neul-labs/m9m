@@ -1,6 +1,7 @@
 package expressions
 
 import (
+	"encoding/json"
 	"fmt"
 	"sync"
 	"time"
@@ -485,6 +486,96 @@ func (e *GojaExpressionEvaluator) normalizeResult(result interface{}) interface{
 	default:
 		return result
 	}
+}
+
+// Evaluate is an alias for EvaluateExpression for backward compatibility
+func (e *GojaExpressionEvaluator) Evaluate(expression string, context *ExpressionContext) (interface{}, error) {
+	return e.EvaluateExpression(expression, context)
+}
+
+// EvaluateTemplateString evaluates expressions embedded in a template string
+// It finds all {{ expression }} patterns and evaluates them, returning the result string
+func (e *GojaExpressionEvaluator) EvaluateTemplateString(template string, context *ExpressionContext) (string, error) {
+	result := template
+
+	// Find all expression patterns {{ ... }}
+	start := 0
+	for {
+		openIdx := findExpressionStart(result, start)
+		if openIdx == -1 {
+			break
+		}
+
+		closeIdx := findExpressionEnd(result, openIdx+2)
+		if closeIdx == -1 {
+			break
+		}
+
+		// Extract the expression
+		expression := result[openIdx+2 : closeIdx]
+
+		// Evaluate the expression
+		value, err := e.EvaluateExpression(expression, context)
+		if err != nil {
+			// On error, leave the expression unchanged and continue
+			start = closeIdx + 2
+			continue
+		}
+
+		// Convert value to string
+		var replacement string
+		switch v := value.(type) {
+		case string:
+			replacement = v
+		case nil:
+			replacement = ""
+		default:
+			// Use JSON encoding for complex types
+			if jsonBytes, err := jsonMarshal(v); err == nil {
+				replacement = string(jsonBytes)
+			} else {
+				replacement = fmt.Sprintf("%v", v)
+			}
+		}
+
+		// Replace the expression with the result
+		result = result[:openIdx] + replacement + result[closeIdx+2:]
+		start = openIdx + len(replacement)
+	}
+
+	return result, nil
+}
+
+// findExpressionStart finds the start of a {{ expression
+func findExpressionStart(s string, start int) int {
+	for i := start; i < len(s)-1; i++ {
+		if s[i] == '{' && s[i+1] == '{' {
+			return i
+		}
+	}
+	return -1
+}
+
+// findExpressionEnd finds the closing }} of an expression
+func findExpressionEnd(s string, start int) int {
+	depth := 0
+	for i := start; i < len(s)-1; i++ {
+		if s[i] == '{' {
+			depth++
+		} else if s[i] == '}' {
+			if depth > 0 {
+				depth--
+			} else if s[i+1] == '}' {
+				return i
+			}
+		}
+	}
+	return -1
+}
+
+// jsonMarshal is a helper to marshal values to JSON
+func jsonMarshal(v interface{}) ([]byte, error) {
+	return json.Marshal(v)
 }
 
 // Pool statistics

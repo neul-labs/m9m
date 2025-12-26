@@ -1,6 +1,6 @@
-# n8n-go Technical Specification - Updated
+# m9m Technical Specification - Updated
 
-This document provides detailed technical specifications for the n8n-go implementation, updated to reflect current progress and future plans for maximal compatibility.
+This document provides detailed technical specifications for the m9m implementation, updated to reflect current progress and future plans for maximal compatibility.
 
 ## Current Implementation Status
 

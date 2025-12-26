@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/dop251/goja"
-	"github.com/dipankar/n8n-go/internal/model"
+	"github.com/dipankar/m9m/internal/model"
 )
 
 // WorkflowExecuteMode represents the execution mode of the workflow
@@ -627,5 +627,23 @@ func NewExpressionContext() *ExpressionContext {
 	return &ExpressionContext{
 		AdditionalKeys: &AdditionalKeys{},
 		Mode:           ModeManual,
+		SiblingParameters: make(map[string]interface{}),
 	}
+}
+
+// SetVariable sets a variable in the expression context for use in expressions
+// Variables are stored in SiblingParameters and can be accessed in expressions
+func (ctx *ExpressionContext) SetVariable(name string, value interface{}) {
+	if ctx.SiblingParameters == nil {
+		ctx.SiblingParameters = make(map[string]interface{})
+	}
+	ctx.SiblingParameters[name] = value
+}
+
+// GetVariables returns all variables set in the expression context
+func (ctx *ExpressionContext) GetVariables() map[string]interface{} {
+	if ctx.SiblingParameters == nil {
+		return make(map[string]interface{})
+	}
+	return ctx.SiblingParameters
 }

@@ -1,0 +1,201 @@
+# Kubernetes deployment configuration for m9m
+# Deploy with: kubectl apply -f deploy/kubernetes.yaml
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: m9m
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: m9m-config
+  namespace: m9m
+data:
+  M9M_PORT: "8080"
+  M9M_HOST: "0.0.0.0"
+  M9M_LOG_LEVEL: "info"
+  M9M_DB_TYPE: "postgres"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: m9m-secrets
+  namespace: m9m
+type: Opaque
+stringData:
+  M9M_DB_POSTGRES_URL: "postgres://m9m:password@m9m-postgres:5432/m9m?sslmode=disable"
+  M9M_COPILOT_API_KEY: ""
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: m9m
+  namespace: m9m
+  labels:
+    app: m9m
+    component: control-plane
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: m9m
+      component: control-plane
+  template:
+    metadata:
+      labels:
+        app: m9m
+        component: control-plane
+    spec:
+      containers:
+        - name: m9m
+          image: ghcr.io/dipankar/m9m:latest
+          args: ["--mode", "control"]
+          ports:
+            - name: http
+              containerPort: 8080
+            - name: metrics
+              containerPort: 9090
+          envFrom:
+            - configMapRef:
+                name: m9m-config
+            - secretRef:
+                name: m9m-secrets
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: m9m-worker
+  namespace: m9m
+  labels:
+    app: m9m
+    component: worker
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: m9m
+      component: worker
+  template:
+    metadata:
+      labels:
+        app: m9m
+        component: worker
+    spec:
+      containers:
+        - name: m9m-worker
+          image: ghcr.io/dipankar/m9m:latest
+          args: ["--mode", "worker"]
+          envFrom:
+            - configMapRef:
+                name: m9m-config
+            - secretRef:
+                name: m9m-secrets
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "250m"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: m9m
+  namespace: m9m
+spec:
+  selector:
+    app: m9m
+    component: control-plane
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+    - name: metrics
+      port: 9090
+      targetPort: 9090
+  type: ClusterIP
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: m9m
+  namespace: m9m
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  tls:
+    - hosts:
+        - m9m.example.com
+      secretName: m9m-tls
+  rules:
+    - host: m9m.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: m9m
+                port:
+                  number: 80
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: m9m-worker-hpa
+  namespace: m9m
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: m9m-worker
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: m9m-pdb
+  namespace: m9m
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: m9m

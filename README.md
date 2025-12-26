@@ -1,6 +1,6 @@
-# n8n-go: High-Performance Workflow Automation Platform
+# m9m: High-Performance Workflow Automation Platform
 
-n8n-go is a high-performance, cloud-native workflow automation platform built in Go. It provides a scalable alternative to n8n with enhanced performance, embedded Python runtime, and enterprise-grade features.
+m9m is a high-performance, cloud-native workflow automation platform built in Go. It provides a scalable alternative to n8n with enhanced performance, embedded Python runtime, and enterprise-grade features.
 
 ## Key Features
 
@@ -32,40 +32,40 @@ n8n-go is a high-performance, cloud-native workflow automation platform built in
 
 #### Docker (Recommended)
 ```bash
-docker run -p 8080:8080 n8n-go/n8n-go:latest
+docker run -p 8080:8080 m9m/m9m:latest
 ```
 
 #### Binary Release
 ```bash
 # Download latest release
-wget https://github.com/n8n-go/n8n-go/releases/latest/download/n8n-go-linux-amd64
-chmod +x n8n-go-linux-amd64
-./n8n-go-linux-amd64 execute workflow.json
+wget https://github.com/m9m/m9m/releases/latest/download/m9m-linux-amd64
+chmod +x m9m-linux-amd64
+./m9m-linux-amd64 execute workflow.json
 ```
 
 #### From Source
 ```bash
-git clone https://github.com/n8n-go/n8n-go.git
-cd n8n-go
-go build -o n8n-go cmd/n8n-go/main.go
-./n8n-go execute workflow.json
+git clone https://github.com/m9m/m9m.git
+cd m9m
+go build -o m9m cmd/m9m/main.go
+./m9m execute workflow.json
 ```
 
 ### Basic Usage
 
 Execute a workflow:
 ```bash
-n8n-go execute my-workflow.json
+m9m execute my-workflow.json
 ```
 
 Start with monitoring:
 ```bash
-n8n-go serve --metrics-port 9090 --queue redis://localhost:6379
+m9m serve --metrics-port 9090 --queue redis://localhost:6379
 ```
 
 ## Architecture
 
-n8n-go implements a modular, plugin-based architecture:
+m9m implements a modular, plugin-based architecture:
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
@@ -98,21 +98,21 @@ n8n-go implements a modular, plugin-based architecture:
 ### Environment Variables
 ```bash
 # Server Configuration
-N8N_GO_PORT=8080
-N8N_GO_HOST=0.0.0.0
+M9M_PORT=8080
+M9M_HOST=0.0.0.0
 
 # Queue Configuration
-N8N_GO_QUEUE_TYPE=redis
-N8N_GO_QUEUE_URL=redis://localhost:6379
-N8N_GO_MAX_WORKERS=10
+M9M_QUEUE_TYPE=redis
+M9M_QUEUE_URL=redis://localhost:6379
+M9M_MAX_WORKERS=10
 
 # Monitoring
-N8N_GO_METRICS_PORT=9090
-N8N_GO_TRACING_ENDPOINT=http://localhost:14268/api/traces
+M9M_METRICS_PORT=9090
+M9M_TRACING_ENDPOINT=http://localhost:14268/api/traces
 
 # Database
-N8N_GO_DB_TYPE=postgresql
-N8N_GO_DB_URL=postgres://user:pass@localhost/n8n_go
+M9M_DB_TYPE=postgresql
+M9M_DB_URL=postgres://user:pass@localhost/n8n_go
 ```
 
 ### Configuration File
@@ -131,7 +131,7 @@ monitoring:
   metrics_port: 9090
   tracing:
     endpoint: "http://localhost:14268/api/traces"
-    service_name: "n8n-go"
+    service_name: "m9m"
 
 database:
   type: "postgresql"
@@ -147,8 +147,8 @@ package custom
 
 import (
     "context"
-    "github.com/yourusername/n8n-go/internal/interfaces"
-    "github.com/yourusername/n8n-go/internal/nodes/base"
+    "github.com/yourusername/m9m/internal/interfaces"
+    "github.com/yourusername/m9m/internal/nodes/base"
 )
 
 type MyCustomNode struct {
@@ -191,7 +191,7 @@ func (n *MyCustomNode) Execute(ctx context.Context, params interfaces.ExecutionP
 
 ## Performance Benchmarks
 
-| Metric | n8n | n8n-go | Improvement |
+| Metric | n8n | m9m | Improvement |
 |--------|-----|--------|-------------|
 | Workflow Execution | 500ms | 100ms | 5x faster |
 | Memory Usage | 512MB | 150MB | 70% reduction |
@@ -206,27 +206,27 @@ func (n *MyCustomNode) Execute(ctx context.Context, params interfaces.ExecutionP
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: n8n-go
+  name: m9m
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: n8n-go
+      app: m9m
   template:
     metadata:
       labels:
-        app: n8n-go
+        app: m9m
     spec:
       containers:
-      - name: n8n-go
-        image: n8n-go/n8n-go:latest
+      - name: m9m
+        image: m9m/m9m:latest
         ports:
         - containerPort: 8080
         - containerPort: 9090
         env:
-        - name: N8N_GO_QUEUE_TYPE
+        - name: M9M_QUEUE_TYPE
           value: "redis"
-        - name: N8N_GO_QUEUE_URL
+        - name: M9M_QUEUE_URL
           value: "redis://redis-service:6379"
 ```
 
@@ -234,14 +234,14 @@ spec:
 ```yaml
 version: '3.8'
 services:
-  n8n-go:
-    image: n8n-go/n8n-go:latest
+  m9m:
+    image: m9m/m9m:latest
     ports:
       - "8080:8080"
       - "9090:9090"
     environment:
-      - N8N_GO_QUEUE_TYPE=redis
-      - N8N_GO_QUEUE_URL=redis://redis:6379
+      - M9M_QUEUE_TYPE=redis
+      - M9M_QUEUE_URL=redis://redis:6379
     depends_on:
       - redis
       - postgres
@@ -287,20 +287,20 @@ curl http://localhost:9090/metrics
 ## Migration from n8n
 
 ### Workflow Compatibility
-n8n-go provides 95% compatibility with existing n8n workflows:
+m9m provides 95% compatibility with existing n8n workflows:
 
 ```bash
 # Export from n8n
 curl -X GET http://n8n:5678/api/v1/workflows/export
 
-# Import to n8n-go
-n8n-go import workflow.json
+# Import to m9m
+m9m import workflow.json
 ```
 
 ### Credential Migration
 ```bash
 # Export credentials (encrypted)
-n8n-go migrate-credentials --from-n8n http://n8n:5678 --credentials-key your-key
+m9m migrate-credentials --from-n8n http://n8n:5678 --credentials-key your-key
 ```
 
 ## Contributing
@@ -309,8 +309,8 @@ We welcome contributions from the community. Please see our [Contributing Guide]
 
 ### Development Setup
 ```bash
-git clone https://github.com/n8n-go/n8n-go.git
-cd n8n-go
+git clone https://github.com/m9m/m9m.git
+cd m9m
 go mod download
 make test
 make build
@@ -328,14 +328,14 @@ make build
 
 ## License
 
-n8n-go is released under the Apache 2.0 License. See [LICENSE](LICENSE) for details.
+m9m is released under the Apache 2.0 License. See [LICENSE](LICENSE) for details.
 
 ## Support
 
-- **Enterprise Support**: Contact enterprise@n8n-go.com
+- **Enterprise Support**: Contact enterprise@m9m.com
 - **Community Support**: GitHub Issues and Discussions
-- **Documentation**: https://docs.n8n-go.com
-- **Slack Community**: https://slack.n8n-go.com
+- **Documentation**: https://docs.m9m.com
+- **Slack Community**: https://slack.m9m.com
 
 ## Roadmap
 

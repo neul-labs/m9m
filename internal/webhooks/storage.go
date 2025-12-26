@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dipankar/n8n-go/internal/storage"
+	"github.com/dipankar/m9m/internal/storage"
 )
 
 // WebhookStorage defines the interface for webhook persistence

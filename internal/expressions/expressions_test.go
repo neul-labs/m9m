@@ -4,12 +4,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dipankar/n8n-go/internal/model"
+	"github.com/dipankar/m9m/internal/model"
 )
 
 // TestExpressionCompatibility tests n8n expression compatibility
 func TestExpressionCompatibility(t *testing.T) {
-	evaluator := NewGojaExpressionEvaluator(DefaultEvaluatorConfig())
+	// Note: We create a new evaluator for each subtest to avoid state leakage
+	// from the runtime pool between tests
 
 	tests := []struct {
 		name       string
@@ -152,10 +153,11 @@ func TestExpressionCompatibility(t *testing.T) {
 
 		// Error cases
 		{
+			// Note: Unclosed expressions are treated as literal text, not errors
 			name:       "invalid_syntax",
 			expression: "{{ $json.name }",
 			context:    map[string]interface{}{"name": "test"},
-			shouldFail: true,
+			expected:   "{{ $json.name }", // Returned as-is since not a valid expression
 		},
 		{
 			name:       "undefined_function",
@@ -167,6 +169,9 @@ func TestExpressionCompatibility(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			// Create a fresh evaluator for each test to avoid runtime pool state leakage
+			evaluator := NewGojaExpressionEvaluator(DefaultEvaluatorConfig())
+
 			// Create test context
 			context := createTestContext(test.context)
 
@@ -187,7 +192,7 @@ func TestExpressionCompatibility(t *testing.T) {
 
 			// Special handling for dynamic values like timestamps
 			if test.expected == "number" {
-				if _, ok := result.(float64); !ok {
+				if !isNumeric(result) {
 					t.Errorf("Expected number, got %T: %v", result, result)
 				}
 				return
@@ -317,10 +322,30 @@ func TestBuiltInFunctions(t *testing.T) {
 				t.Errorf("Expression failed: %v", err)
 				return
 			}
-			if result != test.expected {
-				t.Errorf("Expected %v, got %v", test.expected, result)
+			// Compare as float64 to handle both int64 and float64 return types from goja
+			resultNum := toFloat64(result)
+			if resultNum != test.expected {
+				t.Errorf("Expected %v, got %v (type %T)", test.expected, result, result)
 			}
 		})
+	}
+}
+
+// toFloat64 converts various numeric types to float64 for comparison
+func toFloat64(v interface{}) float64 {
+	switch n := v.(type) {
+	case float64:
+		return n
+	case float32:
+		return float64(n)
+	case int64:
+		return float64(n)
+	case int32:
+		return float64(n)
+	case int:
+		return float64(n)
+	default:
+		return 0
 	}
 }
 
@@ -589,6 +614,20 @@ func deepEqual(a, b interface{}) bool {
 		}
 		return false
 	default:
+		// Handle numeric type comparisons (goja returns int64 for integers)
+		if isNumeric(a) && isNumeric(b) {
+			return toFloat64(a) == toFloat64(b)
+		}
 		return a == b
+	}
+}
+
+// isNumeric checks if a value is a numeric type
+func isNumeric(v interface{}) bool {
+	switch v.(type) {
+	case float64, float32, int64, int32, int:
+		return true
+	default:
+		return false
 	}
 }

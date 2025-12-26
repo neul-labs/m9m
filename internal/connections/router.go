@@ -5,7 +5,7 @@ package connections
 
 import (
 	"fmt"
-	"github.com/dipankar/n8n-go/internal/model"
+	"github.com/dipankar/m9m/internal/model"
 )
 
 // ConnectionRouter handles routing data between nodes in a workflow

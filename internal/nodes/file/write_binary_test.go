@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 	
-	"github.com/dipankar/n8n-go/internal/model"
-	"github.com/dipankar/n8n-go/internal/nodes/base"
+	"github.com/dipankar/m9m/internal/model"
+	"github.com/dipankar/m9m/internal/nodes/base"
 )
 
 func TestWriteBinaryFileNodeCreation(t *testing.T) {
@@ -78,11 +78,10 @@ func TestWriteBinaryFileNodeWriteFile(t *testing.T) {
 	
 	// Test data
 	content := "Hello, World!"
-	encodedContent := base64.StdEncoding.EncodeToString([]byte(content))
 	filePath := filepath.Join(tmpDir, "test-file.txt")
-	
-	// Test writing the file
-	err = node.writeFile(filePath, encodedContent)
+
+	// Test writing the file (writeFile takes []byte, not base64 string)
+	_, err = node.writeFile(filePath, []byte(content))
 	if err != nil {
 		t.Fatalf("Failed to write file: %v", err)
 	}
@@ -115,10 +114,12 @@ func TestWriteBinaryFileNodeExecute(t *testing.T) {
 			},
 		},
 	}
-	
+
 	filePath := filepath.Join(tmpDir, "output-file.txt")
 	nodeParams := map[string]interface{}{
-		"filePath": filePath,
+		"filePath":   filePath,
+		"dataSource": "json",
+		"encoding":   "base64",
 	}
 	
 	result, err := node.Execute(inputData, nodeParams)

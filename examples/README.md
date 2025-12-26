@@ -1,6 +1,6 @@
-# n8n-go Example Workflows
+# m9m Example Workflows
 
-This directory contains a comprehensive collection of example workflows demonstrating n8n-go capabilities and best practices.
+This directory contains a comprehensive collection of example workflows demonstrating m9m capabilities and best practices.
 
 ## Workflow Categories
 
@@ -205,10 +205,10 @@ func TestWorkflowExample(t *testing.T) {
 
 ```bash
 # Run workflow with test data
-n8n-go execute --workflow examples/api-integration/rest-client.json --input test-data.json
+m9m execute --workflow examples/api-integration/rest-client.json --input test-data.json
 
 # Validate output
-n8n-go validate --workflow examples/api-integration/rest-client.json --output result.json
+m9m validate --workflow examples/api-integration/rest-client.json --output result.json
 ```
 
 ## Migration from n8n
@@ -223,7 +223,7 @@ n8n-go validate --workflow examples/api-integration/rest-client.json --output re
 ### Migration Steps
 
 1. **Export workflows** from n8n as JSON
-2. **Copy to n8n-go** examples directory
+2. **Copy to m9m** examples directory
 3. **Test execution** with example data
 4. **Update configurations** if needed (rare)
 5. **Deploy to production**
@@ -231,14 +231,14 @@ n8n-go validate --workflow examples/api-integration/rest-client.json --output re
 ### Migration Tools
 
 ```bash
-# Convert n8n backup to n8n-go format
-n8n-go convert --input n8n-backup.json --output n8n-go-workflows/
+# Convert n8n backup to m9m format
+m9m convert --input n8n-backup.json --output m9m-workflows/
 
 # Validate converted workflows
-n8n-go validate --directory n8n-go-workflows/
+m9m validate --directory m9m-workflows/
 
 # Test performance comparison
-n8n-go benchmark --compare-with-n8n
+m9m benchmark --compare-with-n8n
 ```
 
 ## Contributing Examples
@@ -273,7 +273,7 @@ n8n-go benchmark --compare-with-n8n
 
 ## Support and Community
 
-- **Documentation**: [docs.n8n-go.com](https://docs.n8n-go.com)
+- **Documentation**: [docs.m9m.com](https://docs.m9m.com)
 - **GitHub Issues**: Report bugs and request features
 - **Community Forum**: Get help and share workflows
 - **Examples Repository**: Contribute and discover workflows

@@ -57,13 +57,13 @@ const toggleMode = () => {
       <!-- Logo -->
       <div class="text-center mb-8">
         <div class="inline-flex items-center gap-3">
-          <div class="w-12 h-12 bg-primary-600 rounded-xl flex items-center justify-center">
+          <div class="w-12 h-12 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-xl flex items-center justify-center">
             <BoltIcon class="w-7 h-7 text-white" />
           </div>
-          <span class="text-3xl font-bold text-slate-900 dark:text-white">n8n-go</span>
+          <span class="text-3xl font-bold text-slate-900 dark:text-white">m9m</span>
         </div>
         <p class="mt-2 text-slate-500 dark:text-slate-400">
-          High-performance workflow automation
+          Agent-Native Workflow Automation
         </p>
       </div>
 

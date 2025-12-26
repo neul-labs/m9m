@@ -7,8 +7,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/dipankar/n8n-go/internal/engine"
-	"github.com/dipankar/n8n-go/internal/nodes/base"
+	"github.com/dipankar/m9m/internal/engine"
+	"github.com/dipankar/m9m/internal/nodes/base"
 )
 
 // PluginType represents the type of plugin

@@ -5,8 +5,8 @@ package base
 
 import (
 	"fmt"
-	"github.com/dipankar/n8n-go/internal/model"
-	"github.com/dipankar/n8n-go/internal/expressions"
+	"github.com/dipankar/m9m/internal/model"
+	"github.com/dipankar/m9m/internal/expressions"
 )
 
 // NodeExecutor is the interface that all node types must implement

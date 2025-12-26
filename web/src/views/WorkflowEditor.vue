@@ -7,10 +7,12 @@ import {
   ArrowPathIcon,
   CloudArrowUpIcon,
   PencilIcon,
+  SparklesIcon,
 } from '@heroicons/vue/24/outline'
 import WorkflowCanvas from '@/components/workflow/WorkflowCanvas.vue'
 import NodePalette from '@/components/workflow/NodePalette.vue'
 import NodePanel from '@/components/workflow/NodePanel.vue'
+import AgentCopilot from '@/components/copilot/AgentCopilot.vue'
 import { useWorkflowStore } from '@/stores'
 
 const route = useRoute()
@@ -19,6 +21,7 @@ const workflowStore = useWorkflowStore()
 
 const showNodePalette = ref(true)
 const showNodePanel = ref(false)
+const showCopilot = ref(false)
 const isExecuting = ref(false)
 const editingName = ref(false)
 const workflowNameInput = ref('')
@@ -160,6 +163,18 @@ const cancelEditingName = () => {
         >
           Nodes
         </button>
+        <button
+          @click="showCopilot = !showCopilot"
+          :class="[
+            'px-3 py-1.5 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5',
+            showCopilot
+              ? 'bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
+          ]"
+        >
+          <SparklesIcon class="w-4 h-4" />
+          Copilot
+        </button>
       </div>
 
       <!-- Right: Actions -->
@@ -231,6 +246,22 @@ const cancelEditingName = () => {
         leave-to-class="translate-x-full opacity-0"
       >
         <NodePanel v-if="showNodePanel && selectedNode" class="w-80" />
+      </transition>
+
+      <!-- Agent Copilot Panel (Right) -->
+      <transition
+        enter-active-class="transition-all duration-200 ease-out"
+        enter-from-class="translate-x-full opacity-0"
+        enter-to-class="translate-x-0 opacity-100"
+        leave-active-class="transition-all duration-150 ease-in"
+        leave-from-class="translate-x-0 opacity-100"
+        leave-to-class="translate-x-full opacity-0"
+      >
+        <AgentCopilot
+          v-if="showCopilot"
+          class="w-96"
+          @close="showCopilot = false"
+        />
       </transition>
     </div>
   </div>

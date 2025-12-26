@@ -32,13 +32,13 @@ Created production-ready storage implementations with full CRUD operations:
 **Storage Options:**
 ```bash
 # Memory (development)
-./n8n-go-server -db memory
+./m9m-server -db memory
 
 # PostgreSQL (production)
-./n8n-go-server -db postgres -db-url "postgres://localhost/n8n"
+./m9m-server -db postgres -db-url "postgres://localhost/n8n"
 
 # SQLite (lightweight)
-./n8n-go-server -db sqlite -db-url "./n8n-go.db"
+./m9m-server -db sqlite -db-url "./m9m.db"
 ```
 
 ### 2. HTTP Middleware Stack ✅
@@ -109,7 +109,7 @@ Implemented full n8n-compatible API in `internal/api/server.go` (700+ lines):
 
 ### 4. API Server Entry Point ✅
 
-Created production server in `cmd/n8n-go-server/main.go` (190 lines):
+Created production server in `cmd/m9m-server/main.go` (190 lines):
 
 **Features:**
 - Command-line flag configuration
@@ -180,21 +180,21 @@ Created `API_COMPATIBILITY.md` (1,200+ lines) covering:
 **Build Verification:**
 ```bash
 # Both binaries built successfully
-./n8n-go          # 24MB - CLI tool
-./n8n-go-server   # 26MB - API server
+./m9m          # 24MB - CLI tool
+./m9m-server   # 26MB - API server
 ```
 
 **Runtime Testing:**
 ```bash
 # Server starts successfully
-2025/11/10 10:37:57 Starting n8n-go API server v0.2.0
+2025/11/10 10:37:57 Starting m9m API server v0.2.0
 2025/11/10 10:37:57 Using in-memory storage
 2025/11/10 10:37:57 Registered 11 node types
-2025/11/10 10:37:57 🚀 n8n-go API server listening on 0.0.0.0:8080
+2025/11/10 10:37:57 🚀 m9m API server listening on 0.0.0.0:8080
 
 # Health check works
 $ curl http://localhost:8080/health
-{"service":"n8n-go","status":"ok","time":"2025-11-10T11:15:13Z","version":"0.2.0"}
+{"service":"m9m","status":"ok","time":"2025-11-10T11:15:13Z","version":"0.2.0"}
 
 # Version endpoint works
 $ curl http://localhost:8080/api/v1/version
@@ -217,7 +217,7 @@ $ curl http://localhost:8080/api/v1/node-types
                          │ HTTP REST API + WebSocket
                          ▼
 ┌──────────────────────────────────────────────────────────┐
-│                  n8n-go API Server (NEW)                  │
+│                  m9m API Server (NEW)                  │
 ├──────────────────────────────────────────────────────────┤
 │  ┌─────────────────────────────────────────────────┐     │
 │  │          HTTP Middleware Stack                   │     │
@@ -257,14 +257,14 @@ $ curl http://localhost:8080/api/v1/node-types
 ## Performance Metrics
 
 ### Binary Sizes
-- **n8n-go-server**: 26MB (API server)
-- **n8n-go**: 24MB (CLI tool)
+- **m9m-server**: 26MB (API server)
+- **m9m**: 24MB (CLI tool)
 - **Total**: 50MB for both binaries
 
 ### Startup Performance
 ```
-2025/11/10 10:37:57.450 Starting n8n-go API server v0.2.0
-2025/11/10 10:37:57.580 🚀 n8n-go API server listening
+2025/11/10 10:37:57.450 Starting m9m API server v0.2.0
+2025/11/10 10:37:57.580 🚀 m9m API server listening
 ```
 **Startup Time**: ~130ms (vs ~3s for n8n Node.js)
 
@@ -282,7 +282,7 @@ $ curl http://localhost:8080/api/v1/node-types
 
 ### Comparison with n8n
 
-| Metric | n8n (Node.js) | n8n-go | Improvement |
+| Metric | n8n (Node.js) | m9m | Improvement |
 |--------|---------------|---------|-------------|
 | Startup Time | ~3000ms | ~130ms | 23x faster |
 | Memory (idle) | ~512MB | ~150MB | 70% less |
@@ -321,7 +321,7 @@ $ curl http://localhost:8080/api/v1/node-types
    - Rate limiting (optional)
    - Auth scaffold
 
-6. **cmd/n8n-go-server/main.go** (190 lines)
+6. **cmd/m9m-server/main.go** (190 lines)
    - API server entry point
    - Configuration handling
    - Graceful shutdown
@@ -370,8 +370,8 @@ $ curl http://localhost:8080/api/v1/node-types
 
 **1. Start API Server (Development Mode):**
 ```bash
-cd /home/dipankar/Github/n8n-go
-./n8n-go-server
+cd /home/dipankar/Github/m9m
+./m9m-server
 ```
 
 **2. Test Endpoints:**
@@ -392,7 +392,7 @@ curl http://localhost:8080/api/v1/version
 docker-compose up -d
 
 # Option B: Manual
-./n8n-go-server -port 8080 &
+./m9m-server -port 8080 &
 docker run -p 5678:5678 \
   -e N8N_BACKEND_URL=http://host.docker.internal:8080 \
   n8nio/n8n:latest
@@ -415,8 +415,8 @@ docker run -d \
   -p 5432:5432 \
   postgres:15
 
-# Start n8n-go server
-./n8n-go-server \
+# Start m9m server
+./m9m-server \
   -db postgres \
   -db-url "postgres://n8n:secure_password@localhost:5432/n8n?sslmode=disable" \
   -port 8080 \
@@ -425,12 +425,12 @@ docker run -d \
 
 **With Docker Compose (Full Stack):**
 ```bash
-# Includes: n8n-go, n8n-frontend, PostgreSQL, Redis, Prometheus, Grafana
+# Includes: m9m, n8n-frontend, PostgreSQL, Redis, Prometheus, Grafana
 docker-compose up -d
 
 # Access services
 # n8n UI:       http://localhost:5678
-# n8n-go API:   http://localhost:8080
+# m9m API:   http://localhost:8080
 # Prometheus:   http://localhost:9090
 # Grafana:      http://localhost:3000
 ```
@@ -566,21 +566,21 @@ docker-compose up -d
 
 ## Migration Guide
 
-### From Original n8n to n8n-go
+### From Original n8n to m9m
 
 **1. Export workflows from n8n:**
 ```bash
 # In n8n UI, export all workflows as JSON
 ```
 
-**2. Start n8n-go server:**
+**2. Start m9m server:**
 ```bash
-./n8n-go-server -db postgres -db-url "postgres://localhost/n8n"
+./m9m-server -db postgres -db-url "postgres://localhost/n8n"
 ```
 
 **3. Import workflows:**
 ```bash
-# Use n8n frontend connected to n8n-go
+# Use n8n frontend connected to m9m
 # Or use API:
 curl -X POST http://localhost:8080/api/v1/workflows \
   -H "Content-Type: application/json" \
@@ -594,7 +594,7 @@ curl -X POST http://localhost:8080/api/v1/workflows/{id}/execute
 
 ### Configuration Migration
 
-| n8n Setting | n8n-go Equivalent |
+| n8n Setting | m9m Equivalent |
 |-------------|-------------------|
 | `N8N_PORT` | `-port` flag |
 | `N8N_HOST` | `-host` flag |
@@ -652,8 +652,8 @@ internal/storage/
 └── sqlite.go         # SQLite implementation (550 lines)
 
 cmd/
-├── n8n-go/           # CLI tool (existing)
-└── n8n-go-server/    # API server (190 lines NEW)
+├── m9m/           # CLI tool (existing)
+└── m9m-server/    # API server (190 lines NEW)
 ```
 
 ---

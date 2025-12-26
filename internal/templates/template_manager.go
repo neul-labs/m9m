@@ -10,8 +10,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dipankar/n8n-go/internal/expressions"
-	"github.com/dipankar/n8n-go/internal/model"
+	"github.com/dipankar/m9m/internal/expressions"
+	"github.com/dipankar/m9m/internal/model"
 )
 
 type TemplateManager struct {
@@ -125,7 +125,7 @@ func NewTemplateManager(templatePath string) *TemplateManager {
 		templates:         make(map[string]*WorkflowTemplate),
 		categories:        make(map[string]*TemplateCategory),
 		templatePath:      templatePath,
-		evaluator:         expressions.NewGojaExpressionEvaluator(),
+		evaluator:         expressions.NewGojaExpressionEvaluator(expressions.DefaultEvaluatorConfig()),
 		validationRules:   make(map[string]*ValidationRule),
 		installationQueue: make(chan *InstallationRequest, 100),
 	}
@@ -136,6 +136,11 @@ func NewTemplateManager(templatePath string) *TemplateManager {
 	tm.startInstallationWorker()
 
 	return tm
+}
+
+// GetMarketplace returns the marketplace manager
+func (tm *TemplateManager) GetMarketplace() *MarketplaceManager {
+	return tm.marketplace
 }
 
 func (tm *TemplateManager) LoadTemplates() error {
@@ -269,7 +274,7 @@ func (tm *TemplateManager) evaluateValidationRule(template *WorkflowTemplate, ru
 
 	if !tm.isTruthy(result) {
 		if rule.Severity == "error" {
-			return fmt.Errorf(rule.Message)
+			return fmt.Errorf("%s", rule.Message)
 		}
 	}
 

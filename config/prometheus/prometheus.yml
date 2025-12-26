@@ -1,10 +1,10 @@
-# Prometheus configuration for n8n-go monitoring
+# Prometheus configuration for m9m monitoring
 
 global:
   scrape_interval: 15s
   evaluation_interval: 15s
   external_labels:
-    cluster: 'n8n-go'
+    cluster: 'm9m'
     environment: 'production'
 
 # Alertmanager configuration
@@ -20,10 +20,10 @@ rule_files:
 
 # Scrape configurations
 scrape_configs:
-  # n8n-go metrics
-  - job_name: 'n8n-go'
+  # m9m metrics
+  - job_name: 'm9m'
     static_configs:
-      - targets: ['n8n-go:9090']
+      - targets: ['m9m:9090']
     metrics_path: '/metrics'
     scrape_interval: 10s
 

@@ -92,15 +92,15 @@ jobs:
 
       - name: Run tests
         env:
-          N8N_GO_DB_TYPE: postgres
-          N8N_GO_DB_POSTGRES_HOST: localhost
-          N8N_GO_DB_POSTGRES_PORT: 5432
-          N8N_GO_DB_POSTGRES_DATABASE: n8n_test
-          N8N_GO_DB_POSTGRES_USER: n8n
-          N8N_GO_DB_POSTGRES_PASSWORD: test_password
-          N8N_GO_QUEUE_TYPE: redis
-          N8N_GO_QUEUE_URL: redis://localhost:6379
-          N8N_GO_MONGODB_URL: mongodb://localhost:27017/n8n_test
+          M9M_DB_TYPE: postgres
+          M9M_DB_POSTGRES_HOST: localhost
+          M9M_DB_POSTGRES_PORT: 5432
+          M9M_DB_POSTGRES_DATABASE: n8n_test
+          M9M_DB_POSTGRES_USER: n8n
+          M9M_DB_POSTGRES_PASSWORD: test_password
+          M9M_QUEUE_TYPE: redis
+          M9M_QUEUE_URL: redis://localhost:6379
+          M9M_MONGODB_URL: mongodb://localhost:27017/n8n_test
         run: |
           go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
 
@@ -150,16 +150,16 @@ jobs:
         run: |
           make build
           if [ "${{ matrix.goos }}" = "windows" ]; then
-            mv n8n-go n8n-go-${{ matrix.goos }}-${{ matrix.goarch }}.exe
+            mv m9m m9m-${{ matrix.goos }}-${{ matrix.goarch }}.exe
           else
-            mv n8n-go n8n-go-${{ matrix.goos }}-${{ matrix.goarch }}
+            mv m9m m9m-${{ matrix.goos }}-${{ matrix.goarch }}
           fi
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: n8n-go-${{ matrix.goos }}-${{ matrix.goarch }}
-          path: n8n-go-*
+          name: m9m-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: m9m-*
 
   docker:
     name: Build Docker Image
@@ -186,7 +186,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            dipankar/n8n-go
+            dipankar/m9m
           tags: |
             type=ref,event=branch
             type=semver,pattern={{version}}

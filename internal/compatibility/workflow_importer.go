@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dipankar/n8n-go/internal/model"
+	"github.com/dipankar/m9m/internal/model"
 )
 
 type N8nWorkflowImporter struct {
@@ -16,17 +16,21 @@ type N8nWorkflowImporter struct {
 }
 
 type N8nWorkflowData struct {
-	ID          interface{}          `json:"id"`
-	Name        string               `json:"name"`
-	Active      bool                 `json:"active"`
-	Nodes       []N8nNodeData        `json:"nodes"`
-	Connections map[string][]N8nConnection `json:"connections"`
-	Settings    map[string]interface{} `json:"settings"`
-	StaticData  map[string]interface{} `json:"staticData"`
-	Tags        []interface{}        `json:"tags"`
-	TriggerCount int                 `json:"triggerCount"`
-	Meta        map[string]interface{} `json:"meta"`
-	PinData     map[string][]interface{} `json:"pinData"`
+	ID          interface{}                           `json:"id"`
+	Name        string                                `json:"name"`
+	Active      bool                                  `json:"active"`
+	Nodes       []N8nNodeData                         `json:"nodes"`
+	Connections map[string]N8nConnectionGroup         `json:"connections"`
+	Settings    map[string]interface{}                `json:"settings"`
+	StaticData  map[string]interface{}                `json:"staticData"`
+	Tags        []interface{}                         `json:"tags"`
+	TriggerCount int                                  `json:"triggerCount"`
+	Meta        map[string]interface{}                `json:"meta"`
+	PinData     map[string][]interface{}              `json:"pinData"`
+}
+
+type N8nConnectionGroup struct {
+	Main [][]N8nConnection `json:"main"`
 }
 
 type N8nNodeData struct {
@@ -120,12 +124,12 @@ func (importer *N8nWorkflowImporter) ImportWorkflow(n8nJson []byte) (*ImportResu
 		Description: importer.extractDescription(n8nWorkflow),
 		Active:      n8nWorkflow.Active,
 		Nodes:       []model.Node{},
-		Connections: []model.Connection{},
+		Connections: make(map[string]model.Connections),
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
-		Version:     "1.0.0",
+		VersionID:   "1.0.0",
 		Tags:        importer.convertTags(n8nWorkflow.Tags),
-		Settings:    n8nWorkflow.Settings,
+		Settings:    importer.convertSettings(n8nWorkflow.Settings),
 	}
 
 	// Convert nodes
@@ -143,19 +147,27 @@ func (importer *N8nWorkflowImporter) ImportWorkflow(n8nJson []byte) (*ImportResu
 	}
 
 	// Convert connections
-	for sourceNodeId, connectionGroups := range n8nWorkflow.Connections {
-		for outputName, connections := range connectionGroups {
-			for _, connection := range connections {
+	for sourceNodeId, connectionGroup := range n8nWorkflow.Connections {
+		// Convert connection group for this source node
+		convertedGroup := model.Connections{
+			Main: make([][]model.Connection, len(connectionGroup.Main)),
+		}
+
+		for outputIndex, outputConnections := range connectionGroup.Main {
+			convertedGroup.Main[outputIndex] = make([]model.Connection, 0)
+			for _, connection := range outputConnections {
 				convertedConnection, issues := importer.convertConnection(
-					sourceNodeId, outputName, connection, nodeIdMap,
+					sourceNodeId, outputIndex, connection, nodeIdMap,
 				)
 				if convertedConnection != nil {
-					workflow.Connections = append(workflow.Connections, *convertedConnection)
+					convertedGroup.Main[outputIndex] = append(convertedGroup.Main[outputIndex], *convertedConnection)
 					result.Statistics.ConvertedConnections++
 				}
 				result.ConversionIssues = append(result.ConversionIssues, issues...)
 			}
 		}
+
+		workflow.Connections[sourceNodeId] = convertedGroup
 	}
 
 	result.Workflow = workflow
@@ -166,7 +178,7 @@ func (importer *N8nWorkflowImporter) convertNode(n8nNode N8nNodeData) (*model.No
 	var issues []ConversionIssue
 
 	// Check if we have a registered executor for this node type
-	executor, exists := importer.nodeRegistry[n8nNode.Type]
+	_, exists := importer.nodeRegistry[n8nNode.Type]
 	if !exists {
 		issues = append(issues, ConversionIssue{
 			Type:       "warning",
@@ -190,28 +202,22 @@ func (importer *N8nWorkflowImporter) convertNode(n8nNode N8nNodeData) (*model.No
 	convertedParams, paramIssues := importer.convertParameters(n8nNode.Parameters, n8nNode.ID)
 	issues = append(issues, paramIssues...)
 
-	// Convert configuration
-	config, _ := json.Marshal(convertedParams)
+	// Convert disabled flag to *bool
+	var disabled *bool
+	if n8nNode.Disabled {
+		disabled = &n8nNode.Disabled
+	}
 
 	node := &model.Node{
 		ID:          n8nNode.ID,
 		Name:        n8nNode.Name,
 		Type:        n8nNode.Type,
+		TypeVersion: int(n8nNode.TypeVersion),
 		Position:    importer.convertPosition(n8nNode.Position),
-		Config:      config,
-		Disabled:    n8nNode.Disabled,
+		Parameters:  convertedParams,
+		Disabled:    disabled,
 		Notes:       n8nNode.Notes,
 		Credentials: importer.convertCredentials(n8nNode.Credentials),
-		RetryPolicy: &model.RetryPolicy{
-			Enabled:      n8nNode.RetryOnFail,
-			MaxAttempts:  n8nNode.MaxTries,
-			DelayMs:      n8nNode.WaitBetween,
-			BackoffType:  "fixed",
-		},
-		ErrorHandling: &model.ErrorHandling{
-			ContinueOnFail: n8nNode.ContinueOnFail,
-			OnError:        n8nNode.OnError,
-		},
 	}
 
 	return node, issues
@@ -274,12 +280,12 @@ func (importer *N8nWorkflowImporter) convertParameterValue(value interface{}, co
 	}
 }
 
-func (importer *N8nWorkflowImporter) convertConnection(sourceNodeId, outputName string, connection N8nConnection, nodeIdMap map[string]string) (*model.Connection, []ConversionIssue) {
+func (importer *N8nWorkflowImporter) convertConnection(sourceNodeId string, outputIndex int, connection N8nConnection, nodeIdMap map[string]string) (*model.Connection, []ConversionIssue) {
 	var issues []ConversionIssue
 
-	// Map n8n node IDs to n8n-go node IDs
-	sourceId, sourceExists := nodeIdMap[sourceNodeId]
-	targetId, targetExists := nodeIdMap[connection.Node]
+	// Check if source node exists
+	_, sourceExists := nodeIdMap[sourceNodeId]
+	_, targetExists := nodeIdMap[connection.Node]
 
 	if !sourceExists {
 		issues = append(issues, ConversionIssue{
@@ -298,10 +304,9 @@ func (importer *N8nWorkflowImporter) convertConnection(sourceNodeId, outputName 
 	}
 
 	conn := &model.Connection{
-		Source: sourceId,
-		Target: targetId,
-		Output: outputName,
-		Input:  connection.Type,
+		Node:  connection.Node,
+		Type:  connection.Type,
+		Index: connection.Index,
 	}
 
 	return conn, issues
@@ -401,16 +406,48 @@ func (importer *N8nWorkflowImporter) convertPosition(position []float64) []int {
 	return []int{0, 0}
 }
 
-func (importer *N8nWorkflowImporter) convertCredentials(creds map[string]string) map[string]string {
-	// Direct mapping for now - could add credential type mapping
-	return creds
+func (importer *N8nWorkflowImporter) convertCredentials(creds map[string]string) map[string]model.Credential {
+	result := make(map[string]model.Credential)
+	for credType, credName := range creds {
+		result[credType] = model.Credential{
+			Name: credName,
+			Type: credType,
+		}
+	}
+	return result
 }
 
-func (importer *N8nWorkflowImporter) countConnections(connections map[string][]N8nConnection) int {
+func (importer *N8nWorkflowImporter) convertSettings(settings map[string]interface{}) *model.WorkflowSettings {
+	if settings == nil {
+		return nil
+	}
+
+	ws := &model.WorkflowSettings{}
+
+	if order, ok := settings["executionOrder"].(string); ok {
+		ws.ExecutionOrder = order
+	}
+	if tz, ok := settings["timezone"].(string); ok {
+		ws.Timezone = tz
+	}
+	if saveErr, ok := settings["saveDataError"]; ok {
+		ws.SaveDataError = saveErr
+	}
+	if saveSuccess, ok := settings["saveDataSuccess"]; ok {
+		ws.SaveDataSuccess = saveSuccess
+	}
+	if saveManual, ok := settings["saveManualExecutions"]; ok {
+		ws.SaveManualExecutions = saveManual
+	}
+
+	return ws
+}
+
+func (importer *N8nWorkflowImporter) countConnections(connections map[string]N8nConnectionGroup) int {
 	count := 0
-	for _, connectionGroups := range connections {
-		for _, connectionList := range connectionGroups {
-			count += len(connectionList)
+	for _, connectionGroup := range connections {
+		for _, outputConnections := range connectionGroup.Main {
+			count += len(outputConnections)
 		}
 	}
 	return count
@@ -463,13 +500,25 @@ func (ec *ExpressionConverter) convertComplexPatterns(expression string) string 
 
 // Export workflow to n8n format
 func (importer *N8nWorkflowImporter) ExportWorkflow(workflow *model.Workflow) ([]byte, error) {
+	// Convert settings to map
+	var settingsMap map[string]interface{}
+	if workflow.Settings != nil {
+		settingsMap = map[string]interface{}{
+			"executionOrder":       workflow.Settings.ExecutionOrder,
+			"timezone":             workflow.Settings.Timezone,
+			"saveDataError":        workflow.Settings.SaveDataError,
+			"saveDataSuccess":      workflow.Settings.SaveDataSuccess,
+			"saveManualExecutions": workflow.Settings.SaveManualExecutions,
+		}
+	}
+
 	n8nWorkflow := N8nWorkflowData{
 		ID:          workflow.ID,
 		Name:        workflow.Name,
 		Active:      workflow.Active,
 		Nodes:       []N8nNodeData{},
-		Connections: make(map[string][]N8nConnection),
-		Settings:    workflow.Settings,
+		Connections: make(map[string]N8nConnectionGroup),
+		Settings:    settingsMap,
 		StaticData:  make(map[string]interface{}),
 		Tags:        []interface{}{},
 		TriggerCount: 0,
@@ -484,56 +533,52 @@ func (importer *N8nWorkflowImporter) ExportWorkflow(workflow *model.Workflow) ([
 
 	// Convert nodes
 	for _, node := range workflow.Nodes {
+		// Convert credentials
+		credMap := make(map[string]string)
+		for credType, cred := range node.Credentials {
+			credMap[credType] = cred.Name
+		}
+
+		// Convert disabled
+		disabled := false
+		if node.Disabled != nil {
+			disabled = *node.Disabled
+		}
+
 		n8nNode := N8nNodeData{
 			ID:          node.ID,
 			Name:        node.Name,
 			Type:        node.Type,
-			TypeVersion: 1.0,
+			TypeVersion: float64(node.TypeVersion),
 			Position:    []float64{float64(node.Position[0]), float64(node.Position[1])},
-			Parameters:  make(map[string]interface{}),
-			Credentials: node.Credentials,
-			Disabled:    node.Disabled,
+			Parameters:  node.Parameters,
+			Credentials: credMap,
+			Disabled:    disabled,
 			Notes:       node.Notes,
-		}
-
-		// Convert parameters back
-		if len(node.Config) > 0 {
-			json.Unmarshal(node.Config, &n8nNode.Parameters)
-		}
-
-		// Convert retry policy
-		if node.RetryPolicy != nil {
-			n8nNode.RetryOnFail = node.RetryPolicy.Enabled
-			n8nNode.MaxTries = node.RetryPolicy.MaxAttempts
-			n8nNode.WaitBetween = node.RetryPolicy.DelayMs
-		}
-
-		// Convert error handling
-		if node.ErrorHandling != nil {
-			n8nNode.ContinueOnFail = node.ErrorHandling.ContinueOnFail
-			n8nNode.OnError = node.ErrorHandling.OnError
 		}
 
 		n8nWorkflow.Nodes = append(n8nWorkflow.Nodes, n8nNode)
 	}
 
 	// Convert connections
-	for _, connection := range workflow.Connections {
-		if n8nWorkflow.Connections[connection.Source] == nil {
-			n8nWorkflow.Connections[connection.Source] = []N8nConnection{}
+	for sourceNodeId, connectionGroup := range workflow.Connections {
+		n8nGroup := N8nConnectionGroup{
+			Main: make([][]N8nConnection, len(connectionGroup.Main)),
 		}
 
-		n8nConnection := N8nConnection{
-			Node:        connection.Target,
-			Type:        connection.Input,
-			Index:       0,
-			OutputIndex: 0,
+		for outputIndex, outputConnections := range connectionGroup.Main {
+			n8nGroup.Main[outputIndex] = make([]N8nConnection, len(outputConnections))
+			for i, conn := range outputConnections {
+				n8nGroup.Main[outputIndex][i] = N8nConnection{
+					Node:        conn.Node,
+					Type:        conn.Type,
+					Index:       conn.Index,
+					OutputIndex: outputIndex,
+				}
+			}
 		}
 
-		n8nWorkflow.Connections[connection.Source] = append(
-			n8nWorkflow.Connections[connection.Source],
-			n8nConnection,
-		)
+		n8nWorkflow.Connections[sourceNodeId] = n8nGroup
 	}
 
 	return json.MarshalIndent(n8nWorkflow, "", "  ")
@@ -560,13 +605,13 @@ func (importer *N8nWorkflowImporter) ValidateN8nWorkflow(n8nJson []byte) error {
 		nodeIds[node.ID] = true
 	}
 
-	for sourceId, connectionGroups := range workflow.Connections {
+	for sourceId, connectionGroup := range workflow.Connections {
 		if !nodeIds[sourceId] {
 			return fmt.Errorf("connection references non-existent source node: %s", sourceId)
 		}
 
-		for _, connections := range connectionGroups {
-			for _, connection := range connections {
+		for _, outputConnections := range connectionGroup.Main {
+			for _, connection := range outputConnections {
 				if !nodeIds[connection.Node] {
 					return fmt.Errorf("connection references non-existent target node: %s", connection.Node)
 				}

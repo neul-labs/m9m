@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to n8n-go will be documented in this file.
+All notable changes to m9m will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -123,11 +123,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Migration from n8n
 
-n8n-go provides seamless migration from existing n8n installations:
+m9m provides seamless migration from existing n8n installations:
 
 1. **Export workflows** from n8n as JSON files
-2. **Validate workflows** using `n8n-go validate`
-3. **Test execution** with `n8n-go execute`
+2. **Validate workflows** using `m9m validate`
+3. **Test execution** with `m9m execute`
 4. **Deploy** using provided production configurations
 
 See the [Migration Guide](docs/migration/from-n8n.md) for detailed instructions.
@@ -153,17 +153,17 @@ See the [Migration Guide](docs/migration/from-n8n.md) for detailed instructions.
 
 ## Contributors
 
-- **Lead Developer**: n8n-go Development Team
+- **Lead Developer**: m9m Development Team
 - **Security Review**: Security Engineering Team
 - **Documentation**: Technical Writing Team
 - **Testing**: Quality Assurance Team
 
 ## Support
 
-- **Documentation**: [docs.n8n-go.com](https://docs.n8n-go.com)
-- **GitHub Issues**: [github.com/n8n-go/n8n-go/issues](https://github.com/n8n-go/n8n-go/issues)
-- **Community Forum**: [community.n8n-go.com](https://community.n8n-go.com)
-- **Enterprise Support**: [enterprise@n8n-go.com](mailto:enterprise@n8n-go.com)
+- **Documentation**: [docs.m9m.com](https://docs.m9m.com)
+- **GitHub Issues**: [github.com/m9m/m9m/issues](https://github.com/m9m/m9m/issues)
+- **Community Forum**: [community.m9m.com](https://community.m9m.com)
+- **Enterprise Support**: [enterprise@m9m.com](mailto:enterprise@m9m.com)
 
 ---
 

@@ -1,12 +1,11 @@
 package file
 
 import (
-	"encoding/base64"
 	"os"
 	"testing"
-	
-	"github.com/dipankar/n8n-go/internal/model"
-	"github.com/dipankar/n8n-go/internal/nodes/base"
+
+	"github.com/dipankar/m9m/internal/model"
+	"github.com/dipankar/m9m/internal/nodes/base"
 )
 
 func TestReadBinaryFileNodeCreation(t *testing.T) {
@@ -83,16 +82,13 @@ func TestReadBinaryFileNodeReadFile(t *testing.T) {
 	tmpFile.Close()
 	
 	// Test reading the file
-	encodedContent, err := node.readFile(tmpFile.Name())
+	fileContent, _, err := node.readFile(tmpFile.Name())
 	if err != nil {
 		t.Fatalf("Failed to read file: %v", err)
 	}
-	
-	// Decode and verify content
-	decodedContent, err := base64.StdEncoding.DecodeString(encodedContent)
-	if err != nil {
-		t.Fatalf("Failed to decode content: %v", err)
-	}
+
+	// Verify content directly (readFile returns raw bytes, not base64)
+	decodedContent := fileContent
 	
 	if string(decodedContent) != content {
 		t.Errorf("Expected content '%s', got '%s'", content, string(decodedContent))

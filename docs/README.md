@@ -1,6 +1,6 @@
-# n8n-go Documentation
+# m9m Documentation
 
-Documentation for n8n-go, a high-performance workflow automation platform built in Go.
+Documentation for m9m, a high-performance workflow automation platform built in Go.
 
 ## Documentation Structure
 
@@ -62,4 +62,4 @@ Documentation for n8n-go, a high-performance workflow automation platform built 
 
 ## License
 
-n8n-go is released under the Apache 2.0 License.
+m9m is released under the Apache 2.0 License.

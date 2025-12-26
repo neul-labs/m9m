@@ -12,9 +12,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/lambda"
 
-	"github.com/dipankar/n8n-go/internal/expressions"
-	"github.com/dipankar/n8n-go/internal/model"
-	"github.com/dipankar/n8n-go/internal/nodes/base"
+	"github.com/dipankar/m9m/internal/expressions"
+	"github.com/dipankar/m9m/internal/model"
+	"github.com/dipankar/m9m/internal/nodes/base"
 )
 
 // LambdaOperationsNode provides AWS Lambda operations
@@ -117,8 +117,8 @@ type LambdaConfiguration struct {
 // NewLambdaOperationsNode creates a new Lambda operations node
 func NewLambdaOperationsNode() *LambdaOperationsNode {
 	return &LambdaOperationsNode{
-		BaseNode:  base.NewBaseNode("AWS Lambda", "n8n-nodes-base.awsLambda"),
-		evaluator: expressions.NewGojaExpressionEvaluator(),
+		BaseNode:  base.NewBaseNode(base.NodeDescription{Name: "AWS Lambda", Description: "AWS Lambda function operations", Category: "cloud"}),
+		evaluator: expressions.NewGojaExpressionEvaluator(expressions.DefaultEvaluatorConfig()),
 	}
 }
 
@@ -157,7 +157,7 @@ func (n *LambdaOperationsNode) Execute(inputData []model.DataItem, nodeParams ma
 			ItemIndex:          index,
 			Mode:               expressions.ModeManual,
 			ConnectionInputData: []model.DataItem{item},
-			AdditionalKeys:     make(map[string]interface{}),
+			AdditionalKeys:     &expressions.AdditionalKeys{},
 		}
 
 		// Execute Lambda operation
@@ -169,9 +169,33 @@ func (n *LambdaOperationsNode) Execute(inputData []model.DataItem, nodeParams ma
 			})
 		}
 
-		// Create result item
+		// Create result item - convert LambdaResult to map
+		resultJSON := map[string]interface{}{
+			"operation":       result.Operation,
+			"success":         result.Success,
+			"functionName":    result.FunctionName,
+			"statusCode":      result.StatusCode,
+			"executedVersion": result.ExecutedVersion,
+			"executionTime":   result.ExecutionTime.String(),
+		}
+		if result.Payload != nil {
+			resultJSON["payload"] = result.Payload
+		}
+		if result.LogResult != "" {
+			resultJSON["logResult"] = result.LogResult
+		}
+		if result.FunctionError != "" {
+			resultJSON["functionError"] = result.FunctionError
+		}
+		if result.Configuration != nil {
+			resultJSON["configuration"] = result.Configuration
+		}
+		if result.Error != "" {
+			resultJSON["error"] = result.Error
+		}
+
 		resultItem := model.DataItem{
-			JSON: result,
+			JSON: resultJSON,
 		}
 
 		results = append(results, resultItem)

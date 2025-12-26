@@ -1,8 +1,8 @@
-# Distributed n8n-go Architecture with BadgerDB + Raft + NNG
+# Distributed m9m Architecture with BadgerDB + Raft + NNG
 
 ## Vision: Self-Contained Distributed System
 
-Build a **horizontally scalable n8n-go cluster** where each binary is a complete node that can:
+Build a **horizontally scalable m9m cluster** where each binary is a complete node that can:
 - Store data locally (BadgerDB)
 - Coordinate with peers (Raft consensus)
 - Communicate efficiently (NNG messaging)
@@ -79,7 +79,7 @@ Build a **horizontally scalable n8n-go cluster** where each binary is a complete
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                       n8n-go Cluster                             │
+│                       m9m Cluster                             │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                  │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
@@ -133,7 +133,7 @@ import (
     "time"
 
     badger "github.com/dgraph-io/badger/v4"
-    "github.com/dipankar/n8n-go/internal/model"
+    "github.com/dipankar/m9m/internal/model"
 )
 
 // BadgerStorage implements WorkflowStorage using BadgerDB
@@ -633,9 +633,9 @@ import (
     "time"
 
     "github.com/robfig/cron/v3"
-    "github.com/dipankar/n8n-go/internal/consensus"
-    "github.com/dipankar/n8n-go/internal/engine"
-    "github.com/dipankar/n8n-go/internal/model"
+    "github.com/dipankar/m9m/internal/consensus"
+    "github.com/dipankar/m9m/internal/engine"
+    "github.com/dipankar/m9m/internal/model"
 )
 
 // DistributedScheduler manages scheduled workflows in a Raft cluster
@@ -780,8 +780,8 @@ package api
 
 import (
     "github.com/gorilla/websocket"
-    "github.com/dipankar/n8n-go/internal/messaging"
-    "github.com/dipankar/n8n-go/internal/model"
+    "github.com/dipankar/m9m/internal/messaging"
+    "github.com/dipankar/m9m/internal/model"
 )
 
 // DistributedWebSocketManager manages WebSocket connections across nodes
@@ -840,7 +840,7 @@ func (m *DistributedWebSocketManager) handleExecutionUpdate(msg messaging.Messag
 
 ## Complete System Integration
 
-### File: `cmd/n8n-go-server/main.go` (Updated)
+### File: `cmd/m9m-server/main.go` (Updated)
 
 ```go
 package main
@@ -856,12 +856,12 @@ import (
     "github.com/gorilla/mux"
     badger "github.com/dgraph-io/badger/v4"
 
-    "github.com/dipankar/n8n-go/internal/api"
-    "github.com/dipankar/n8n-go/internal/consensus"
-    "github.com/dipankar/n8n-go/internal/engine"
-    "github.com/dipankar/n8n-go/internal/messaging"
-    "github.com/dipankar/n8n-go/internal/scheduler"
-    "github.com/dipankar/n8n-go/internal/storage"
+    "github.com/dipankar/m9m/internal/api"
+    "github.com/dipankar/m9m/internal/consensus"
+    "github.com/dipankar/m9m/internal/engine"
+    "github.com/dipankar/m9m/internal/messaging"
+    "github.com/dipankar/m9m/internal/scheduler"
+    "github.com/dipankar/m9m/internal/storage"
 )
 
 var (
@@ -891,7 +891,7 @@ func main() {
         *nodeID = hostname
     }
 
-    log.Printf("Starting n8n-go distributed node: %s", *nodeID)
+    log.Printf("Starting m9m distributed node: %s", *nodeID)
 
     // 1. Initialize BadgerDB
     db, err := badger.Open(badger.DefaultOptions(*dataDir + "/badger"))
@@ -978,7 +978,7 @@ func main() {
 
 **Node 1 (Bootstrap/Leader):**
 ```bash
-./n8n-go-server \
+./m9m-server \
   --node-id=node1 \
   --http-port=8080 \
   --raft-addr=10.0.1.1:7000 \
@@ -988,7 +988,7 @@ func main() {
 
 **Node 2:**
 ```bash
-./n8n-go-server \
+./m9m-server \
   --node-id=node2 \
   --http-port=8080 \
   --raft-addr=10.0.1.2:7000 \
@@ -1000,7 +1000,7 @@ func main() {
 
 **Node 3:**
 ```bash
-./n8n-go-server \
+./m9m-server \
   --node-id=node3 \
   --http-port=8080 \
   --raft-addr=10.0.1.3:7000 \
@@ -1104,19 +1104,19 @@ server {
 
 ### Phase 1: Current (PostgreSQL)
 ```
-Single n8n-go-server + PostgreSQL
+Single m9m-server + PostgreSQL
 ```
 
 ### Phase 2: Hybrid (PostgreSQL + Raft)
 ```
-3x n8n-go-server nodes
+3x m9m-server nodes
 Each uses BadgerDB + Raft
 Optional: Keep PostgreSQL as read-only archive
 ```
 
 ### Phase 3: Full Distributed (Raft Only)
 ```
-5+ n8n-go-server nodes
+5+ m9m-server nodes
 BadgerDB + Raft for all data
 Remove PostgreSQL dependency
 ```
@@ -1147,7 +1147,7 @@ require (
 5. `internal/api/distributed_websocket.go` (200 lines)
 
 **Modified Files:**
-1. `cmd/n8n-go-server/main.go` (add cluster initialization)
+1. `cmd/m9m-server/main.go` (add cluster initialization)
 2. `internal/api/server.go` (integrate distributed WS)
 
 **Total Effort:** ~2-3 weeks
@@ -1225,7 +1225,7 @@ require (
 
 ## Conclusion
 
-**This architecture makes n8n-go a truly distributed system with:**
+**This architecture makes m9m a truly distributed system with:**
 - ✅ No external dependencies
 - ✅ True horizontal scalability
 - ✅ Strong consistency

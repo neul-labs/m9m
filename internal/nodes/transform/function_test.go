@@ -3,8 +3,8 @@ package transform
 import (
 	"testing"
 	
-	"github.com/dipankar/n8n-go/internal/model"
-	"github.com/dipankar/n8n-go/internal/nodes/base"
+	"github.com/dipankar/m9m/internal/model"
+	"github.com/dipankar/m9m/internal/nodes/base"
 )
 
 func TestFunctionNodeCreation(t *testing.T) {
@@ -192,12 +192,29 @@ func TestFunctionNodeExecuteWithMathOperations(t *testing.T) {
 	item := result[0]
 	
 	// Check that the item has the expected JSON data
-	if sum, ok := item.JSON["sum"].(float64); !ok || int(sum) != 15 {
-		t.Errorf("Expected sum 15, got %v", item.JSON["sum"])
+	// Note: goja returns int64 for integer results, so we handle both int64 and float64
+	sum := getNumberValue(item.JSON["sum"])
+	if sum != 15 {
+		t.Errorf("Expected sum 15, got %v (type %T)", item.JSON["sum"], item.JSON["sum"])
 	}
-	
-	if product, ok := item.JSON["product"].(float64); !ok || int(product) != 50 {
-		t.Errorf("Expected product 50, got %v", item.JSON["product"])
+
+	product := getNumberValue(item.JSON["product"])
+	if product != 50 {
+		t.Errorf("Expected product 50, got %v (type %T)", item.JSON["product"], item.JSON["product"])
+	}
+}
+
+// getNumberValue extracts a number from an interface{} regardless of its underlying type
+func getNumberValue(v interface{}) float64 {
+	switch n := v.(type) {
+	case float64:
+		return n
+	case int64:
+		return float64(n)
+	case int:
+		return float64(n)
+	default:
+		return 0
 	}
 }
 

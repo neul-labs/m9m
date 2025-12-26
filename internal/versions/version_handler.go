@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/dipankar/m9m/internal/api"
 	"github.com/gorilla/mux"
 )
 
@@ -79,8 +80,11 @@ func (h *VersionHandler) CreateVersion(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: Get user from context (when auth is integrated)
-	author := "system" // Placeholder
+	// Get user from auth context
+	author := "system"
+	if authCtx := api.AuthFromContext(r.Context()); authCtx != nil {
+		author = authCtx.UserID
+	}
 
 	version, err := h.versionManager.CreateVersion(workflowID, author, &request)
 	if err != nil {
@@ -132,8 +136,11 @@ func (h *VersionHandler) RestoreVersion(w http.ResponseWriter, r *http.Request) 
 		request.CreateBackup = true
 	}
 
-	// TODO: Get user from context
-	author := "system" // Placeholder
+	// Get user from auth context
+	author := "system"
+	if authCtx := api.AuthFromContext(r.Context()); authCtx != nil {
+		author = authCtx.UserID
+	}
 
 	version, err := h.versionManager.RestoreVersion(versionID, author, &request)
 	if err != nil {

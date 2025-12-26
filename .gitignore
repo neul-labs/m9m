@@ -1,6 +1,6 @@
 # Binaries
-n8n-go
-/bin/n8n-go
+m9m
+/bin/m9m
 /bin/*
 *.exe
 *.exe~

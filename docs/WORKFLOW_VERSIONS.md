@@ -1,6 +1,6 @@
 # Workflow Versions
 
-The n8n-go workflow version system provides comprehensive version control for workflows, enabling teams to track changes, compare versions, and restore to previous states with ease.
+The m9m workflow version system provides comprehensive version control for workflows, enabling teams to track changes, compare versions, and restore to previous states with ease.
 
 ## Overview
 
@@ -477,5 +477,5 @@ The system logs important operations:
 ## Support
 
 For issues or questions:
-- GitHub Issues: https://github.com/dipankar/n8n-go/issues
-- Documentation: https://github.com/dipankar/n8n-go/docs
+- GitHub Issues: https://github.com/dipankar/m9m/issues
+- Documentation: https://github.com/dipankar/m9m/docs

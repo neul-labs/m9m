@@ -7,6 +7,8 @@ import {
   KeyIcon,
   Cog6ToothIcon,
   PlusIcon,
+  DocumentDuplicateIcon,
+  ChartBarIcon,
 } from '@heroicons/vue/24/outline'
 
 const route = useRoute()
@@ -16,12 +18,15 @@ interface NavItem {
   name: string
   path: string
   icon: typeof HomeIcon
+  badge?: string
 }
 
 const navItems: NavItem[] = [
   { name: 'Dashboard', path: '/', icon: HomeIcon },
   { name: 'Workflows', path: '/workflows', icon: BoltIcon },
+  { name: 'Templates', path: '/templates', icon: DocumentDuplicateIcon, badge: 'New' },
   { name: 'Executions', path: '/executions', icon: ClockIcon },
+  { name: 'Performance', path: '/performance', icon: ChartBarIcon },
   { name: 'Credentials', path: '/credentials', icon: KeyIcon },
   { name: 'Settings', path: '/settings', icon: Cog6ToothIcon },
 ]
@@ -43,10 +48,13 @@ const createNewWorkflow = () => {
     <!-- Logo -->
     <div class="h-16 flex items-center px-6 border-b border-slate-200 dark:border-slate-700">
       <div class="flex items-center gap-3">
-        <div class="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
+        <div class="w-8 h-8 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-lg flex items-center justify-center">
           <BoltIcon class="w-5 h-5 text-white" />
         </div>
-        <span class="text-xl font-bold text-slate-900 dark:text-white">n8n-go</span>
+        <div>
+          <span class="text-xl font-bold text-slate-900 dark:text-white">m9m</span>
+          <span class="ml-1.5 text-[10px] font-medium text-violet-600 dark:text-violet-400 bg-violet-100 dark:bg-violet-900/30 px-1.5 py-0.5 rounded">Agent Native</span>
+        </div>
       </div>
     </div>
 
@@ -75,15 +83,21 @@ const createNewWorkflow = () => {
         ]"
       >
         <component :is="item.icon" class="w-5 h-5" />
-        <span>{{ item.name }}</span>
+        <span class="flex-1">{{ item.name }}</span>
+        <span
+          v-if="item.badge"
+          class="text-[10px] font-medium bg-violet-100 dark:bg-violet-900/50 text-violet-600 dark:text-violet-400 px-1.5 py-0.5 rounded"
+        >
+          {{ item.badge }}
+        </span>
       </RouterLink>
     </nav>
 
     <!-- Footer -->
     <div class="p-4 border-t border-slate-200 dark:border-slate-700">
       <div class="text-xs text-slate-500 dark:text-slate-400">
-        <div class="font-medium">n8n-go</div>
-        <div>v0.4.0</div>
+        <div class="font-medium">m9m</div>
+        <div>v1.0.0 - Agent Native</div>
       </div>
     </div>
   </aside>

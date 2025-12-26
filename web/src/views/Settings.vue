@@ -214,11 +214,11 @@ const changePassword = async () => {
       <div class="card p-6">
         <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">About</h2>
         <div class="space-y-2 text-sm text-slate-600 dark:text-slate-400">
-          <p><span class="font-medium">n8n-go</span> v0.4.0</p>
-          <p>High-performance workflow automation platform</p>
+          <p><span class="font-medium">m9m</span> v1.0.0</p>
+          <p>Agent-Native Workflow Automation Platform</p>
           <p class="mt-4">
             <a
-              href="https://github.com/yourusername/n8n-go"
+              href="https://github.com/dipankar/m9m"
               target="_blank"
               class="text-primary-600 dark:text-primary-400 hover:underline"
             >

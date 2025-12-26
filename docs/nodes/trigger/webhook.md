@@ -321,7 +321,7 @@ Validate incoming data:
 
 ### External Webhook Server
 
-n8n-go can integrate with external webhook servers:
+m9m can integrate with external webhook servers:
 
 ```go
 // Register webhook handler
@@ -335,10 +335,10 @@ server.RegisterWebhook(webhookInfo.Path, webhookInfo.Method, func(w http.Respons
 
 ### Built-in Server
 
-Use n8n-go's built-in webhook server:
+Use m9m's built-in webhook server:
 
 ```bash
-n8n-go server --webhook-port 3000 --webhook-path "/webhook"
+m9m server --webhook-port 3000 --webhook-path "/webhook"
 ```
 
 ## Performance
@@ -401,8 +401,8 @@ Webhook configuration is compatible with n8n:
 ### Migration Steps
 
 1. **Export webhook configuration** from n8n
-2. **Import unchanged** to n8n-go
-3. **Update webhook URLs** to point to n8n-go server
+2. **Import unchanged** to m9m
+3. **Update webhook URLs** to point to m9m server
 4. **Test webhook functionality**
 
 ## Troubleshooting

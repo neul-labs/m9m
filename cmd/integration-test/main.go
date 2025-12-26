@@ -9,12 +9,12 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/dipankar/n8n-go/internal/engine"
-	"github.com/dipankar/n8n-go/internal/model"
-	"github.com/dipankar/n8n-go/internal/nodes/core"
-	"github.com/dipankar/n8n-go/internal/nodes/transform"
-	"github.com/dipankar/n8n-go/internal/nodes/http"
-	"github.com/dipankar/n8n-go/internal/nodes/trigger"
+	"github.com/dipankar/m9m/internal/engine"
+	"github.com/dipankar/m9m/internal/model"
+	"github.com/dipankar/m9m/internal/nodes/core"
+	"github.com/dipankar/m9m/internal/nodes/transform"
+	"github.com/dipankar/m9m/internal/nodes/http"
+	"github.com/dipankar/m9m/internal/nodes/trigger"
 )
 
 func main() {

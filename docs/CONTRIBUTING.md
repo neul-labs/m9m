@@ -1,6 +1,6 @@
-# Contributing to n8n-go
+# Contributing to m9m
 
-We welcome contributions from the community! This guide will help you get started with contributing to n8n-go, whether you're fixing bugs, adding features, or improving documentation.
+We welcome contributions from the community! This guide will help you get started with contributing to m9m, whether you're fixing bugs, adding features, or improving documentation.
 
 ## Table of Contents
 
@@ -37,11 +37,11 @@ We welcome contributions from the community! This guide will help you get starte
 ### 1. Fork and Clone
 ```bash
 # Fork the repository on GitHub, then clone your fork
-git clone https://github.com/your-username/n8n-go.git
-cd n8n-go
+git clone https://github.com/your-username/m9m.git
+cd m9m
 
 # Add upstream remote
-git remote add upstream https://github.com/n8n-go/n8n-go.git
+git remote add upstream https://github.com/m9m/m9m.git
 ```
 
 ### 2. Install Dependencies
@@ -78,8 +78,8 @@ make dev
 cp config.example.yaml config.yaml
 
 # Set environment variables
-export N8N_GO_DEV_MODE=true
-export N8N_GO_LOG_LEVEL=debug
+export M9M_DEV_MODE=true
+export M9M_LOG_LEVEL=debug
 
 # Start with file watching
 make dev-watch
@@ -122,7 +122,7 @@ import (
 
     "github.com/external/package"
 
-    "github.com/n8n-go/internal/interfaces"
+    "github.com/m9m/internal/interfaces"
 )
 
 // Constants
@@ -179,7 +179,7 @@ func processData(data []byte) error {
 #### 5. Comments and Documentation
 ```go
 // Package comment explains the purpose
-// Package example provides example functionality for n8n-go workflows.
+// Package example provides example functionality for m9m workflows.
 package example
 
 // ExampleNode represents a workflow node that demonstrates best practices.
@@ -211,7 +211,7 @@ internal/
 └── credentials/    # Credential management
 
 cmd/
-└── n8n-go/        # Main application entry point
+└── m9m/        # Main application entry point
 
 docs/              # Documentation
 tests/             # Integration tests
@@ -399,8 +399,8 @@ package mynodes
 
 import (
     "context"
-    "github.com/n8n-go/internal/interfaces"
-    "github.com/n8n-go/internal/nodes/base"
+    "github.com/m9m/internal/interfaces"
+    "github.com/m9m/internal/nodes/base"
 )
 
 type MyCustomNode struct {
@@ -501,7 +501,7 @@ func TestMyCustomNode_Execute(t *testing.T) {
 ```
 
 ### 3. Node Registration
-Add your node to the registry in `cmd/n8n-go/main.go`:
+Add your node to the registry in `cmd/m9m/main.go`:
 
 ```go
 func registerNodeTypes(engine engine.WorkflowEngine) {
@@ -578,8 +578,8 @@ Contributors will be recognized in:
 
 ## License
 
-By contributing to n8n-go, you agree that your contributions will be licensed under the Apache 2.0 License.
+By contributing to m9m, you agree that your contributions will be licensed under the Apache 2.0 License.
 
 ---
 
-Thank you for contributing to n8n-go! Your efforts help make workflow automation better for everyone.
+Thank you for contributing to m9m! Your efforts help make workflow automation better for everyone.

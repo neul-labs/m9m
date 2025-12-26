@@ -3,7 +3,7 @@
   "name": "CSV Data Processing Pipeline",
   "description": "A comprehensive data processing template that reads CSV files, transforms data, validates records, and outputs to multiple formats. Includes error handling, data quality checks, and customizable transformation rules.",
   "version": "1.2.0",
-  "author": "n8n-go Team",
+  "author": "m9m Team",
   "category": "data-processing",
   "tags": ["csv", "data", "transform", "validation", "etl", "pipeline"],
   "parameters": {
@@ -447,8 +447,8 @@
       "screenshots/data-processing-config.png",
       "screenshots/data-processing-validation.png"
     ],
-    "documentation": "https://docs.n8n-go.dev/templates/data-processing-pipeline",
-    "repository": "https://github.com/n8n-go/templates",
+    "documentation": "https://docs.m9m.dev/templates/data-processing-pipeline",
+    "repository": "https://github.com/m9m/templates",
     "license": "MIT",
     "keywords": [
       "etl",

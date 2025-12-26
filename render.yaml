@@ -1,0 +1,43 @@
+# render.yaml - Render.com deployment configuration for m9m
+# Deploy with: Connect your GitHub repo to Render
+
+services:
+  - type: web
+    name: m9m
+    env: docker
+    dockerfilePath: ./Dockerfile
+    dockerCommand: ./m9m --mode control
+    region: oregon
+    plan: starter
+    healthCheckPath: /health
+    envVars:
+      - key: M9M_PORT
+        value: 8080
+      - key: M9M_HOST
+        value: 0.0.0.0
+      - key: M9M_LOG_LEVEL
+        value: info
+      - key: M9M_DB_TYPE
+        value: sqlite
+      - key: M9M_COPILOT_PROVIDER
+        sync: false
+      - key: M9M_COPILOT_API_KEY
+        sync: false
+
+  # Optional: PostgreSQL database
+  # - type: pserv
+  #   name: m9m-db
+  #   env: docker
+  #   dockerfilePath: ./Dockerfile
+  #   plan: starter
+  #   disk:
+  #     name: m9m-data
+  #     mountPath: /data
+  #     sizeGB: 10
+
+databases:
+  - name: m9m-postgres
+    plan: starter
+    databaseName: m9m
+    user: m9m
+    ipAllowList: []

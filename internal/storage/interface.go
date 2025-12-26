@@ -3,7 +3,7 @@ package storage
 import (
 	"time"
 
-	"github.com/dipankar/n8n-go/internal/model"
+	"github.com/dipankar/m9m/internal/model"
 )
 
 // WorkflowStorage defines the interface for workflow persistence

@@ -1,4 +1,4 @@
-# n8n-go Hybrid Architecture Design
+# m9m Hybrid Architecture Design
 
 ## Overview
 
@@ -266,21 +266,21 @@ Workers can be specialized for different workload types:
 
 **CPU-Heavy Workers**:
 ```bash
-./n8n-go-worker --type=cpu --max-concurrent=5
+./m9m-worker --type=cpu --max-concurrent=5
 ```
 - Execute compute-intensive workflows
 - Lower concurrency, higher CPU allocation
 
 **I/O-Heavy Workers**:
 ```bash
-./n8n-go-worker --type=io --max-concurrent=50
+./m9m-worker --type=io --max-concurrent=50
 ```
 - Execute HTTP requests, database queries
 - Higher concurrency, lower CPU needs
 
 **Mixed Workers** (default):
 ```bash
-./n8n-go-worker --max-concurrent=20
+./m9m-worker --max-concurrent=20
 ```
 - Handle all workflow types
 
@@ -382,16 +382,16 @@ GET /api/v1/workers/{id}/metrics
 
 ```bash
 # Control Plane
-./n8n-go --cluster --node-id=control1 ...
-./n8n-go --cluster --node-id=control2 ...
-./n8n-go --cluster --node-id=control3 ...
+./m9m --cluster --node-id=control1 ...
+./m9m --cluster --node-id=control2 ...
+./m9m --cluster --node-id=control3 ...
 
 # Workers
-./n8n-go-worker --id=worker1 --control=control1:9000,control2:9000,control3:9000
-./n8n-go-worker --id=worker2 ...
-./n8n-go-worker --id=worker3 ...
-./n8n-go-worker --id=worker4 ...
-./n8n-go-worker --id=worker5 ...
+./m9m-worker --id=worker1 --control=control1:9000,control2:9000,control3:9000
+./m9m-worker --id=worker2 ...
+./m9m-worker --id=worker3 ...
+./m9m-worker --id=worker4 ...
+./m9m-worker --id=worker5 ...
 ```
 
 ### Medium Deployment (5 control + 25 workers)
@@ -428,7 +428,7 @@ GET /api/v1/workers/{id}/metrics
    - Worker health monitoring
    - Load balancing
 
-5. **`cmd/n8n-go-worker/main.go`**
+5. **`cmd/m9m-worker/main.go`**
    - Worker binary entry point
    - Configuration and initialization
 

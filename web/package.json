@@ -1,7 +1,7 @@
 {
-  "name": "n8n-go-web",
+  "name": "m9m-web",
   "version": "0.1.0",
-  "description": "Modern workflow automation frontend for n8n-go",
+  "description": "Modern workflow automation frontend for m9m",
   "type": "module",
   "scripts": {
     "dev": "vite",

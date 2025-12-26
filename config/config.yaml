@@ -1,4 +1,4 @@
-# n8n-go Configuration File
+# m9m Configuration File
 # This is a template - copy to config/config.yaml and customize
 
 # Server Configuration
@@ -69,7 +69,7 @@ logging:
   format: "json"  # json or text
   output: "stdout"  # stdout, stderr, or file path
   file:
-    path: "/app/logs/n8n-go.log"
+    path: "/app/logs/m9m.log"
     max_size: 100  # MB
     max_backups: 3
     max_age: 28  # days

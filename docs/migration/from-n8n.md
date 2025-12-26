@@ -1,10 +1,10 @@
-# Migration Guide: From n8n to n8n-go
+# Migration Guide: From n8n to m9m
 
-This comprehensive guide will help you migrate from n8n to n8n-go, ensuring a smooth transition while taking advantage of significant performance improvements and enhanced features.
+This comprehensive guide will help you migrate from n8n to m9m, ensuring a smooth transition while taking advantage of significant performance improvements and enhanced features.
 
 ## Overview
 
-n8n-go is a high-performance, Go-based implementation of the n8n workflow automation platform that provides:
+m9m is a high-performance, Go-based implementation of the n8n workflow automation platform that provides:
 
 - **100% Compatibility**: All existing n8n workflows work unchanged
 - **10-20x Performance**: Faster workflow execution with lower resource usage
@@ -16,7 +16,7 @@ n8n-go is a high-performance, Go-based implementation of the n8n workflow automa
 
 ### Compatibility Check
 
-n8n-go is compatible with:
+m9m is compatible with:
 - ✅ All n8n workflow JSON files
 - ✅ All expression syntax and functions
 - ✅ All built-in node types
@@ -27,14 +27,14 @@ n8n-go is compatible with:
 ### Current Limitations
 
 Before migrating, be aware of these current limitations:
-- ❌ Custom community nodes (n8n-go uses built-in nodes only)
+- ❌ Custom community nodes (m9m uses built-in nodes only)
 - ❌ n8n Cloud specific features
 - ❌ Database sharing with existing n8n instance
-- ❌ n8n UI (n8n-go focuses on execution engine)
+- ❌ n8n UI (m9m focuses on execution engine)
 
 ### Performance Comparison
 
-| Metric | n8n | n8n-go | Improvement |
+| Metric | n8n | m9m | Improvement |
 |--------|-----|---------|-------------|
 | Workflow Execution | 500/sec | 9,000/sec | 18x faster |
 | Expression Evaluation | 10K/sec | 180K/sec | 18x faster |
@@ -75,27 +75,27 @@ TO '/tmp/workflows.csv' WITH CSV HEADER;
 SELECT name, workflow FROM workflow_entity WHERE active = true;
 ```
 
-### Step 2: Install n8n-go
+### Step 2: Install m9m
 
 #### Download Pre-built Binary
 ```bash
 # Linux x86_64
-curl -L https://github.com/n8n-go/n8n-go/releases/latest/download/n8n-go-linux-amd64 -o n8n-go
-chmod +x n8n-go
+curl -L https://github.com/m9m/m9m/releases/latest/download/m9m-linux-amd64 -o m9m
+chmod +x m9m
 
 # macOS
-curl -L https://github.com/n8n-go/n8n-go/releases/latest/download/n8n-go-darwin-amd64 -o n8n-go
-chmod +x n8n-go
+curl -L https://github.com/m9m/m9m/releases/latest/download/m9m-darwin-amd64 -o m9m
+chmod +x m9m
 
 # Windows
-curl -L https://github.com/n8n-go/n8n-go/releases/latest/download/n8n-go-windows-amd64.exe -o n8n-go.exe
+curl -L https://github.com/m9m/m9m/releases/latest/download/m9m-windows-amd64.exe -o m9m.exe
 ```
 
 #### Build from Source
 ```bash
-git clone https://github.com/n8n-go/n8n-go.git
-cd n8n-go
-go build -o n8n-go cmd/n8n-go/main.go
+git clone https://github.com/m9m/m9m.git
+cd m9m
+go build -o m9m cmd/m9m/main.go
 ```
 
 ### Step 3: Validate Workflows
@@ -104,25 +104,25 @@ Run the validation tool to check workflow compatibility:
 
 ```bash
 # Validate single workflow
-./n8n-go validate --workflow ./workflows/my-workflow.json
+./m9m validate --workflow ./workflows/my-workflow.json
 
 # Validate all workflows in directory
-./n8n-go validate --directory ./workflows/
+./m9m validate --directory ./workflows/
 
 # Validate with detailed output
-./n8n-go validate --directory ./workflows/ --verbose
+./m9m validate --directory ./workflows/ --verbose
 ```
 
 ### Step 4: Convert Credentials (if needed)
 
-n8n-go uses the same credential format as n8n, but you may need to extract them:
+m9m uses the same credential format as n8n, but you may need to extract them:
 
 ```bash
 # Export credentials from n8n
 n8n export:credentials --output=./credentials.json
 
-# Convert to n8n-go format (if needed)
-./n8n-go convert:credentials --input ./credentials.json --output ./credentials/
+# Convert to m9m format (if needed)
+./m9m convert:credentials --input ./credentials.json --output ./credentials/
 ```
 
 ### Step 5: Test Workflow Execution
@@ -131,51 +131,51 @@ Execute workflows to ensure they work correctly:
 
 ```bash
 # Execute single workflow
-./n8n-go execute --workflow ./workflows/my-workflow.json
+./m9m execute --workflow ./workflows/my-workflow.json
 
 # Execute with test data
-./n8n-go execute --workflow ./workflows/data-processing.json --input ./test-data.json
+./m9m execute --workflow ./workflows/data-processing.json --input ./test-data.json
 
 # Execute with environment variables
 export API_KEY="your-api-key"
-./n8n-go execute --workflow ./workflows/api-workflow.json
+./m9m execute --workflow ./workflows/api-workflow.json
 
 # Dry run mode (validate without execution)
-./n8n-go execute --workflow ./workflows/my-workflow.json --dry-run
+./m9m execute --workflow ./workflows/my-workflow.json --dry-run
 ```
 
 ### Step 6: Performance Testing
 
-Compare performance between n8n and n8n-go:
+Compare performance between n8n and m9m:
 
 ```bash
 # Run performance benchmark
-./n8n-go benchmark --workflow ./workflows/complex-workflow.json --iterations 1000
+./m9m benchmark --workflow ./workflows/complex-workflow.json --iterations 1000
 
 # Compare with n8n timing
-./n8n-go benchmark --compare-with-n8n --workflow ./workflows/my-workflow.json
+./m9m benchmark --compare-with-n8n --workflow ./workflows/my-workflow.json
 ```
 
 ### Step 7: Production Deployment
 
-Deploy n8n-go in your production environment:
+Deploy m9m in your production environment:
 
 ```bash
 # Run as webhook server
-./n8n-go server --port 3000 --webhook-path "/webhook"
+./m9m server --port 3000 --webhook-path "/webhook"
 
 # Run specific workflow
-./n8n-go execute --workflow ./workflows/production-workflow.json
+./m9m execute --workflow ./workflows/production-workflow.json
 
 # Run with configuration file
-./n8n-go --config ./config.yaml execute --workflow ./workflows/my-workflow.json
+./m9m --config ./config.yaml execute --workflow ./workflows/my-workflow.json
 ```
 
 ## Configuration Migration
 
 ### Environment Variables
 
-n8n-go supports the same environment variable patterns as n8n:
+m9m supports the same environment variable patterns as n8n:
 
 ```bash
 # Database connection (if using external storage)
@@ -204,7 +204,7 @@ export EXECUTIONS_MAX_TIMEOUT=3600
 
 ### Configuration File
 
-Create a `config.yaml` file for n8n-go:
+Create a `config.yaml` file for m9m:
 
 ```yaml
 database:
@@ -247,14 +247,14 @@ For basic workflows with standard nodes:
 # 1. Export from n8n
 n8n export:workflow --output=simple-workflow.json --id=123
 
-# 2. Validate in n8n-go
-./n8n-go validate --workflow simple-workflow.json
+# 2. Validate in m9m
+./m9m validate --workflow simple-workflow.json
 
 # 3. Test execution
-./n8n-go execute --workflow simple-workflow.json
+./m9m execute --workflow simple-workflow.json
 
 # 4. Deploy
-./n8n-go server --workflows ./workflows/
+./m9m server --workflows ./workflows/
 ```
 
 ### Scenario 2: Webhook-based Workflows
@@ -265,11 +265,11 @@ For workflows triggered by webhooks:
 # 1. Export webhook workflow
 n8n export:workflow --output=webhook-workflow.json --id=456
 
-# 2. Update webhook URLs to point to n8n-go
+# 2. Update webhook URLs to point to m9m
 # Edit webhook-workflow.json if needed
 
-# 3. Start n8n-go webhook server
-./n8n-go server --port 3000
+# 3. Start m9m webhook server
+./m9m server --port 3000
 
 # 4. Test webhook endpoint
 curl -X POST http://localhost:3000/webhook/test \
@@ -287,10 +287,10 @@ n8n export:workflow --output=scheduled-workflow.json --id=789
 
 # 2. Set up cron job to execute workflow
 crontab -e
-# Add: 0 9 * * * /path/to/n8n-go execute --workflow /path/to/scheduled-workflow.json
+# Add: 0 9 * * * /path/to/m9m execute --workflow /path/to/scheduled-workflow.json
 
-# Or use n8n-go built-in scheduler
-./n8n-go scheduler --workflows ./workflows/
+# Or use m9m built-in scheduler
+./m9m scheduler --workflows ./workflows/
 ```
 
 ### Scenario 4: API Integration Workflows
@@ -306,10 +306,10 @@ export API_KEY="your-api-key"
 export API_SECRET="your-api-secret"
 
 # 3. Test API connections
-./n8n-go execute --workflow api-workflow.json --validate-credentials
+./m9m execute --workflow api-workflow.json --validate-credentials
 
 # 4. Deploy with proper credentials
-./n8n-go execute --workflow api-workflow.json
+./m9m execute --workflow api-workflow.json
 ```
 
 ## Advanced Migration Topics
@@ -318,7 +318,7 @@ export API_SECRET="your-api-secret"
 
 If you're using custom nodes, find equivalent built-in nodes or expressions:
 
-| Custom Node | n8n-go Equivalent | Migration Strategy |
+| Custom Node | m9m Equivalent | Migration Strategy |
 |-------------|-------------------|-------------------|
 | Custom HTTP | HTTP Request Node | Use built-in HTTP node |
 | Custom JSON | JSON + Set Nodes | Use expression equivalents |
@@ -327,7 +327,7 @@ If you're using custom nodes, find equivalent built-in nodes or expressions:
 
 ### Expression Migration
 
-All n8n expressions work in n8n-go without changes:
+All n8n expressions work in m9m without changes:
 
 ```javascript
 // These work identically in both systems
@@ -339,7 +339,7 @@ All n8n expressions work in n8n-go without changes:
 
 ### Error Handling Migration
 
-n8n-go provides enhanced error handling:
+m9m provides enhanced error handling:
 
 ```json
 {
@@ -367,13 +367,13 @@ for workflow in ./workflows/*.json; do
     echo "Testing $workflow..."
 
     # Validate workflow
-    if ! ./n8n-go validate --workflow "$workflow"; then
+    if ! ./m9m validate --workflow "$workflow"; then
         echo "❌ Validation failed for $workflow"
         exit 1
     fi
 
     # Test execution (dry run)
-    if ! ./n8n-go execute --workflow "$workflow" --dry-run; then
+    if ! ./m9m execute --workflow "$workflow" --dry-run; then
         echo "❌ Execution test failed for $workflow"
         exit 1
     fi
@@ -390,10 +390,10 @@ Compare performance before and after migration:
 
 ```bash
 # Create performance test
-./n8n-go benchmark --workflow ./workflows/performance-test.json --output results.json
+./m9m benchmark --workflow ./workflows/performance-test.json --output results.json
 
 # Compare results
-echo "n8n-go Performance Results:"
+echo "m9m Performance Results:"
 cat results.json | jq '.executionsPerSecond'
 ```
 
@@ -404,7 +404,7 @@ cat results.json | jq '.executionsPerSecond'
 #### Issue: Workflow validation fails
 ```bash
 # Solution: Check for unsupported nodes
-./n8n-go validate --workflow workflow.json --verbose
+./m9m validate --workflow workflow.json --verbose
 
 # Look for error details and replace unsupported nodes
 ```
@@ -412,7 +412,7 @@ cat results.json | jq '.executionsPerSecond'
 #### Issue: Expressions not working
 ```bash
 # Solution: Test expression syntax
-./n8n-go test-expression "{{ \$json.field }}"
+./m9m test-expression "{{ \$json.field }}"
 
 # Check for syntax differences
 ```
@@ -420,7 +420,7 @@ cat results.json | jq '.executionsPerSecond'
 #### Issue: Webhook not receiving requests
 ```bash
 # Solution: Check webhook configuration
-./n8n-go server --port 3000 --debug
+./m9m server --port 3000 --debug
 
 # Verify webhook URLs and authentication
 ```
@@ -428,18 +428,18 @@ cat results.json | jq '.executionsPerSecond'
 #### Issue: Performance not as expected
 ```bash
 # Solution: Enable optimization flags
-./n8n-go execute --workflow workflow.json --optimize
+./m9m execute --workflow workflow.json --optimize
 
 # Check resource usage
-./n8n-go execute --workflow workflow.json --profile
+./m9m execute --workflow workflow.json --profile
 ```
 
 ### Getting Help
 
 If you encounter issues during migration:
 
-1. **Check Documentation**: Visit [docs.n8n-go.com](https://docs.n8n-go.com)
-2. **GitHub Issues**: Report bugs at [github.com/n8n-go/n8n-go/issues](https://github.com/n8n-go/n8n-go/issues)
+1. **Check Documentation**: Visit [docs.m9m.com](https://docs.m9m.com)
+2. **GitHub Issues**: Report bugs at [github.com/m9m/m9m/issues](https://github.com/m9m/m9m/issues)
 3. **Community Support**: Join the community forum
 4. **Professional Support**: Contact for enterprise migration assistance
 
@@ -447,13 +447,13 @@ If you encounter issues during migration:
 
 ### Monitoring and Observability
 
-Set up monitoring for your n8n-go deployment:
+Set up monitoring for your m9m deployment:
 
 ```yaml
 # monitoring.yaml
 logging:
   level: info
-  output: /var/log/n8n-go.log
+  output: /var/log/m9m.log
 
 metrics:
   enabled: true
@@ -481,7 +481,7 @@ cp -r ./workflows/ ./backups/workflows-$(date +%Y%m%d)/
 cp config.yaml ./backups/config-$(date +%Y%m%d).yaml
 
 # Backup credentials (encrypted)
-./n8n-go export:credentials --output ./backups/credentials-$(date +%Y%m%d).json
+./m9m export:credentials --output ./backups/credentials-$(date +%Y%m%d).json
 ```
 
 ### Security Hardening
@@ -498,8 +498,8 @@ chmod 600 config.yaml
 chmod 700 ./workflows/
 
 # Run with limited privileges
-useradd -r -s /bin/false n8n-go
-sudo -u n8n-go ./n8n-go server
+useradd -r -s /bin/false m9m
+sudo -u m9m ./m9m server
 ```
 
 ## Migration Checklist
@@ -511,10 +511,10 @@ Use this checklist to ensure complete migration:
 - [ ] Export credentials and configurations
 - [ ] Document custom nodes and their functionality
 - [ ] Create test data for validation
-- [ ] Set up n8n-go development environment
+- [ ] Set up m9m development environment
 
 ### Migration
-- [ ] Install n8n-go
+- [ ] Install m9m
 - [ ] Validate all exported workflows
 - [ ] Test workflow execution with sample data
 - [ ] Convert credentials if necessary
@@ -538,12 +538,12 @@ Use this checklist to ensure complete migration:
 ### Post-Migration
 - [ ] Monitor performance metrics
 - [ ] Validate all workflows in production
-- [ ] Train team on n8n-go differences
+- [ ] Train team on m9m differences
 - [ ] Document any migration-specific changes
 - [ ] Plan for ongoing maintenance
 
 ## Conclusion
 
-Migrating from n8n to n8n-go provides significant performance improvements while maintaining 100% compatibility with your existing workflows. Follow this guide step-by-step to ensure a smooth transition and take advantage of n8n-go's enhanced capabilities.
+Migrating from n8n to m9m provides significant performance improvements while maintaining 100% compatibility with your existing workflows. Follow this guide step-by-step to ensure a smooth transition and take advantage of m9m's enhanced capabilities.
 
-For additional support or questions about your specific migration scenario, please refer to the documentation or contact the n8n-go community.
+For additional support or questions about your specific migration scenario, please refer to the documentation or contact the m9m community.

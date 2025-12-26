@@ -1,10 +1,10 @@
-# n8n-go Plugin System
+# m9m Plugin System
 
-The n8n-go plugin system allows you to extend n8n-go with custom nodes without recompiling the core application. This provides flexibility to add domain-specific functionality, integrate with proprietary systems, or rapidly prototype new nodes.
+The m9m plugin system allows you to extend m9m with custom nodes without recompiling the core application. This provides flexibility to add domain-specific functionality, integrate with proprietary systems, or rapidly prototype new nodes.
 
 ## Supported Plugin Types
 
-n8n-go supports three types of plugins:
+m9m supports three types of plugins:
 
 1. **JavaScript Plugins** - Write nodes in JavaScript using a familiar Node.js-like API
 2. **gRPC Plugins** - Connect to external services via gRPC for distributed node execution
@@ -14,10 +14,10 @@ n8n-go supports three types of plugins:
 
 ### Loading Plugins
 
-Start n8n-go with the `--plugin-dir` flag to specify the directory containing your plugins:
+Start m9m with the `--plugin-dir` flag to specify the directory containing your plugins:
 
 ```bash
-./n8n-go --plugin-dir ./plugins/examples
+./m9m --plugin-dir ./plugins/examples
 ```
 
 The plugin system will automatically discover and load all plugins in the directory:
@@ -143,7 +143,7 @@ See [examples/textTransform.js](examples/textTransform.js) for a complete workin
 1. **Always return an array** - Even for single items, return `[item]`
 2. **Preserve binary data** - Copy `item.binary` to output if present
 3. **Handle errors gracefully** - Use try-catch and return meaningful errors
-4. **Use console.log for debugging** - Logs appear in n8n-go output
+4. **Use console.log for debugging** - Logs appear in m9m output
 5. **Validate inputs** - Check parameter types and required fields
 6. **Keep it simple** - Complex logic should use gRPC/REST plugins
 
@@ -452,10 +452,10 @@ Write your plugin code (see examples above).
 
 ### 3. Test Plugin
 
-Start n8n-go with your plugin directory:
+Start m9m with your plugin directory:
 
 ```bash
-./n8n-go --plugin-dir ./plugins
+./m9m --plugin-dir ./plugins
 ```
 
 Check the logs for successful loading:
@@ -490,16 +490,16 @@ Use console.log in JavaScript plugins:
 console.log("Debug info:", parameters);
 ```
 
-Check n8n-go logs for plugin errors:
+Check m9m logs for plugin errors:
 ```bash
-./n8n-go --plugin-dir ./plugins 2>&1 | grep -i error
+./m9m --plugin-dir ./plugins 2>&1 | grep -i error
 ```
 
 ## Advanced Topics
 
 ### Hot Reloading
 
-Plugin hot-reloading allows you to update plugins without restarting n8n-go. This is particularly useful during development and for updating plugins in production.
+Plugin hot-reloading allows you to update plugins without restarting m9m. This is particularly useful during development and for updating plugins in production.
 
 **HTTP API Endpoints:**
 
@@ -585,7 +585,7 @@ headers:
 Set environment variables before starting:
 ```bash
 export API_TOKEN=your-token-here
-./n8n-go --plugin-dir ./plugins
+./m9m --plugin-dir ./plugins
 ```
 
 ### Error Handling
@@ -640,7 +640,7 @@ execute: function(inputData, parameters) {
 
 **Check logs:**
 ```bash
-./n8n-go --plugin-dir ./plugins 2>&1 | grep -i "plugin"
+./m9m --plugin-dir ./plugins 2>&1 | grep -i "plugin"
 ```
 
 **Common issues:**
@@ -705,7 +705,7 @@ curl -X POST http://localhost:8090/api/node/execute \
 
 ## Security Considerations
 
-1. **JavaScript plugins run in-process** - They have access to the same resources as n8n-go
+1. **JavaScript plugins run in-process** - They have access to the same resources as m9m
 2. **Validate all inputs** - Never trust user-provided parameters
 3. **Use HTTPS for REST APIs** - Encrypt data in transit
 4. **Use TLS for gRPC** - Enable secure connections in production
@@ -733,7 +733,7 @@ We welcome plugin contributions! To share your plugins:
 
 1. Test your plugin thoroughly
 2. Add documentation and examples
-3. Submit a pull request to the [n8n-go-plugins](https://github.com/dipankar/n8n-go-plugins) repository
+3. Submit a pull request to the [m9m-plugins](https://github.com/dipankar/m9m-plugins) repository
 
 ## Support
 

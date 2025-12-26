@@ -8,14 +8,16 @@ import (
 	"sync"
 	"time"
 
+	"github.com/dipankar/m9m/internal/engine"
+	"github.com/dipankar/m9m/internal/model"
+	"github.com/dipankar/m9m/internal/storage"
 	"github.com/robfig/cron/v3"
-	"github.com/dipankar/n8n-go/internal/engine"
-	"github.com/dipankar/n8n-go/internal/model"
 )
 
 // WorkflowScheduler manages scheduled workflow executions
 type WorkflowScheduler struct {
 	engine       engine.WorkflowEngine
+	storage      storage.WorkflowStorage
 	schedules    map[string]*ScheduleConfig
 	cronJobs     map[string]*cron.Cron
 	executions   map[string]*ExecutionHistory
@@ -104,6 +106,11 @@ func NewWorkflowScheduler(eng engine.WorkflowEngine) *WorkflowScheduler {
 		cancel:     cancel,
 		metrics:    &SchedulerMetrics{},
 	}
+}
+
+// SetStorage sets the workflow storage for loading workflows
+func (s *WorkflowScheduler) SetStorage(store storage.WorkflowStorage) {
+	s.storage = store
 }
 
 // Start initializes and starts the scheduler
@@ -586,11 +593,12 @@ func (s *WorkflowScheduler) recalculateAverageTime(history *ExecutionHistory) {
 	}
 }
 
-// loadWorkflow loads a workflow by ID (placeholder implementation)
+// loadWorkflow loads a workflow by ID from storage
 func (s *WorkflowScheduler) loadWorkflow(workflowID string) (*model.Workflow, error) {
-	// TODO: Implement actual workflow loading from storage
-	// This is a placeholder that should be replaced with actual workflow loading logic
-	return nil, fmt.Errorf("workflow loading not implemented")
+	if s.storage == nil {
+		return nil, fmt.Errorf("storage not configured - call SetStorage first")
+	}
+	return s.storage.GetWorkflow(workflowID)
 }
 
 // metricsCollector runs periodic metrics collection

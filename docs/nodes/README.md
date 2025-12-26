@@ -1,6 +1,6 @@
-# n8n-go Node Documentation
+# m9m Node Documentation
 
-This directory contains comprehensive documentation for all node types available in n8n-go.
+This directory contains comprehensive documentation for all node types available in m9m.
 
 ## Node Categories
 
@@ -100,7 +100,7 @@ return nil, n.CreateError("descriptive error message", map[string]interface{}{
 
 ## Expression Compatibility
 
-n8n-go provides 100% compatibility with n8n expressions:
+m9m provides 100% compatibility with n8n expressions:
 
 ### Variable Access
 - `$json` - Current item JSON data

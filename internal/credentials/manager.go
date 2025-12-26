@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/dipankar/n8n-go/internal/model"
+	"github.com/dipankar/m9m/internal/model"
 )
 
 // CredentialManager manages credentials for workflow nodes

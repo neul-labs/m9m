@@ -2,28 +2,32 @@ package code
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strings"
 
-	"github.com/dipankar/n8n-go/internal/nodes/base"
-	"github.com/dipankar/n8n-go/internal/runtime"
+	"github.com/dipankar/m9m/internal/model"
+	"github.com/dipankar/m9m/internal/nodes/base"
+	"github.com/dipankar/m9m/internal/runtime"
 )
 
 // PythonCodeNode executes Python code with n8n compatibility
 type PythonCodeNode struct {
 	*base.BaseNode
-	pythonRuntime *runtime.EmbeddedPythonRuntime
+	pythonRuntime *runtime.PythonRuntime
 }
 
 // NewPythonCodeNode creates a new Python code execution node
 func NewPythonCodeNode() *PythonCodeNode {
 	node := &PythonCodeNode{
-		BaseNode: base.NewBaseNode(base.NodeDescription{Name: "PythonCode", Description: "Execute Python Code", Category: "core"}),
+		BaseNode: base.NewBaseNode(base.NodeDescription{
+			Name:        "PythonCode",
+			Description: "Execute Python code with n8n compatibility",
+			Category:    "code",
+		}),
 	}
 
-	// Initialize embedded Python runtime
-	pyRuntime, err := runtime.NewEmbeddedPythonRuntime()
+	// Initialize Python runtime
+	pyRuntime, err := runtime.NewPythonRuntime()
 	if err != nil {
 		// Log error but continue - will handle in Execute
 		node.pythonRuntime = nil
@@ -34,110 +38,69 @@ func NewPythonCodeNode() *PythonCodeNode {
 	return node
 }
 
-// GetMetadata returns the node metadata
-func (n *PythonCodeNode) GetMetadata() base.NodeMetadata {
-	return base.NodeMetadata{
-		Name:        "PythonCode",
-		DisplayName: "Python Code",
-		Description: "Execute Python code with n8n compatibility",
-		Group:       []string{"Code"},
-		Version:     1,
-		Inputs:      []string{"main"},
-		Outputs:     []string{"main"},
-		Credentials: []base.CredentialType{},
-		Properties: []base.NodeProperty{
-			{
-				Name:        "pythonCode",
-				DisplayName: "Python Code",
-				Type:        "string",
-				TypeOptions: map[string]interface{}{
-					"editor": "code",
-					"editorLanguage": "python",
-				},
-				Default:     "# Python code with n8n helpers\n# Access input data: $input or $json\n# Return data: return {...}\n\nfor item in $input:\n    # Process each item\n    item['processed'] = True\n\nreturn $input",
-				Required:    true,
-				Description: "The Python code to execute. You can access $input, $json, $node, $workflow",
-			},
-			{
-				Name:        "mode",
-				DisplayName: "Mode",
-				Type:        "options",
-				Options: []base.OptionItem{
-					{Name: "Run Once for All Items", Value: "runOnce"},
-					{Name: "Run Once for Each Item", Value: "runForEach"},
-				},
-				Default:     "runOnce",
-				Description: "How to run the Python code",
-			},
-			{
-				Name:        "continueOnFail",
-				DisplayName: "Continue On Fail",
-				Type:        "boolean",
-				Default:     false,
-				Description: "Whether to continue execution when the code fails",
-			},
-		},
-	}
-}
-
 // Execute runs the Python code
-func (n *PythonCodeNode) Execute(ctx context.Context, params base.ExecutionParams) (base.NodeOutput, error) {
+func (n *PythonCodeNode) Execute(inputData []model.DataItem, nodeParams map[string]interface{}) ([]model.DataItem, error) {
 	if n.pythonRuntime == nil {
 		// Try to initialize runtime if it failed during construction
-		pyRuntime, err := runtime.NewEmbeddedPythonRuntime()
+		pyRuntime, err := runtime.NewPythonRuntime()
 		if err != nil {
-			return base.NodeOutput{}, fmt.Errorf("failed to initialize Python runtime: %w", err)
+			return nil, fmt.Errorf("failed to initialize Python runtime: %w", err)
 		}
 		n.pythonRuntime = pyRuntime
+
+		// Initialize the runtime
+		if err := n.pythonRuntime.Initialize(context.Background()); err != nil {
+			return nil, fmt.Errorf("failed to initialize Python runtime: %w", err)
+		}
 	}
 
 	// Get parameters
-	pythonCode := params.GetNodeParameter("pythonCode", "").(string)
-	mode := params.GetNodeParameter("mode", "runOnce").(string)
-	continueOnFail := params.GetNodeParameter("continueOnFail", false).(bool)
-
-	// Get input data
-	input := params.GetInputData()
-	if len(input) == 0 {
-		input = []base.ItemData{{JSON: map[string]interface{}{}}}
+	pythonCode, _ := nodeParams["pythonCode"].(string)
+	if pythonCode == "" {
+		pythonCode = "return $input"
 	}
 
-	var outputItems []base.ItemData
+	mode, _ := nodeParams["mode"].(string)
+	if mode == "" {
+		mode = "runOnce"
+	}
+
+	continueOnFail, _ := nodeParams["continueOnFail"].(bool)
+
+	var outputItems []model.DataItem
 
 	if mode == "runOnce" {
 		// Run once for all items
-		allItems := make([]interface{}, len(input))
-		for i, item := range input {
+		allItems := make([]interface{}, len(inputData))
+		for i, item := range inputData {
 			allItems[i] = item.JSON
 		}
 
 		// Execute Python code
 		result, err := n.pythonRuntime.Execute(pythonCode, allItems, map[string]interface{}{
-			"mode":     mode,
-			"workflow": params.GetWorkflow(),
-			"node":     n.GetMetadata(),
+			"mode": mode,
 		})
 
 		if err != nil {
 			if continueOnFail {
 				// Return error as data
-				outputItems = append(outputItems, base.ItemData{
+				outputItems = append(outputItems, model.DataItem{
 					JSON: map[string]interface{}{
 						"error": err.Error(),
 					},
 				})
 			} else {
-				return base.NodeOutput{}, fmt.Errorf("Python execution failed: %w", err)
+				return nil, fmt.Errorf("Python execution failed: %w", err)
 			}
 		} else if result.Type == "error" {
 			if continueOnFail {
-				outputItems = append(outputItems, base.ItemData{
+				outputItems = append(outputItems, model.DataItem{
 					JSON: map[string]interface{}{
 						"error": result.Error,
 					},
 				})
 			} else {
-				return base.NodeOutput{}, fmt.Errorf("Python code error: %s", result.Error)
+				return nil, fmt.Errorf("Python code error: %s", result.Error)
 			}
 		} else {
 			// Process result
@@ -147,73 +110,65 @@ func (n *PythonCodeNode) Execute(ctx context.Context, params base.ExecutionParam
 					// Multiple items returned
 					for _, item := range v {
 						if itemMap, ok := item.(map[string]interface{}); ok {
-							outputItems = append(outputItems, base.ItemData{JSON: itemMap})
+							outputItems = append(outputItems, model.DataItem{JSON: itemMap})
 						} else {
-							outputItems = append(outputItems, base.ItemData{
+							outputItems = append(outputItems, model.DataItem{
 								JSON: map[string]interface{}{"value": item},
 							})
 						}
 					}
 				case map[string]interface{}:
 					// Single object returned
-					outputItems = append(outputItems, base.ItemData{JSON: v})
+					outputItems = append(outputItems, model.DataItem{JSON: v})
 				default:
 					// Primitive value returned
-					outputItems = append(outputItems, base.ItemData{
+					outputItems = append(outputItems, model.DataItem{
 						JSON: map[string]interface{}{"value": v},
 					})
 				}
 			} else {
 				// No output, pass through input
-				outputItems = input
+				outputItems = inputData
 			}
 		}
 	} else {
 		// Run once for each item
-		for _, item := range input {
+		for i, item := range inputData {
 			result, err := n.pythonRuntime.Execute(pythonCode, item.JSON, map[string]interface{}{
-				"mode":     mode,
-				"workflow": params.GetWorkflow(),
-				"node":     n.GetMetadata(),
-				"index":    item.Index,
+				"mode":  mode,
+				"index": i,
 			})
 
 			if err != nil {
 				if continueOnFail {
-					outputItems = append(outputItems, base.ItemData{
+					outputItems = append(outputItems, model.DataItem{
 						JSON: map[string]interface{}{
-							"error": err.Error(),
+							"error":        err.Error(),
 							"originalItem": item.JSON,
 						},
-						Index: item.Index,
 					})
 				} else {
-					return base.NodeOutput{}, fmt.Errorf("Python execution failed for item %d: %w", item.Index, err)
+					return nil, fmt.Errorf("Python execution failed for item %d: %w", i, err)
 				}
 			} else if result.Type == "error" {
 				if continueOnFail {
-					outputItems = append(outputItems, base.ItemData{
+					outputItems = append(outputItems, model.DataItem{
 						JSON: map[string]interface{}{
-							"error": result.Error,
+							"error":        result.Error,
 							"originalItem": item.JSON,
 						},
-						Index: item.Index,
 					})
 				} else {
-					return base.NodeOutput{}, fmt.Errorf("Python code error for item %d: %s", item.Index, result.Error)
+					return nil, fmt.Errorf("Python code error for item %d: %s", i, result.Error)
 				}
 			} else {
 				// Process result
 				if result.Output != nil {
 					if outputMap, ok := result.Output.(map[string]interface{}); ok {
-						outputItems = append(outputItems, base.ItemData{
-							JSON:  outputMap,
-							Index: item.Index,
-						})
+						outputItems = append(outputItems, model.DataItem{JSON: outputMap})
 					} else {
-						outputItems = append(outputItems, base.ItemData{
+						outputItems = append(outputItems, model.DataItem{
 							JSON: map[string]interface{}{"value": result.Output},
-							Index: item.Index,
 						})
 					}
 				} else {
@@ -224,9 +179,7 @@ func (n *PythonCodeNode) Execute(ctx context.Context, params base.ExecutionParam
 		}
 	}
 
-	return base.NodeOutput{
-		Items: outputItems,
-	}, nil
+	return outputItems, nil
 }
 
 // ValidateParameters validates node parameters
@@ -242,14 +195,6 @@ func (n *PythonCodeNode) ValidateParameters(params map[string]interface{}) error
 	}
 
 	return nil
-}
-
-// Clone creates a copy of the node
-func (n *PythonCodeNode) Clone() base.Node {
-	return &PythonCodeNode{
-		BaseNode:      n.BaseNode.Clone(),
-		pythonRuntime: n.pythonRuntime, // Share runtime instance
-	}
 }
 
 // Cleanup cleans up resources

@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/dipankar/n8n-go/internal/templates"
+	"github.com/dipankar/m9m/internal/templates"
 )
 
 var (
@@ -473,8 +473,3 @@ func loadTemplateFromFile(filePath string) (*templates.WorkflowTemplate, error) 
 	return &template, nil
 }
 
-// Helper method to add to TemplateManager - this would be added to the actual manager
-func (tm *templates.TemplateManager) GetMarketplace() *templates.MarketplaceManager {
-	// This is a placeholder - in the real implementation, this would return the marketplace manager
-	return templates.NewMarketplaceManager(tm)
-}

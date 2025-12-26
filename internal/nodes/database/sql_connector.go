@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dipankar/n8n-go/internal/expressions"
-	"github.com/dipankar/n8n-go/internal/model"
-	"github.com/dipankar/n8n-go/internal/nodes/base"
+	"github.com/dipankar/m9m/internal/expressions"
+	"github.com/dipankar/m9m/internal/model"
+	"github.com/dipankar/m9m/internal/nodes/base"
 
 	// Import SQL drivers
 	_ "github.com/lib/pq"           // PostgreSQL

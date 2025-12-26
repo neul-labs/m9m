@@ -1,14 +1,14 @@
 #!/bin/bash
 
-# Test script for n8n-go workflow version system
+# Test script for m9m workflow version system
 # Demonstrates creating, listing, restoring, and managing versions
 
 set -e
 
-BASE_URL="${N8N_GO_URL:-http://localhost:8080}"
+BASE_URL="${M9M_URL:-http://localhost:8080}"
 API_URL="$BASE_URL/api/v1"
 
-echo "🧪 n8n-go Workflow Version System Test"
+echo "🧪 m9m Workflow Version System Test"
 echo "======================================="
 echo "Testing against: $BASE_URL"
 echo ""

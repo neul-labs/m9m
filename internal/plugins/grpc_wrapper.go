@@ -1,8 +1,8 @@
 package plugins
 
 import (
-	"github.com/dipankar/n8n-go/internal/model"
-	"github.com/dipankar/n8n-go/internal/nodes/base"
+	"github.com/dipankar/m9m/internal/model"
+	"github.com/dipankar/m9m/internal/nodes/base"
 )
 
 // GRPCNodeWrapper wraps a gRPC plugin to implement the NodeExecutor interface

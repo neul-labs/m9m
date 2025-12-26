@@ -45,6 +45,18 @@ const routes: RouteRecordRaw[] = [
         props: true,
       },
       {
+        path: 'templates',
+        name: 'templates',
+        component: () => import('@/views/TemplatesView.vue'),
+        meta: { title: 'Templates' },
+      },
+      {
+        path: 'performance',
+        name: 'performance',
+        component: () => import('@/views/PerformanceView.vue'),
+        meta: { title: 'Performance' },
+      },
+      {
         path: 'credentials',
         name: 'credentials',
         component: () => import('@/views/Credentials.vue'),
@@ -80,7 +92,7 @@ const router = createRouter({
 // Update document title on navigation
 router.beforeEach((to, _from, next) => {
   const title = to.meta.title as string | undefined
-  document.title = title ? `${title} - n8n-go` : 'n8n-go'
+  document.title = title ? `${title} - m9m` : 'm9m'
   next()
 })
 

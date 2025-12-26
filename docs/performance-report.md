@@ -1,33 +1,33 @@
-# n8n-go Performance Report
+# m9m Performance Report
 
 ## Executive Summary
 
-n8n-go delivers significant performance improvements over the Node.js implementation of n8n while maintaining full compatibility with exported n8n workflows.
+m9m delivers significant performance improvements over the Node.js implementation of n8n while maintaining full compatibility with exported n8n workflows.
 
 ## Performance Benchmarks
 
 ### Startup Performance
-| Metric | n8n-go | n8n Node.js | Improvement |
+| Metric | m9m | n8n Node.js | Improvement |
 |--------|--------|-------------|-------------|
 | Startup Time | < 50ms | ~1000ms+ | **20x faster** |
 | Memory Usage | ~30MB | ~125MB+ | **75% less** |
 
 ### Execution Performance
-| Scenario | n8n-go | n8n Node.js | Improvement |
+| Scenario | m9m | n8n Node.js | Improvement |
 |----------|--------|-------------|-------------|
 | Simple HTTP Request | 211ms | ~500ms+ | **2.4x faster** |
 | 5 Concurrent Requests | 1.64s | ~2500ms+ | **1.5x faster** |
 | 10 Concurrent Requests | 3.83s | ~5000ms+ | **1.3x faster** |
 
 ### Resource Efficiency
-| Metric | n8n-go | n8n Node.js | Improvement |
+| Metric | m9m | n8n Node.js | Improvement |
 |--------|--------|-------------|-------------|
 | CPU Usage | Low | Moderate-High | **Significant** |
 | Memory Footprint | ~30MB | ~125MB+ | **75% less** |
 | Binary Size | ~15MB | ~200MB+ | **93% smaller** |
 
 ### Concurrency Performance
-| Concurrent Workflows | n8n-go | n8n Node.js | Improvement |
+| Concurrent Workflows | m9m | n8n Node.js | Improvement |
 |---------------------|--------|-------------|-------------|
 | 1 | 4.72 items/sec | ~2 items/sec | **2.4x faster** |
 | 5 | 3.05 items/sec | ~1.5 items/sec | **2.0x faster** |
@@ -75,7 +75,7 @@ n8n-go delivers significant performance improvements over the Node.js implementa
 ## Technical Implementation Details
 
 ### HTTP Request Performance
-n8n-go's HTTP Request node shows:
+m9m's HTTP Request node shows:
 - **4.72 requests/second** for single requests
 - **3.05 requests/second** for 5 concurrent requests
 - **2.61 requests/second** for 10 concurrent requests
@@ -117,21 +117,21 @@ Performance gains from:
 ## Resource Utilization Comparison
 
 ### CPU Usage Patterns
-| Workload | n8n-go | n8n Node.js |
+| Workload | m9m | n8n Node.js |
 |----------|--------|-------------|
 | Idle | ~0% | ~5% |
 | Light Processing | ~5-10% | ~15-25% |
 | Heavy Processing | ~20-40% | ~50-80% |
 
 ### Memory Usage Patterns
-| Workload | n8n-go | n8n Node.js |
+| Workload | m9m | n8n Node.js |
 |----------|--------|-------------|
 | Startup | ~30MB | ~125MB+ |
 | Light Workflow | ~35MB | ~130MB+ |
 | Heavy Workflow | ~50MB | ~150MB+ |
 
 ### Disk Usage
-| Component | n8n-go | n8n Node.js |
+| Component | m9m | n8n Node.js |
 |----------|--------|-------------|
 | Binary Size | ~15MB | ~200MB+ |
 | Dependencies | None | Hundreds of packages |
@@ -140,7 +140,7 @@ Performance gains from:
 ## Network I/O Performance
 
 ### HTTP Throughput
-| Scenario | n8n-go | n8n Node.js | Improvement |
+| Scenario | m9m | n8n Node.js | Improvement |
 |----------|--------|-------------|-------------|
 | Single Request | ~200ms | ~500ms+ | **2.5x faster** |
 | Batch Requests | ~400ms | ~1000ms+ | **2.5x faster** |
@@ -183,7 +183,7 @@ Performance gains from:
 
 ## Conclusion
 
-n8n-go delivers substantial performance improvements over the Node.js implementation while maintaining full compatibility with n8n workflows:
+m9m delivers substantial performance improvements over the Node.js implementation while maintaining full compatibility with n8n workflows:
 
 - **5-20x CPU performance improvement**
 - **30-80% memory usage reduction**
@@ -192,7 +192,7 @@ n8n-go delivers substantial performance improvements over the Node.js implementa
 - **Single binary deployment**
 - **No runtime dependencies**
 
-These performance benefits make n8n-go particularly suitable for:
+These performance benefits make m9m particularly suitable for:
 - High-volume workflow processing
 - Resource-constrained environments
 - Production deployments requiring reliability

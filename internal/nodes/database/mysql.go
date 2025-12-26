@@ -9,8 +9,8 @@ import (
 	
 	_ "github.com/go-sql-driver/mysql" // MySQL driver
 	
-	"github.com/dipankar/n8n-go/internal/model"
-	"github.com/dipankar/n8n-go/internal/nodes/base"
+	"github.com/dipankar/m9m/internal/model"
+	"github.com/dipankar/m9m/internal/nodes/base"
 )
 
 // MySQLNode implements the MySQL node functionality

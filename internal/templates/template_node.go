@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/dipankar/n8n-go/internal/nodes/base"
-	"github.com/dipankar/n8n-go/internal/model"
+	"github.com/dipankar/m9m/internal/model"
+	"github.com/dipankar/m9m/internal/nodes/base"
 )
 
 type TemplateNode struct {
@@ -48,26 +48,28 @@ type TemplateGetOperation struct {
 
 func NewTemplateNode() *TemplateNode {
 	return &TemplateNode{
-		BaseNode:        base.NewBaseNode("Template", "Manage workflow templates", "1.0.0"),
+		BaseNode: base.NewBaseNode(base.NodeDescription{
+			Name:        "Template",
+			Description: "Manage and install workflow templates",
+			Category:    "templates",
+		}),
 		templateManager: NewTemplateManager("./templates"),
 	}
 }
 
-func (n *TemplateNode) Execute(input *model.NodeExecutionInput) (*model.NodeExecutionOutput, error) {
-	var config TemplateNodeConfig
-	if err := json.Unmarshal(input.Config, &config); err != nil {
-		return nil, fmt.Errorf("failed to parse template config: %w", err)
+// Execute implements the node interface
+func (n *TemplateNode) Execute(inputData []model.DataItem, nodeParams map[string]interface{}) ([]model.DataItem, error) {
+	operation, _ := nodeParams["operation"].(string)
+	if operation == "" {
+		operation = "list"
 	}
 
 	var results []model.DataItem
 
-	for _, item := range input.Items {
-		result, err := n.executeOperation(&config, item)
+	for _, item := range inputData {
+		result, err := n.executeOperation(operation, nodeParams, item)
 		if err != nil {
-			return &model.NodeExecutionOutput{
-				Items: []model.DataItem{},
-				Error: err.Error(),
-			}, nil
+			return nil, err
 		}
 
 		if result != nil {
@@ -75,53 +77,57 @@ func (n *TemplateNode) Execute(input *model.NodeExecutionInput) (*model.NodeExec
 		}
 	}
 
-	return &model.NodeExecutionOutput{
-		Items: results,
-	}, nil
+	return results, nil
 }
 
-func (n *TemplateNode) executeOperation(config *TemplateNodeConfig, item model.DataItem) (*model.DataItem, error) {
-	switch config.Operation {
+func (n *TemplateNode) executeOperation(operation string, nodeParams map[string]interface{}, item model.DataItem) (*model.DataItem, error) {
+	switch operation {
 	case "list":
-		return n.listTemplates(config, item)
+		return n.listTemplates(nodeParams, item)
 	case "search":
-		return n.searchTemplates(config, item)
+		return n.searchTemplates(nodeParams, item)
 	case "get":
-		return n.getTemplate(config, item)
+		return n.getTemplate(nodeParams, item)
 	case "install":
-		return n.installTemplate(config, item)
+		return n.installTemplate(nodeParams, item)
 	case "validate":
-		return n.validateTemplate(config, item)
+		return n.validateTemplate(nodeParams, item)
 	default:
-		return nil, fmt.Errorf("unsupported operation: %s", config.Operation)
+		return nil, fmt.Errorf("unsupported operation: %s", operation)
 	}
 }
 
-func (n *TemplateNode) listTemplates(config *TemplateNodeConfig, item model.DataItem) (*model.DataItem, error) {
-	var operation TemplateListOperation
-	if err := n.mapParameters(config.Parameters, &operation); err != nil {
-		return nil, err
+func (n *TemplateNode) listTemplates(nodeParams map[string]interface{}, item model.DataItem) (*model.DataItem, error) {
+	category, _ := nodeParams["category"].(string)
+	limit := 50
+	if l, ok := nodeParams["limit"].(float64); ok {
+		limit = int(l)
 	}
 
 	var templates []*WorkflowTemplate
 	var err error
 
-	if operation.Category != "" {
-		templates, err = n.templateManager.GetTemplatesByCategory(operation.Category)
+	if category != "" {
+		templates, err = n.templateManager.GetTemplatesByCategory(category)
 	} else {
-		templates, err = n.templateManager.SearchTemplates("", operation.Filters)
+		templates, err = n.templateManager.SearchTemplates("", nil)
 	}
 
 	if err != nil {
 		return nil, err
 	}
 
-	if len(operation.Tags) > 0 {
-		templates = n.filterTemplatesByTags(templates, operation.Tags)
+	// Apply tag filtering if provided
+	if tags, ok := nodeParams["tags"].([]interface{}); ok && len(tags) > 0 {
+		tagStrings := make([]string, len(tags))
+		for i, t := range tags {
+			tagStrings[i], _ = t.(string)
+		}
+		templates = n.filterTemplatesByTags(templates, tagStrings)
 	}
 
-	if operation.Limit > 0 && len(templates) > operation.Limit {
-		templates = templates[:operation.Limit]
+	if limit > 0 && len(templates) > limit {
+		templates = templates[:limit]
 	}
 
 	templateList := make([]interface{}, len(templates))
@@ -153,19 +159,25 @@ func (n *TemplateNode) listTemplates(config *TemplateNodeConfig, item model.Data
 	return &result, nil
 }
 
-func (n *TemplateNode) searchTemplates(config *TemplateNodeConfig, item model.DataItem) (*model.DataItem, error) {
-	var operation TemplateSearchOperation
-	if err := n.mapParameters(config.Parameters, &operation); err != nil {
-		return nil, err
+func (n *TemplateNode) searchTemplates(nodeParams map[string]interface{}, item model.DataItem) (*model.DataItem, error) {
+	query, _ := nodeParams["query"].(string)
+	limit := 50
+	if l, ok := nodeParams["limit"].(float64); ok {
+		limit = int(l)
 	}
 
-	templates, err := n.templateManager.SearchTemplates(operation.Query, operation.Filters)
+	var filters map[string]interface{}
+	if f, ok := nodeParams["filters"].(map[string]interface{}); ok {
+		filters = f
+	}
+
+	templates, err := n.templateManager.SearchTemplates(query, filters)
 	if err != nil {
 		return nil, err
 	}
 
-	if operation.Limit > 0 && len(templates) > operation.Limit {
-		templates = templates[:operation.Limit]
+	if limit > 0 && len(templates) > limit {
+		templates = templates[:limit]
 	}
 
 	templateList := make([]interface{}, len(templates))
@@ -178,14 +190,14 @@ func (n *TemplateNode) searchTemplates(config *TemplateNodeConfig, item model.Da
 			"author":      template.Author,
 			"category":    template.Category,
 			"tags":        template.Tags,
-			"relevance":   1.0, // TODO: Implement relevance scoring
+			"relevance":   1.0,
 		}
 	}
 
 	result := model.DataItem{
 		JSON: map[string]interface{}{
 			"operation": "search",
-			"query":     operation.Query,
+			"query":     query,
 			"total":     len(templateList),
 			"templates": templateList,
 		},
@@ -194,66 +206,94 @@ func (n *TemplateNode) searchTemplates(config *TemplateNodeConfig, item model.Da
 	return &result, nil
 }
 
-func (n *TemplateNode) getTemplate(config *TemplateNodeConfig, item model.DataItem) (*model.DataItem, error) {
-	var operation TemplateGetOperation
-	if err := n.mapParameters(config.Parameters, &operation); err != nil {
-		return nil, err
+func (n *TemplateNode) getTemplate(nodeParams map[string]interface{}, item model.DataItem) (*model.DataItem, error) {
+	templateID, _ := nodeParams["templateId"].(string)
+	if templateID == "" {
+		if id, ok := item.JSON["template_id"].(string); ok {
+			templateID = id
+		}
+	}
+	if templateID == "" {
+		return nil, fmt.Errorf("templateId is required")
 	}
 
-	template, err := n.templateManager.GetTemplate(operation.TemplateID)
+	template, err := n.templateManager.GetTemplate(templateID)
 	if err != nil {
 		return nil, err
 	}
 
 	result := model.DataItem{
 		JSON: map[string]interface{}{
-			"operation":    "get",
-			"template_id":  template.ID,
-			"template":     template,
+			"operation":   "get",
+			"template_id": template.ID,
+			"template":    template,
 		},
 	}
 
 	return &result, nil
 }
 
-func (n *TemplateNode) installTemplate(config *TemplateNodeConfig, item model.DataItem) (*model.DataItem, error) {
-	var operation TemplateInstallOperation
-	if err := n.mapParameters(config.Parameters, &operation); err != nil {
-		return nil, err
+func (n *TemplateNode) installTemplate(nodeParams map[string]interface{}, item model.DataItem) (*model.DataItem, error) {
+	templateID, _ := nodeParams["templateId"].(string)
+	if templateID == "" {
+		if id, ok := item.JSON["template_id"].(string); ok {
+			templateID = id
+		}
+	}
+	if templateID == "" {
+		return nil, fmt.Errorf("templateId is required")
 	}
 
-	installResult, err := n.templateManager.InstallTemplate(
-		operation.TemplateID,
-		operation.Parameters,
-		operation.Options,
-	)
+	var parameters map[string]interface{}
+	if p, ok := nodeParams["parameters"].(map[string]interface{}); ok {
+		parameters = p
+	}
+
+	var options *InstallationOptions
+	if o, ok := nodeParams["options"].(map[string]interface{}); ok {
+		optData, _ := json.Marshal(o)
+		options = &InstallationOptions{}
+		json.Unmarshal(optData, options)
+	}
+
+	installResult, err := n.templateManager.InstallTemplate(templateID, parameters, options)
 	if err != nil {
 		return nil, err
 	}
 
 	result := model.DataItem{
 		JSON: map[string]interface{}{
-			"operation":     "install",
-			"template_id":   operation.TemplateID,
-			"success":       installResult.Success,
-			"workflow_id":   installResult.WorkflowID,
-			"errors":        installResult.Errors,
-			"warnings":      installResult.Warnings,
-			"changes":       installResult.Changes,
-			"metadata":      installResult.Metadata,
+			"operation":   "install",
+			"template_id": templateID,
+			"success":     installResult.Success,
+			"workflow_id": installResult.WorkflowID,
+			"errors":      installResult.Errors,
+			"warnings":    installResult.Warnings,
+			"changes":     installResult.Changes,
+			"metadata":    installResult.Metadata,
 		},
 	}
 
 	return &result, nil
 }
 
-func (n *TemplateNode) validateTemplate(config *TemplateNodeConfig, item model.DataItem) (*model.DataItem, error) {
-	var operation TemplateValidateOperation
-	if err := n.mapParameters(config.Parameters, &operation); err != nil {
-		return nil, err
+func (n *TemplateNode) validateTemplate(nodeParams map[string]interface{}, item model.DataItem) (*model.DataItem, error) {
+	templateID, _ := nodeParams["templateId"].(string)
+	if templateID == "" {
+		if id, ok := item.JSON["template_id"].(string); ok {
+			templateID = id
+		}
+	}
+	if templateID == "" {
+		return nil, fmt.Errorf("templateId is required")
 	}
 
-	template, err := n.templateManager.GetTemplate(operation.TemplateID)
+	var parameters map[string]interface{}
+	if p, ok := nodeParams["parameters"].(map[string]interface{}); ok {
+		parameters = p
+	}
+
+	template, err := n.templateManager.GetTemplate(templateID)
 	if err != nil {
 		return nil, err
 	}
@@ -261,13 +301,13 @@ func (n *TemplateNode) validateTemplate(config *TemplateNodeConfig, item model.D
 	validationErrors := []string{}
 	validationWarnings := []string{}
 
-	if err := n.templateManager.validateInstallationParameters(template, operation.Parameters); err != nil {
+	if err := n.templateManager.validateInstallationParameters(template, parameters); err != nil {
 		validationErrors = append(validationErrors, err.Error())
 	}
 
 	for paramName, param := range template.Parameters {
 		if param.Required {
-			if _, provided := operation.Parameters[paramName]; !provided {
+			if _, provided := parameters[paramName]; !provided {
 				validationErrors = append(validationErrors, fmt.Sprintf("Required parameter missing: %s", paramName))
 			}
 		}
@@ -278,7 +318,7 @@ func (n *TemplateNode) validateTemplate(config *TemplateNodeConfig, item model.D
 	result := model.DataItem{
 		JSON: map[string]interface{}{
 			"operation":   "validate",
-			"template_id": operation.TemplateID,
+			"template_id": templateID,
 			"valid":       isValid,
 			"errors":      validationErrors,
 			"warnings":    validationWarnings,
@@ -314,112 +354,4 @@ func (n *TemplateNode) filterTemplatesByTags(templates []*WorkflowTemplate, tags
 	}
 
 	return filtered
-}
-
-func (n *TemplateNode) mapParameters(source map[string]interface{}, target interface{}) error {
-	data, err := json.Marshal(source)
-	if err != nil {
-		return err
-	}
-
-	return json.Unmarshal(data, target)
-}
-
-func (n *TemplateNode) GetNodeDefinition() *model.NodeDefinition {
-	return &model.NodeDefinition{
-		Name:        "Template",
-		DisplayName: "Template Manager",
-		Description: "Manage and install workflow templates",
-		Version:     "1.0.0",
-		Category:    "templates",
-		Icon:        "template",
-		Color:       "#9CA3AF",
-		Properties: []model.NodeProperty{
-			{
-				Name:        "operation",
-				DisplayName: "Operation",
-				Type:        "select",
-				Required:    true,
-				Default:     "list",
-				Options: []model.NodePropertyOption{
-					{Name: "List Templates", Value: "list"},
-					{Name: "Search Templates", Value: "search"},
-					{Name: "Get Template", Value: "get"},
-					{Name: "Install Template", Value: "install"},
-					{Name: "Validate Template", Value: "validate"},
-				},
-				Description: "The operation to perform with templates",
-			},
-			{
-				Name:        "templateId",
-				DisplayName: "Template ID",
-				Type:        "string",
-				Required:    false,
-				Description: "The ID of the template to work with",
-				DisplayOptions: map[string]interface{}{
-					"show": map[string]interface{}{
-						"operation": []string{"get", "install", "validate"},
-					},
-				},
-			},
-			{
-				Name:        "query",
-				DisplayName: "Search Query",
-				Type:        "string",
-				Required:    false,
-				Description: "Search query for finding templates",
-				DisplayOptions: map[string]interface{}{
-					"show": map[string]interface{}{
-						"operation": []string{"search"},
-					},
-				},
-			},
-			{
-				Name:        "category",
-				DisplayName: "Category",
-				Type:        "select",
-				Required:    false,
-				Options: []model.NodePropertyOption{
-					{Name: "Automation", Value: "automation"},
-					{Name: "Data Processing", Value: "data-processing"},
-					{Name: "Integrations", Value: "integrations"},
-					{Name: "Monitoring", Value: "monitoring"},
-					{Name: "Notifications", Value: "notifications"},
-				},
-				Description: "Filter templates by category",
-				DisplayOptions: map[string]interface{}{
-					"show": map[string]interface{}{
-						"operation": []string{"list"},
-					},
-				},
-			},
-			{
-				Name:        "parameters",
-				DisplayName: "Template Parameters",
-				Type:        "json",
-				Required:    false,
-				Description: "Parameters for template installation or validation",
-				DisplayOptions: map[string]interface{}{
-					"show": map[string]interface{}{
-						"operation": []string{"install", "validate"},
-					},
-				},
-			},
-			{
-				Name:        "limit",
-				DisplayName: "Limit",
-				Type:        "number",
-				Required:    false,
-				Default:     50,
-				Description: "Maximum number of templates to return",
-				DisplayOptions: map[string]interface{}{
-					"show": map[string]interface{}{
-						"operation": []string{"list", "search"},
-					},
-				},
-			},
-		},
-		Inputs:  []string{"main"},
-		Outputs: []string{"main"},
-	}
 }
