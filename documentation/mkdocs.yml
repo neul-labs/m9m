@@ -111,6 +111,11 @@ nav:
     - AI Nodes: nodes/ai.md
     - Cloud Nodes: nodes/cloud.md
     - Creating Custom Nodes: nodes/custom-nodes.md
+  - SDK & Bindings:
+    - Overview: sdk/overview.md
+    - Go SDK: sdk/go.md
+    - Python: sdk/python.md
+    - Node.js: sdk/nodejs.md
   - API Reference:
     - REST API: api/rest-api.md
     - Endpoints: api/endpoints.md

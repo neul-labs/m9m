@@ -189,6 +189,110 @@ func (n *MyCustomNode) Execute(ctx context.Context, params interfaces.ExecutionP
 }
 ```
 
+## SDK & Language Bindings
+
+m9m can be embedded as a library in your applications. We provide native bindings for Go, Python, and Node.js.
+
+### Go SDK
+
+Import m9m directly into your Go applications:
+
+```go
+import "github.com/m9m/m9m/pkg/m9m"
+
+func main() {
+    // Create engine
+    engine := m9m.New()
+
+    // Load workflow
+    workflow, _ := m9m.LoadWorkflow("workflow.json")
+
+    // Execute
+    result, err := engine.Execute(workflow, []m9m.DataItem{
+        {JSON: map[string]interface{}{"input": "data"}},
+    })
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Println(result.Data)
+}
+```
+
+### Python Bindings
+
+Install and use m9m in Python applications:
+
+```bash
+# Install with uv
+cd bindings/python
+uv pip install -e .
+
+# Or build the shared library first
+make cgo-lib
+```
+
+```python
+from m9m import WorkflowEngine, Workflow
+
+# Create engine
+engine = WorkflowEngine()
+
+# Load and execute workflow
+workflow = Workflow.from_file("workflow.json")
+result = engine.execute(workflow, [{"json": {"input": "data"}}])
+print(result.data)
+
+# Register custom nodes with decorators
+@engine.node("custom.myNode", name="My Node", category="transform")
+def my_node(input_data, params):
+    return [{"json": {"result": "processed"}}]
+```
+
+### Node.js Bindings
+
+Use m9m in Node.js/TypeScript applications:
+
+```bash
+# Install dependencies and build
+cd bindings/nodejs
+npm install
+npm run build
+```
+
+```typescript
+import { WorkflowEngine, Workflow } from '@m9m/workflow-engine';
+
+const engine = new WorkflowEngine();
+
+// Load workflow from JSON
+const workflow = Workflow.fromJSON({
+  name: 'My Workflow',
+  nodes: [],
+  connections: {}
+});
+
+// Execute workflow
+const result = await engine.execute(workflow, [{ json: { input: 'data' } }]);
+console.log(result.data);
+```
+
+### Building Native Libraries
+
+```bash
+# Build CGO shared library for all platforms
+make cgo-lib          # Linux (.so)
+make cgo-lib-darwin   # macOS (.dylib)
+make cgo-lib-windows  # Windows (.dll)
+
+# Build Python bindings
+make python-bindings
+
+# Build Node.js bindings
+make nodejs-bindings
+```
+
+See [SDK Documentation](docs/sdk/README.md) for detailed API reference and examples.
+
 ## Performance Benchmarks
 
 | Metric | n8n | m9m | Improvement |
@@ -321,6 +425,7 @@ make build
 - [Documentation Index](docs/README.md)
 - [Architecture](docs/architecture/README.md)
 - [API Reference](docs/api/API_COMPATIBILITY.md)
+- [SDK & Bindings](docs/sdk/README.md)
 - [Deployment Guide](docs/deployment/DEPLOYMENT_GUIDE.md)
 - [Node Development](docs/nodes/README.md)
 - [Migration Guide](docs/migration/from-n8n.md)

@@ -25,6 +25,12 @@ Documentation for m9m, a high-performance workflow automation platform built in 
 - [Production Guide](deployment/production.md) - Production-ready configuration
 - [Deployment Overview](deployment/README.md) - Deployment strategies
 
+### SDK & Language Bindings
+- [SDK Overview](sdk/README.md) - Embedding m9m in your applications
+- Go SDK (`pkg/m9m`) - Native Go library
+- Python Bindings (`bindings/python`) - ctypes-based Python library
+- Node.js Bindings (`bindings/nodejs`) - N-API native addon
+
 ### Features
 - [Plugin System](PLUGIN_SYSTEM.md) - Plugin development and usage
 - [Plugin Architecture](PLUGIN_ARCHITECTURE.md) - Internal plugin design

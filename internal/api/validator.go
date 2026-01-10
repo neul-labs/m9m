@@ -349,8 +349,8 @@ func toFloat64(value interface{}) (float64, bool) {
 
 // JSONValidator provides JSON-specific validation
 type JSONValidator struct {
-	maxDepth    int
-	maxKeyLen   int
+	maxDepth     int
+	maxKeyLen    int
 	maxStringLen int
 }
 

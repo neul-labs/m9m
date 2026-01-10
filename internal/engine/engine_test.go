@@ -1,10 +1,10 @@
 package engine
 
 import (
-	"testing"
 	"github.com/dipankar/m9m/internal/credentials"
 	"github.com/dipankar/m9m/internal/model"
 	"github.com/dipankar/m9m/internal/nodes/base"
+	"testing"
 )
 
 // mockNodeExecutor is a mock implementation of NodeExecutor for testing
@@ -36,7 +36,7 @@ func TestWorkflowEngineCreation(t *testing.T) {
 
 func TestExecuteWorkflowWithNilWorkflow(t *testing.T) {
 	engine := NewWorkflowEngine()
-	
+
 	_, err := engine.ExecuteWorkflow(nil, nil)
 	if err == nil {
 		t.Error("Expected error when executing nil workflow, got nil")
@@ -45,7 +45,7 @@ func TestExecuteWorkflowWithNilWorkflow(t *testing.T) {
 
 func TestNodeRegistrationAndRetrieval(t *testing.T) {
 	engine := NewWorkflowEngine().(*workflowEngineImpl)
-	
+
 	// Create a mock executor
 	executor := &mockNodeExecutor{
 		name: "test-executor",
@@ -55,21 +55,21 @@ func TestNodeRegistrationAndRetrieval(t *testing.T) {
 			Category:    "Test",
 		},
 	}
-	
+
 	// Register the executor
 	engine.RegisterNodeExecutor("test-node-type", executor)
-	
+
 	// Retrieve the executor
 	retrieved, err := engine.GetNodeExecutor("test-node-type")
 	if err != nil {
 		t.Fatalf("Failed to retrieve executor: %v", err)
 	}
-	
+
 	// We can't directly compare interfaces, so we'll just check that it's not nil
 	if retrieved == nil {
 		t.Error("Retrieved executor is nil")
 	}
-	
+
 	// Try to retrieve a non-existent executor
 	_, err = engine.GetNodeExecutor("non-existent-type")
 	if err == nil {
@@ -79,7 +79,7 @@ func TestNodeRegistrationAndRetrieval(t *testing.T) {
 
 func TestExecuteWorkflowWithRegisteredNode(t *testing.T) {
 	engine := NewWorkflowEngine().(*workflowEngineImpl)
-	
+
 	// Create and register a mock executor
 	executor := &mockNodeExecutor{
 		name: "http-request-executor",
@@ -89,9 +89,9 @@ func TestExecuteWorkflowWithRegisteredNode(t *testing.T) {
 			Category:    "HTTP",
 		},
 	}
-	
+
 	engine.RegisterNodeExecutor("n8n-nodes-base.httpRequest", executor)
-	
+
 	// Create a workflow with an HTTP Request node
 	workflow := &model.Workflow{
 		ID:     "test-1",
@@ -112,7 +112,7 @@ func TestExecuteWorkflowWithRegisteredNode(t *testing.T) {
 		},
 		Connections: make(map[string]model.Connections),
 	}
-	
+
 	inputData := []model.DataItem{
 		{
 			JSON: map[string]interface{}{
@@ -120,16 +120,16 @@ func TestExecuteWorkflowWithRegisteredNode(t *testing.T) {
 			},
 		},
 	}
-	
+
 	result, err := engine.ExecuteWorkflow(workflow, inputData)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
-	
+
 	if result == nil {
 		t.Fatal("Expected result, got nil")
 	}
-	
+
 	if len(result.Data) != len(inputData) {
 		t.Errorf("Expected %d data items, got %d", len(inputData), len(result.Data))
 	}
@@ -137,7 +137,7 @@ func TestExecuteWorkflowWithRegisteredNode(t *testing.T) {
 
 func TestExecuteWorkflowWithoutNodes(t *testing.T) {
 	engine := NewWorkflowEngine()
-	
+
 	workflow := &model.Workflow{
 		ID:          "test-1",
 		Name:        "Test Workflow",
@@ -145,7 +145,7 @@ func TestExecuteWorkflowWithoutNodes(t *testing.T) {
 		Nodes:       []model.Node{}, // No nodes
 		Connections: make(map[string]model.Connections),
 	}
-	
+
 	inputData := []model.DataItem{
 		{
 			JSON: map[string]interface{}{
@@ -153,16 +153,16 @@ func TestExecuteWorkflowWithoutNodes(t *testing.T) {
 			},
 		},
 	}
-	
+
 	result, err := engine.ExecuteWorkflow(workflow, inputData)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
-	
+
 	if result == nil {
 		t.Fatal("Expected result, got nil")
 	}
-	
+
 	if len(result.Data) != len(inputData) {
 		t.Errorf("Expected %d data items, got %d", len(inputData), len(result.Data))
 	}
@@ -170,15 +170,15 @@ func TestExecuteWorkflowWithoutNodes(t *testing.T) {
 
 func TestWorkflowEngineWithCredentialManager(t *testing.T) {
 	engine := NewWorkflowEngine().(*workflowEngineImpl)
-	
+
 	// Test setting credential manager
 	credManager, err := credentials.NewCredentialManager()
 	if err != nil {
 		t.Fatalf("Failed to create credential manager: %v", err)
 	}
-	
+
 	engine.SetCredentialManager(credManager)
-	
+
 	// Verify credential manager is set
 	if engine.credentialManager == nil {
 		t.Error("Expected credential manager to be set")

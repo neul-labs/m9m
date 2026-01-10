@@ -25,6 +25,10 @@ type RateLimiterConfig struct {
 
 	// Enable/disable
 	Enabled bool
+
+	// TrustedProxies is a list of trusted proxy IP addresses or CIDR ranges
+	// Only trust X-Forwarded-For headers from these proxies
+	TrustedProxies []string
 }
 
 // EndpointLimit defines rate limits for a specific endpoint
@@ -67,16 +71,19 @@ type TokenBucket struct {
 	maxTokens      float64
 	refillRate     float64 // tokens per second
 	lastRefillTime time.Time
+	lastUsedTime   time.Time // Track when bucket was last accessed for cleanup
 	mu             sync.Mutex
 }
 
 // NewTokenBucket creates a new token bucket
 func NewTokenBucket(tokensPerSecond int, burst int) *TokenBucket {
+	now := time.Now()
 	return &TokenBucket{
 		tokens:         float64(burst),
 		maxTokens:      float64(burst),
 		refillRate:     float64(tokensPerSecond),
-		lastRefillTime: time.Now(),
+		lastRefillTime: now,
+		lastUsedTime:   now,
 	}
 }
 
@@ -88,6 +95,7 @@ func (tb *TokenBucket) Allow() bool {
 	now := time.Now()
 	elapsed := now.Sub(tb.lastRefillTime).Seconds()
 	tb.lastRefillTime = now
+	tb.lastUsedTime = now // Track access time for cleanup
 
 	// Refill tokens
 	tb.tokens += elapsed * tb.refillRate
@@ -104,6 +112,13 @@ func (tb *TokenBucket) Allow() bool {
 	return false
 }
 
+// LastUsed returns when this bucket was last accessed
+func (tb *TokenBucket) LastUsed() time.Time {
+	tb.mu.Lock()
+	defer tb.mu.Unlock()
+	return tb.lastUsedTime
+}
+
 // Tokens returns the current number of available tokens
 func (tb *TokenBucket) Tokens() float64 {
 	tb.mu.Lock()
@@ -113,12 +128,12 @@ func (tb *TokenBucket) Tokens() float64 {
 
 // RateLimiter provides rate limiting functionality
 type RateLimiter struct {
-	config         *RateLimiterConfig
-	globalBucket   *TokenBucket
-	ipBuckets      map[string]*TokenBucket
+	config          *RateLimiterConfig
+	globalBucket    *TokenBucket
+	ipBuckets       map[string]*TokenBucket
 	endpointBuckets map[string]map[string]*TokenBucket // endpoint -> IP -> bucket
-	mu             sync.RWMutex
-	stopCleanup    chan struct{}
+	mu              sync.RWMutex
+	stopCleanup     chan struct{}
 }
 
 // NewRateLimiter creates a new rate limiter
@@ -241,17 +256,20 @@ func (rl *RateLimiter) cleanup() {
 	rl.mu.Lock()
 	defer rl.mu.Unlock()
 
-	// Clean up IP buckets that are at max capacity (haven't been used)
+	// Use time-based eviction: remove entries not accessed within 2x cleanup interval
+	cutoff := time.Now().Add(-2 * rl.config.CleanupInterval)
+
+	// Clean up IP buckets based on last used time
 	for ip, bucket := range rl.ipBuckets {
-		if bucket.Tokens() >= bucket.maxTokens {
+		if bucket.LastUsed().Before(cutoff) {
 			delete(rl.ipBuckets, ip)
 		}
 	}
 
-	// Clean up endpoint buckets
+	// Clean up endpoint buckets based on last used time
 	for endpoint, ipBuckets := range rl.endpointBuckets {
 		for ip, bucket := range ipBuckets {
-			if bucket.Tokens() >= bucket.maxTokens {
+			if bucket.LastUsed().Before(cutoff) {
 				delete(ipBuckets, ip)
 			}
 		}
@@ -304,23 +322,123 @@ func (rl *RateLimiter) Middleware(errorHandler *ErrorHandler) func(http.Handler)
 }
 
 // getClientIP extracts the client IP from the request
+// NOTE: Only trusts X-Forwarded-For from configured trusted proxies
 func getClientIP(r *http.Request) string {
-	// Check X-Forwarded-For header
-	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
-		// Take the first IP in the chain
-		if idx := indexOf(xff, ","); idx != -1 {
-			return xff[:idx]
+	// Extract remote address (strip port if present)
+	remoteIP := r.RemoteAddr
+	if colonIdx := lastIndexOf(remoteIP, ":"); colonIdx != -1 {
+		// Check if this might be IPv6 in brackets
+		if bracketIdx := lastIndexOf(remoteIP, "]"); bracketIdx != -1 && bracketIdx < colonIdx {
+			remoteIP = remoteIP[:colonIdx]
+		} else if !containsColon(remoteIP[:colonIdx]) {
+			// IPv4 with port
+			remoteIP = remoteIP[:colonIdx]
 		}
-		return xff
 	}
 
-	// Check X-Real-IP header
+	// Remove IPv6 brackets if present
+	if len(remoteIP) > 2 && remoteIP[0] == '[' && remoteIP[len(remoteIP)-1] == ']' {
+		remoteIP = remoteIP[1 : len(remoteIP)-1]
+	}
+
+	return remoteIP
+}
+
+// getClientIPWithTrustedProxies extracts the real client IP, trusting headers only from specified proxies
+func getClientIPWithTrustedProxies(r *http.Request, trustedProxies []string) string {
+	remoteIP := getClientIP(r)
+
+	// If no trusted proxies configured or remote is not trusted, return remote IP directly
+	if len(trustedProxies) == 0 || !isTrustedProxy(remoteIP, trustedProxies) {
+		return remoteIP
+	}
+
+	// Check X-Forwarded-For header from trusted proxy
+	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+		// Parse the header - format: client, proxy1, proxy2, ...
+		// Take the rightmost non-trusted IP (the actual client)
+		ips := splitAndTrim(xff, ",")
+		for i := len(ips) - 1; i >= 0; i-- {
+			ip := ips[i]
+			if ip != "" && !isTrustedProxy(ip, trustedProxies) {
+				return ip
+			}
+		}
+	}
+
+	// Check X-Real-IP header from trusted proxy
 	if xri := r.Header.Get("X-Real-IP"); xri != "" {
 		return xri
 	}
 
-	// Fall back to RemoteAddr
-	return r.RemoteAddr
+	return remoteIP
+}
+
+// isTrustedProxy checks if an IP is in the trusted proxies list
+func isTrustedProxy(ip string, trustedProxies []string) bool {
+	for _, trusted := range trustedProxies {
+		if ip == trusted {
+			return true
+		}
+		// TODO: Add CIDR range support if needed
+	}
+	return false
+}
+
+// lastIndexOf finds the last occurrence of substr in s
+func lastIndexOf(s string, substr string) int {
+	for i := len(s) - len(substr); i >= 0; i-- {
+		if s[i:i+len(substr)] == substr {
+			return i
+		}
+	}
+	return -1
+}
+
+// containsColon checks if string contains a colon (for IPv6 detection)
+func containsColon(s string) bool {
+	for i := 0; i < len(s); i++ {
+		if s[i] == ':' {
+			return true
+		}
+	}
+	return false
+}
+
+// splitAndTrim splits a string and trims whitespace from each part
+func splitAndTrim(s string, sep string) []string {
+	parts := make([]string, 0)
+	start := 0
+	for i := 0; i <= len(s)-len(sep); i++ {
+		if s[i:i+len(sep)] == sep {
+			part := s[start:i]
+			// Trim whitespace
+			part = trimWhitespace(part)
+			if part != "" {
+				parts = append(parts, part)
+			}
+			start = i + len(sep)
+		}
+	}
+	// Add the last part
+	part := trimWhitespace(s[start:])
+	if part != "" {
+		parts = append(parts, part)
+	}
+	return parts
+}
+
+// trimWhitespace removes leading and trailing whitespace
+func trimWhitespace(s string) string {
+	start := 0
+	end := len(s)
+	for start < end && (s[start] == ' ' || s[start] == '\t') {
+		start++
+	}
+	for end > start && (s[end-1] == ' ' || s[end-1] == '\t') {
+		end--
+	}
+	return s[start:end]
 }
 
 // Helper functions
@@ -346,14 +464,14 @@ func indexOf(s string, substr string) int {
 // SlidingWindowRateLimiter implements sliding window rate limiting
 // for more accurate rate limiting at window boundaries
 type SlidingWindowRateLimiter struct {
-	windowSize   time.Duration
-	maxRequests  int
-	windows      map[string]*slidingWindow
-	mu           sync.RWMutex
+	windowSize  time.Duration
+	maxRequests int
+	windows     map[string]*slidingWindow
+	mu          sync.RWMutex
 }
 
 type slidingWindow struct {
-	counts    []int
+	counts     []int
 	timestamps []time.Time
 	mu         sync.Mutex
 }

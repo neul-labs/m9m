@@ -10,6 +10,37 @@ import (
 	"github.com/dipankar/m9m/internal/auth"
 )
 
+// SecurityHeadersMiddleware adds security headers to all responses
+func SecurityHeadersMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Prevent MIME type sniffing
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+
+		// Prevent clickjacking
+		w.Header().Set("X-Frame-Options", "DENY")
+
+		// Enable XSS filter
+		w.Header().Set("X-XSS-Protection", "1; mode=block")
+
+		// Content Security Policy
+		w.Header().Set("Content-Security-Policy", "default-src 'self'")
+
+		// Strict Transport Security (for HTTPS)
+		w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+
+		// Cache control for API responses
+		w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate")
+
+		// Referrer Policy
+		w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
+
+		// Remove server identification
+		w.Header().Del("Server")
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 // CORSMiddleware handles Cross-Origin Resource Sharing
 func CORSMiddleware(allowedOrigin string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
@@ -152,7 +183,9 @@ func RateLimitMiddleware(requestsPerMinute int) func(http.Handler) http.Handler 
 	}
 }
 
-// AuthMiddleware validates authentication (basic implementation - for backwards compatibility)
+// AuthMiddleware validates authentication (basic implementation)
+// NOTE: This middleware requires authentication by default. Use AuthMiddlewareWithManager
+// for full authentication support with JWT and API keys.
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Skip auth for health checks and public endpoints
@@ -161,7 +194,20 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		// For backwards compatibility, allow all requests when no auth manager is configured
+		// Check if authentication context exists (set by AuthMiddlewareWithManager)
+		authCtx := AuthFromContext(r.Context())
+		if authCtx == nil {
+			// No auth context - return 401 Unauthorized
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte(`{
+				"error": true,
+				"message": "Authentication required",
+				"code": 401
+			}`))
+			return
+		}
+
 		next.ServeHTTP(w, r)
 	})
 }

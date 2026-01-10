@@ -4,16 +4,48 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
+	"strconv"
+	"strings"
 	"time"
 
-	"github.com/gorilla/mux"
-	"github.com/gorilla/websocket"
 	"github.com/dipankar/m9m/internal/engine"
 	"github.com/dipankar/m9m/internal/expressions"
 	"github.com/dipankar/m9m/internal/model"
 	"github.com/dipankar/m9m/internal/scheduler"
 	"github.com/dipankar/m9m/internal/storage"
+	"github.com/gorilla/mux"
+	"github.com/gorilla/websocket"
 )
+
+// APIServerConfig configures the API server
+type APIServerConfig struct {
+	// AllowedOrigins for WebSocket CORS (comma-separated in env)
+	AllowedOrigins []string
+	// DevMode enables permissive security settings
+	DevMode bool
+	// MaxPaginationLimit caps the number of items per page
+	MaxPaginationLimit int
+}
+
+// DefaultAPIServerConfig returns default configuration from environment
+func DefaultAPIServerConfig() *APIServerConfig {
+	config := &APIServerConfig{
+		DevMode:            os.Getenv("M9M_DEV_MODE") == "true",
+		MaxPaginationLimit: 100,
+	}
+
+	// Parse allowed origins from environment
+	originsEnv := os.Getenv("M9M_ALLOWED_ORIGINS")
+	if originsEnv != "" {
+		config.AllowedOrigins = strings.Split(originsEnv, ",")
+		for i := range config.AllowedOrigins {
+			config.AllowedOrigins[i] = strings.TrimSpace(config.AllowedOrigins[i])
+		}
+	}
+
+	return config
+}
 
 // APIServer provides n8n-compatible REST API
 type APIServer struct {
@@ -22,21 +54,52 @@ type APIServer struct {
 	storage   storage.WorkflowStorage
 	upgrader  websocket.Upgrader
 	wsClients map[string]*websocket.Conn
+	config    *APIServerConfig
 }
 
 // NewAPIServer creates a new API server instance
 func NewAPIServer(eng engine.WorkflowEngine, scheduler *scheduler.WorkflowScheduler, storage storage.WorkflowStorage) *APIServer {
-	return &APIServer{
+	return NewAPIServerWithConfig(eng, scheduler, storage, DefaultAPIServerConfig())
+}
+
+// NewAPIServerWithConfig creates a new API server with custom configuration
+func NewAPIServerWithConfig(eng engine.WorkflowEngine, scheduler *scheduler.WorkflowScheduler, storage storage.WorkflowStorage, config *APIServerConfig) *APIServer {
+	if config == nil {
+		config = DefaultAPIServerConfig()
+	}
+
+	server := &APIServer{
 		engine:    eng,
 		scheduler: scheduler,
 		storage:   storage,
-		upgrader: websocket.Upgrader{
-			CheckOrigin: func(r *http.Request) bool {
-				return true // Allow all origins for development
-			},
-		},
 		wsClients: make(map[string]*websocket.Conn),
+		config:    config,
 	}
+
+	// Configure WebSocket upgrader with proper CORS
+	server.upgrader = websocket.Upgrader{
+		CheckOrigin: func(r *http.Request) bool {
+			// In dev mode, allow all origins
+			if config.DevMode {
+				return true
+			}
+
+			// Check if origin is in allowed list
+			origin := r.Header.Get("Origin")
+			if origin == "" {
+				return true // Same-origin requests have no Origin header
+			}
+
+			for _, allowed := range config.AllowedOrigins {
+				if origin == allowed {
+					return true
+				}
+			}
+			return false
+		},
+	}
+
+	return server
 }
 
 // RegisterRoutes registers all API routes
@@ -77,6 +140,16 @@ func (s *APIServer) RegisterRoutes(router *mux.Router) {
 	api.HandleFunc("/executions/{id}", s.DeleteExecution).Methods("DELETE", "OPTIONS")
 	api.HandleFunc("/executions/{id}/retry", s.RetryExecution).Methods("POST", "OPTIONS")
 	api.HandleFunc("/executions/{id}/cancel", s.CancelExecution).Methods("POST", "OPTIONS")
+
+	// Schedules (Cron scheduling)
+	api.HandleFunc("/schedules", s.ListSchedules).Methods("GET", "OPTIONS")
+	api.HandleFunc("/schedules", s.CreateSchedule).Methods("POST", "OPTIONS")
+	api.HandleFunc("/schedules/{id}", s.GetSchedule).Methods("GET", "OPTIONS")
+	api.HandleFunc("/schedules/{id}", s.UpdateSchedule).Methods("PUT", "OPTIONS")
+	api.HandleFunc("/schedules/{id}", s.DeleteSchedule).Methods("DELETE", "OPTIONS")
+	api.HandleFunc("/schedules/{id}/enable", s.EnableSchedule).Methods("POST", "OPTIONS")
+	api.HandleFunc("/schedules/{id}/disable", s.DisableSchedule).Methods("POST", "OPTIONS")
+	api.HandleFunc("/schedules/{id}/history", s.GetScheduleHistory).Methods("GET", "OPTIONS")
 
 	// Credentials
 	api.HandleFunc("/credentials", s.ListCredentials).Methods("GET", "OPTIONS")
@@ -155,8 +228,8 @@ func (s *APIServer) ReadyCheck(w http.ResponseWriter, r *http.Request) {
 // GetVersion returns version information
 func (s *APIServer) GetVersion(w http.ResponseWriter, r *http.Request) {
 	s.sendJSON(w, http.StatusOK, map[string]interface{}{
-		"n8nVersion":    "1.0.0-compatible",
-		"serverVersion": "0.2.0",
+		"n8nVersion":     "1.0.0-compatible",
+		"serverVersion":  "0.2.0",
 		"implementation": "n8n-go",
 		"compatibility": map[string]interface{}{
 			"workflows":   true,
@@ -171,13 +244,13 @@ func (s *APIServer) GetVersion(w http.ResponseWriter, r *http.Request) {
 func (s *APIServer) GetSettings(w http.ResponseWriter, r *http.Request) {
 	// Default settings
 	settings := map[string]interface{}{
-		"timezone":                  "UTC",
-		"executionMode":             "regular",
-		"saveDataSuccessExecution":  "all",
-		"saveDataErrorExecution":    "all",
-		"saveExecutionProgress":     true,
-		"saveManualExecutions":      true,
-		"communityNodesEnabled":     false,
+		"timezone":                 "UTC",
+		"executionMode":            "regular",
+		"saveDataSuccessExecution": "all",
+		"saveDataErrorExecution":   "all",
+		"saveExecutionProgress":    true,
+		"saveManualExecutions":     true,
+		"communityNodesEnabled":    false,
 		"versionNotifications": map[string]bool{
 			"enabled": false,
 		},
@@ -239,11 +312,11 @@ func (s *APIServer) UpdateSettings(w http.ResponseWriter, r *http.Request) {
 func (s *APIServer) GetLicense(w http.ResponseWriter, r *http.Request) {
 	// License management is an enterprise feature not implemented in open-source n8n-go
 	s.sendJSON(w, http.StatusOK, map[string]interface{}{
-		"licensed":       false,
-		"licenseType":    "community",
-		"features":       []string{},
-		"expiresAt":      nil,
-		"message":        "License management is an enterprise feature",
+		"licensed":    false,
+		"licenseType": "community",
+		"features":    []string{},
+		"expiresAt":   nil,
+		"message":     "License management is an enterprise feature",
 	})
 }
 
@@ -251,9 +324,9 @@ func (s *APIServer) GetLicense(w http.ResponseWriter, r *http.Request) {
 func (s *APIServer) GetLDAP(w http.ResponseWriter, r *http.Request) {
 	// LDAP is an enterprise feature not implemented in open-source n8n-go
 	s.sendJSON(w, http.StatusOK, map[string]interface{}{
-		"enabled":        false,
-		"configured":     false,
-		"message":        "LDAP is an enterprise feature",
+		"enabled":    false,
+		"configured": false,
+		"message":    "LDAP is an enterprise feature",
 	})
 }
 
@@ -420,11 +493,27 @@ func (s *APIServer) sendError(w http.ResponseWriter, status int, message string,
 		"code":    status,
 	}
 
-	if err != nil {
+	// Only include error details in dev mode to prevent information leakage
+	if err != nil && s.config.DevMode {
 		response["details"] = err.Error()
 	}
 
 	s.sendJSON(w, status, response)
+}
+
+// parseIntParam safely parses an integer parameter with default and max values
+func parseIntParam(value string, defaultVal, maxVal int) int {
+	if value == "" {
+		return defaultVal
+	}
+	parsed, err := strconv.Atoi(value)
+	if err != nil || parsed < 0 {
+		return defaultVal
+	}
+	if maxVal > 0 && parsed > maxVal {
+		return maxVal
+	}
+	return parsed
 }
 
 // Workflow handlers
@@ -436,14 +525,8 @@ func (s *APIServer) ListWorkflows(w http.ResponseWriter, r *http.Request) {
 	offsetStr := r.URL.Query().Get("offset")
 	limitStr := r.URL.Query().Get("limit")
 
-	offset := 0
-	limit := 20
-	if offsetStr != "" {
-		fmt.Sscanf(offsetStr, "%d", &offset)
-	}
-	if limitStr != "" {
-		fmt.Sscanf(limitStr, "%d", &limit)
-	}
+	offset := parseIntParam(offsetStr, 0, 0)
+	limit := parseIntParam(limitStr, 20, s.config.MaxPaginationLimit)
 
 	filters := storage.WorkflowFilters{
 		Search: search,
@@ -477,12 +560,43 @@ func (s *APIServer) CreateWorkflow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Validate workflow
+	if err := validateWorkflow(&workflow); err != nil {
+		s.sendError(w, http.StatusBadRequest, "Invalid workflow", err)
+		return
+	}
+
 	if err := s.storage.SaveWorkflow(&workflow); err != nil {
 		s.sendError(w, http.StatusInternalServerError, "Failed to save workflow", err)
 		return
 	}
 
 	s.sendJSON(w, http.StatusCreated, workflow)
+}
+
+// validateWorkflow validates a workflow for required fields and constraints
+func validateWorkflow(workflow *model.Workflow) error {
+	if workflow.Name == "" {
+		return fmt.Errorf("workflow name is required")
+	}
+	if len(workflow.Name) > 255 {
+		return fmt.Errorf("workflow name too long (max 255 characters)")
+	}
+
+	// Validate nodes
+	for i, node := range workflow.Nodes {
+		if node.Type == "" {
+			return fmt.Errorf("node %d: type is required", i)
+		}
+		if node.Name == "" {
+			return fmt.Errorf("node %d: name is required", i)
+		}
+		if len(node.Name) > 255 {
+			return fmt.Errorf("node %d: name too long (max 255 characters)", i)
+		}
+	}
+
+	return nil
 }
 
 func (s *APIServer) GetWorkflow(w http.ResponseWriter, r *http.Request) {
@@ -613,14 +727,8 @@ func (s *APIServer) ListExecutions(w http.ResponseWriter, r *http.Request) {
 	offsetStr := r.URL.Query().Get("offset")
 	limitStr := r.URL.Query().Get("limit")
 
-	offset := 0
-	limit := 20
-	if offsetStr != "" {
-		fmt.Sscanf(offsetStr, "%d", &offset)
-	}
-	if limitStr != "" {
-		fmt.Sscanf(limitStr, "%d", &limit)
-	}
+	offset := parseIntParam(offsetStr, 0, 0)
+	limit := parseIntParam(limitStr, 20, s.config.MaxPaginationLimit)
 
 	filters := storage.ExecutionFilters{
 		WorkflowID: workflowID,
@@ -756,7 +864,161 @@ func (s *APIServer) GetMetrics(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// Schedule handlers
+
+// ListSchedules handles GET /api/v1/schedules
+func (s *APIServer) ListSchedules(w http.ResponseWriter, r *http.Request) {
+	schedules := s.scheduler.ListSchedules()
+
+	s.sendJSON(w, http.StatusOK, map[string]interface{}{
+		"data":  schedules,
+		"total": len(schedules),
+	})
+}
+
+// CreateSchedule handles POST /api/v1/schedules
+func (s *APIServer) CreateSchedule(w http.ResponseWriter, r *http.Request) {
+	var config scheduler.ScheduleConfig
+	if err := json.NewDecoder(r.Body).Decode(&config); err != nil {
+		s.sendError(w, http.StatusBadRequest, "Invalid JSON", err)
+		return
+	}
+
+	// Validate required fields
+	if config.WorkflowID == "" {
+		s.sendError(w, http.StatusBadRequest, "workflowId is required", nil)
+		return
+	}
+	if config.CronExpr == "" {
+		s.sendError(w, http.StatusBadRequest, "cronExpression is required", nil)
+		return
+	}
+
+	// Generate ID if not provided
+	if config.ID == "" {
+		config.ID = fmt.Sprintf("schedule_%d", time.Now().UnixNano())
+	}
+
+	// Set defaults
+	if config.Timezone == "" {
+		config.Timezone = "UTC"
+	}
+	config.CreatedAt = time.Now()
+	config.UpdatedAt = time.Now()
+
+	if err := s.scheduler.AddSchedule(&config); err != nil {
+		s.sendError(w, http.StatusBadRequest, "Failed to create schedule", err)
+		return
+	}
+
+	s.sendJSON(w, http.StatusCreated, config)
+}
+
+// GetSchedule handles GET /api/v1/schedules/{id}
+func (s *APIServer) GetSchedule(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	scheduleID := vars["id"]
+
+	schedule, err := s.scheduler.GetSchedule(scheduleID)
+	if err != nil {
+		s.sendError(w, http.StatusNotFound, "Schedule not found", err)
+		return
+	}
+
+	s.sendJSON(w, http.StatusOK, schedule)
+}
+
+// UpdateSchedule handles PUT /api/v1/schedules/{id}
+func (s *APIServer) UpdateSchedule(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	scheduleID := vars["id"]
+
+	var updates scheduler.ScheduleConfig
+	if err := json.NewDecoder(r.Body).Decode(&updates); err != nil {
+		s.sendError(w, http.StatusBadRequest, "Invalid JSON", err)
+		return
+	}
+
+	updates.UpdatedAt = time.Now()
+
+	if err := s.scheduler.UpdateSchedule(scheduleID, &updates); err != nil {
+		s.sendError(w, http.StatusBadRequest, "Failed to update schedule", err)
+		return
+	}
+
+	schedule, _ := s.scheduler.GetSchedule(scheduleID)
+	s.sendJSON(w, http.StatusOK, schedule)
+}
+
+// DeleteSchedule handles DELETE /api/v1/schedules/{id}
+func (s *APIServer) DeleteSchedule(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	scheduleID := vars["id"]
+
+	if err := s.scheduler.RemoveSchedule(scheduleID); err != nil {
+		s.sendError(w, http.StatusNotFound, "Schedule not found", err)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// EnableSchedule handles POST /api/v1/schedules/{id}/enable
+func (s *APIServer) EnableSchedule(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	scheduleID := vars["id"]
+
+	updates := &scheduler.ScheduleConfig{Enabled: true, UpdatedAt: time.Now()}
+	if err := s.scheduler.UpdateSchedule(scheduleID, updates); err != nil {
+		s.sendError(w, http.StatusNotFound, "Schedule not found", err)
+		return
+	}
+
+	schedule, _ := s.scheduler.GetSchedule(scheduleID)
+	s.sendJSON(w, http.StatusOK, schedule)
+}
+
+// DisableSchedule handles POST /api/v1/schedules/{id}/disable
+func (s *APIServer) DisableSchedule(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	scheduleID := vars["id"]
+
+	updates := &scheduler.ScheduleConfig{Enabled: false, UpdatedAt: time.Now()}
+	if err := s.scheduler.UpdateSchedule(scheduleID, updates); err != nil {
+		s.sendError(w, http.StatusNotFound, "Schedule not found", err)
+		return
+	}
+
+	schedule, _ := s.scheduler.GetSchedule(scheduleID)
+	s.sendJSON(w, http.StatusOK, schedule)
+}
+
+// GetScheduleHistory handles GET /api/v1/schedules/{id}/history
+func (s *APIServer) GetScheduleHistory(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	scheduleID := vars["id"]
+
+	limit := parseIntParam(r.URL.Query().Get("limit"), 50, 100)
+
+	history, err := s.scheduler.GetExecutionHistory(scheduleID, limit)
+	if err != nil {
+		s.sendError(w, http.StatusNotFound, "Schedule history not found", err)
+		return
+	}
+
+	s.sendJSON(w, http.StatusOK, history)
+}
+
 // Credential handlers
+
+// CredentialResponse represents a safe credential response without sensitive data
+type CredentialResponse struct {
+	ID        string    `json:"id"`
+	Name      string    `json:"name"`
+	Type      string    `json:"type"`
+	CreatedAt time.Time `json:"createdAt,omitempty"`
+	UpdatedAt time.Time `json:"updatedAt,omitempty"`
+}
 
 func (s *APIServer) ListCredentials(w http.ResponseWriter, r *http.Request) {
 	credentials, err := s.storage.ListCredentials()
@@ -765,7 +1027,19 @@ func (s *APIServer) ListCredentials(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.sendJSON(w, http.StatusOK, credentials)
+	// Return safe response without sensitive data
+	safeCredentials := make([]CredentialResponse, 0, len(credentials))
+	for _, cred := range credentials {
+		safeCredentials = append(safeCredentials, CredentialResponse{
+			ID:        cred.ID,
+			Name:      cred.Name,
+			Type:      cred.Type,
+			CreatedAt: cred.CreatedAt,
+			UpdatedAt: cred.UpdatedAt,
+		})
+	}
+
+	s.sendJSON(w, http.StatusOK, safeCredentials)
 }
 
 func (s *APIServer) CreateCredential(w http.ResponseWriter, r *http.Request) {
@@ -793,7 +1067,16 @@ func (s *APIServer) GetCredential(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.sendJSON(w, http.StatusOK, credential)
+	// Return safe response without sensitive data
+	safeCredential := CredentialResponse{
+		ID:        credential.ID,
+		Name:      credential.Name,
+		Type:      credential.Type,
+		CreatedAt: credential.CreatedAt,
+		UpdatedAt: credential.UpdatedAt,
+	}
+
+	s.sendJSON(w, http.StatusOK, safeCredential)
 }
 
 func (s *APIServer) UpdateCredential(w http.ResponseWriter, r *http.Request) {
@@ -970,9 +1253,9 @@ var builtInTemplates = []Template{
 			Active: false,
 			Nodes: []model.Node{
 				{
-					ID:   "webhook-1",
-					Name: "Webhook",
-					Type: "n8n-nodes-base.webhook",
+					ID:       "webhook-1",
+					Name:     "Webhook",
+					Type:     "n8n-nodes-base.webhook",
 					Position: []int{250, 300},
 					Parameters: map[string]interface{}{
 						"httpMethod": "POST",
@@ -994,9 +1277,9 @@ var builtInTemplates = []Template{
 			Active: false,
 			Nodes: []model.Node{
 				{
-					ID:   "cron-1",
-					Name: "Schedule Trigger",
-					Type: "n8n-nodes-base.scheduleTrigger",
+					ID:       "cron-1",
+					Name:     "Schedule Trigger",
+					Type:     "n8n-nodes-base.scheduleTrigger",
 					Position: []int{250, 300},
 					Parameters: map[string]interface{}{
 						"rule": map[string]interface{}{
@@ -1021,15 +1304,15 @@ var builtInTemplates = []Template{
 			Active: false,
 			Nodes: []model.Node{
 				{
-					ID:   "trigger-1",
-					Name: "Manual Trigger",
-					Type: "n8n-nodes-base.manualTrigger",
+					ID:       "trigger-1",
+					Name:     "Manual Trigger",
+					Type:     "n8n-nodes-base.manualTrigger",
 					Position: []int{250, 300},
 				},
 				{
-					ID:   "http-1",
-					Name: "HTTP Request",
-					Type: "n8n-nodes-base.httpRequest",
+					ID:       "http-1",
+					Name:     "HTTP Request",
+					Type:     "n8n-nodes-base.httpRequest",
 					Position: []int{450, 300},
 					Parameters: map[string]interface{}{
 						"method": "GET",
@@ -1057,15 +1340,15 @@ var builtInTemplates = []Template{
 			Active: false,
 			Nodes: []model.Node{
 				{
-					ID:   "trigger-1",
-					Name: "Manual Trigger",
-					Type: "n8n-nodes-base.manualTrigger",
+					ID:       "trigger-1",
+					Name:     "Manual Trigger",
+					Type:     "n8n-nodes-base.manualTrigger",
 					Position: []int{250, 300},
 				},
 				{
-					ID:   "set-1",
-					Name: "Set Data",
-					Type: "n8n-nodes-base.set",
+					ID:       "set-1",
+					Name:     "Set Data",
+					Type:     "n8n-nodes-base.set",
 					Position: []int{450, 300},
 					Parameters: map[string]interface{}{
 						"values": map[string]interface{}{
@@ -1188,6 +1471,16 @@ func (s *APIServer) ApplyTemplate(w http.ResponseWriter, r *http.Request) {
 }
 
 // EvaluateExpression evaluates an n8n expression
+// maxExpressionLength limits the size of expressions to prevent DoS
+const maxExpressionLength = 10000
+
+// dangerousPatterns contains patterns that could indicate injection attempts
+var dangerousPatterns = []string{
+	"require(", "import(", "eval(", "Function(",
+	"process.", "global.", "__proto__", "constructor.",
+	"Reflect.", "Proxy(", "Object.defineProperty",
+}
+
 func (s *APIServer) EvaluateExpression(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Expression string                 `json:"expression"`
@@ -1201,6 +1494,18 @@ func (s *APIServer) EvaluateExpression(w http.ResponseWriter, r *http.Request) {
 
 	if req.Expression == "" {
 		s.sendError(w, http.StatusBadRequest, "Expression is required", nil)
+		return
+	}
+
+	// Security: Limit expression length
+	if len(req.Expression) > maxExpressionLength {
+		s.sendError(w, http.StatusBadRequest, "Expression too long", nil)
+		return
+	}
+
+	// Security: Check for dangerous patterns
+	if containsDangerousPattern(req.Expression) {
+		s.sendError(w, http.StatusBadRequest, "Expression contains disallowed constructs", nil)
 		return
 	}
 
@@ -1230,6 +1535,17 @@ func (s *APIServer) EvaluateExpression(w http.ResponseWriter, r *http.Request) {
 		"success": true,
 		"result":  result,
 	})
+}
+
+// containsDangerousPattern checks if expression contains potentially dangerous code
+func containsDangerousPattern(expr string) bool {
+	lowerExpr := strings.ToLower(expr)
+	for _, pattern := range dangerousPatterns {
+		if strings.Contains(lowerExpr, strings.ToLower(pattern)) {
+			return true
+		}
+	}
+	return false
 }
 
 // ============================================================================

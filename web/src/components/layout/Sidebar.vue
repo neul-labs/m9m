@@ -9,6 +9,7 @@ import {
   PlusIcon,
   DocumentDuplicateIcon,
   ChartBarIcon,
+  CalendarDaysIcon,
 } from '@heroicons/vue/24/outline'
 
 const route = useRoute()
@@ -26,6 +27,7 @@ const navItems: NavItem[] = [
   { name: 'Workflows', path: '/workflows', icon: BoltIcon },
   { name: 'Templates', path: '/templates', icon: DocumentDuplicateIcon, badge: 'New' },
   { name: 'Executions', path: '/executions', icon: ClockIcon },
+  { name: 'Schedules', path: '/schedules', icon: CalendarDaysIcon },
   { name: 'Performance', path: '/performance', icon: ChartBarIcon },
   { name: 'Credentials', path: '/credentials', icon: KeyIcon },
   { name: 'Settings', path: '/settings', icon: Cog6ToothIcon },

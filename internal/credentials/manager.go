@@ -123,17 +123,17 @@ func (cm *CredentialManager) InjectCredentialsIntoNodeParameters(nodeID string, 
 func (cm *CredentialManager) GetNodeCredentials(nodeID string) (map[string]string, error) {
 	cm.mu.RLock()
 	defer cm.mu.RUnlock()
-	
+
 	// Get the credential mappings for this node
 	mappings, exists := cm.nodeMappings[nodeID]
 	if !exists {
 		// No credentials registered for this node
 		return make(map[string]string), nil
 	}
-	
+
 	// Resolve each credential
 	resolvedCredentials := make(map[string]string)
-	
+
 	for paramName, credentialID := range mappings {
 		cred, err := cm.store.GetCredential(credentialID)
 		if err != nil {
@@ -142,18 +142,18 @@ func (cm *CredentialManager) GetNodeCredentials(nodeID string) (map[string]strin
 			resolvedCredentials[paramName] = ""
 			continue
 		}
-		
+
 		// Resolve credential values, handling environment variables
 		for key, value := range cred.Data {
 			resolvedValue, err := cm.store.ResolveCredentialValue(value)
 			if err != nil {
 				return nil, fmt.Errorf("failed to resolve credential value for %s.%s: %v", paramName, key, err)
 			}
-			
+
 			// Store with prefixed key to avoid conflicts
 			resolvedCredentials[fmt.Sprintf("%s_%s", paramName, key)] = resolvedValue
 		}
 	}
-	
+
 	return resolvedCredentials, nil
 }

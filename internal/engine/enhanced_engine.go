@@ -77,7 +77,7 @@ func (e *EnhancedWorkflowEngine) ExecuteWorkflowWithExpressions(
 	// Create execution context
 	runExecutionData := &expressions.RunExecutionData{
 		ExecutionData: &expressions.ExecutionData{
-			ContextData:         make(map[string]interface{}),
+			ContextData:        make(map[string]interface{}),
 			NodeExecutionStack: []interface{}{},
 			MetaData:           make(map[string]interface{}),
 			WaitingExecution:   make(map[string]interface{}),
@@ -125,12 +125,12 @@ func (e *EnhancedWorkflowEngine) ExecuteWorkflowWithExpressions(
 			context := &expressions.ExpressionContext{
 				Workflow:            workflow,
 				RunExecutionData:    runExecutionData,
-				RunIndex:           runIndex,
-				ItemIndex:          itemIndex,
-				ActiveNodeName:     node.Name,
+				RunIndex:            runIndex,
+				ItemIndex:           itemIndex,
+				ActiveNodeName:      node.Name,
 				ConnectionInputData: []model.DataItem{inputItem},
-				Mode:               e.executionMode,
-				AdditionalKeys:     e.createAdditionalKeys(),
+				Mode:                e.executionMode,
+				AdditionalKeys:      e.createAdditionalKeys(),
 			}
 
 			// Resolve expressions in node parameters
@@ -175,8 +175,8 @@ func (e *EnhancedWorkflowEngine) ExecuteWorkflowWithExpressions(
 
 		// Update run execution data
 		nodeExecutionResult := expressions.NodeExecutionResult{
-			Data:        allOutputData,
-			StartTime:   time.Now(),
+			Data:          allOutputData,
+			StartTime:     time.Now(),
 			ExecutionTime: 0, // This would be calculated properly in a real implementation
 		}
 		runExecutionData.ResultData.NodeData[nodeName] = []expressions.NodeExecutionResult{nodeExecutionResult}
@@ -206,7 +206,7 @@ func (e *EnhancedWorkflowEngine) ExecuteWorkflowWithExpressions(
 				finalOutput = append(finalOutput, data...)
 			}
 		}
-	} else if len(nodeResults) > 0 {
+	} else if len(nodeResults) > 0 && len(executionOrder) > 0 {
 		// If no clear final nodes, return output from last executed node
 		lastNodeName := executionOrder[len(executionOrder)-1]
 		finalOutput = nodeResults[lastNodeName]
@@ -242,11 +242,11 @@ func (e *EnhancedWorkflowEngine) resolveNodeParameters(
 func (e *EnhancedWorkflowEngine) createAdditionalKeys() *expressions.AdditionalKeys {
 	return &expressions.AdditionalKeys{
 		ExecutionId:           fmt.Sprintf("exec_%d", time.Now().UnixNano()),
-		RestApiUrl:           "http://localhost:5678/api/v1",
-		InstanceBaseUrl:      "http://localhost:5678",
-		WebhookBaseUrl:       "http://localhost:5678/webhook",
+		RestApiUrl:            "http://localhost:5678/api/v1",
+		InstanceBaseUrl:       "http://localhost:5678",
+		WebhookBaseUrl:        "http://localhost:5678/webhook",
 		WebhookWaitingBaseUrl: "http://localhost:5678/webhook-waiting",
-		WebhookTestBaseUrl:   "http://localhost:5678/webhook-test",
+		WebhookTestBaseUrl:    "http://localhost:5678/webhook-test",
 	}
 }
 

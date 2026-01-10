@@ -12,9 +12,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gorilla/websocket"
 	"github.com/dipankar/m9m/internal/messaging"
 	"github.com/dipankar/m9m/internal/model"
+	"github.com/gorilla/websocket"
 )
 
 // DistributedWebSocketManager manages WebSocket connections across cluster nodes
@@ -172,17 +172,24 @@ func (m *DistributedWebSocketManager) handleNodeExecution(msg messaging.Message)
 
 // sendToLocalClients sends a message to all local WebSocket clients
 func (m *DistributedWebSocketManager) sendToLocalClients(msgType string, data map[string]interface{}) {
+	// Copy client map under read lock to avoid holding lock during network operations
 	m.clientsMutex.RLock()
-	defer m.clientsMutex.RUnlock()
-
 	if len(m.localClients) == 0 {
+		m.clientsMutex.RUnlock()
 		return
 	}
 
+	// Copy clients to avoid holding lock during send
+	clients := make(map[string]*websocket.Conn, len(m.localClients))
+	for k, v := range m.localClients {
+		clients[k] = v
+	}
+	m.clientsMutex.RUnlock()
+
 	// Prepare message
 	message := map[string]interface{}{
-		"type": msgType,
-		"data": data,
+		"type":      msgType,
+		"data":      data,
 		"timestamp": time.Now().Unix(),
 	}
 
@@ -192,18 +199,17 @@ func (m *DistributedWebSocketManager) sendToLocalClients(msgType string, data ma
 		return
 	}
 
-	// Send to all local clients
+	// Send to all clients (without holding lock)
 	var disconnected []string
-	for clientID, conn := range m.localClients {
+	for clientID, conn := range clients {
 		if err := conn.WriteMessage(websocket.TextMessage, messageJSON); err != nil {
 			log.Printf("Error sending message to client %s: %v", clientID, err)
 			disconnected = append(disconnected, clientID)
 		}
 	}
 
-	// Clean up disconnected clients
+	// Clean up disconnected clients with separate write lock
 	if len(disconnected) > 0 {
-		m.clientsMutex.RUnlock()
 		m.clientsMutex.Lock()
 		for _, clientID := range disconnected {
 			if conn, exists := m.localClients[clientID]; exists {
@@ -212,7 +218,6 @@ func (m *DistributedWebSocketManager) sendToLocalClients(msgType string, data ma
 			}
 		}
 		m.clientsMutex.Unlock()
-		m.clientsMutex.RLock()
 	}
 }
 
@@ -227,8 +232,8 @@ func (m *DistributedWebSocketManager) SendToClient(clientID string, msgType stri
 	}
 
 	message := map[string]interface{}{
-		"type": msgType,
-		"data": data,
+		"type":      msgType,
+		"data":      data,
 		"timestamp": time.Now().Unix(),
 	}
 
@@ -305,7 +310,7 @@ func (m *DistributedWebSocketManager) Stats() map[string]interface{} {
 	defer m.clientsMutex.RUnlock()
 
 	return map[string]interface{}{
-		"local_clients":      len(m.localClients),
-		"messaging_stats":    m.messaging.Stats(),
+		"local_clients":   len(m.localClients),
+		"messaging_stats": m.messaging.Stats(),
 	}
 }

@@ -28,25 +28,25 @@ const (
 	ErrCodeUnprocessableEntity ErrorCode = "UNPROCESSABLE_ENTITY"
 
 	// Server errors (5xx)
-	ErrCodeInternalError    ErrorCode = "INTERNAL_ERROR"
-	ErrCodeNotImplemented   ErrorCode = "NOT_IMPLEMENTED"
+	ErrCodeInternalError      ErrorCode = "INTERNAL_ERROR"
+	ErrCodeNotImplemented     ErrorCode = "NOT_IMPLEMENTED"
 	ErrCodeServiceUnavailable ErrorCode = "SERVICE_UNAVAILABLE"
-	ErrCodeDatabaseError    ErrorCode = "DATABASE_ERROR"
-	ErrCodeExternalService  ErrorCode = "EXTERNAL_SERVICE_ERROR"
+	ErrCodeDatabaseError      ErrorCode = "DATABASE_ERROR"
+	ErrCodeExternalService    ErrorCode = "EXTERNAL_SERVICE_ERROR"
 
 	// Domain-specific errors
-	ErrCodeWorkflowNotFound    ErrorCode = "WORKFLOW_NOT_FOUND"
-	ErrCodeWorkflowInactive    ErrorCode = "WORKFLOW_INACTIVE"
-	ErrCodeExecutionNotFound   ErrorCode = "EXECUTION_NOT_FOUND"
-	ErrCodeExecutionFailed     ErrorCode = "EXECUTION_FAILED"
-	ErrCodeCredentialNotFound  ErrorCode = "CREDENTIAL_NOT_FOUND"
-	ErrCodeCredentialInvalid   ErrorCode = "CREDENTIAL_INVALID"
-	ErrCodeNodeNotFound        ErrorCode = "NODE_NOT_FOUND"
-	ErrCodeNodeExecutionError  ErrorCode = "NODE_EXECUTION_ERROR"
-	ErrCodeExpressionError     ErrorCode = "EXPRESSION_ERROR"
-	ErrCodeTemplateNotFound    ErrorCode = "TEMPLATE_NOT_FOUND"
-	ErrCodeWebhookNotFound     ErrorCode = "WEBHOOK_NOT_FOUND"
-	ErrCodeSchedulerError      ErrorCode = "SCHEDULER_ERROR"
+	ErrCodeWorkflowNotFound   ErrorCode = "WORKFLOW_NOT_FOUND"
+	ErrCodeWorkflowInactive   ErrorCode = "WORKFLOW_INACTIVE"
+	ErrCodeExecutionNotFound  ErrorCode = "EXECUTION_NOT_FOUND"
+	ErrCodeExecutionFailed    ErrorCode = "EXECUTION_FAILED"
+	ErrCodeCredentialNotFound ErrorCode = "CREDENTIAL_NOT_FOUND"
+	ErrCodeCredentialInvalid  ErrorCode = "CREDENTIAL_INVALID"
+	ErrCodeNodeNotFound       ErrorCode = "NODE_NOT_FOUND"
+	ErrCodeNodeExecutionError ErrorCode = "NODE_EXECUTION_ERROR"
+	ErrCodeExpressionError    ErrorCode = "EXPRESSION_ERROR"
+	ErrCodeTemplateNotFound   ErrorCode = "TEMPLATE_NOT_FOUND"
+	ErrCodeWebhookNotFound    ErrorCode = "WEBHOOK_NOT_FOUND"
+	ErrCodeSchedulerError     ErrorCode = "SCHEDULER_ERROR"
 )
 
 // APIError represents a structured API error

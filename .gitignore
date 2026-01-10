@@ -8,7 +8,13 @@ m9m
 # Build artifacts
 *.o
 *.a
+/build/
+*.dylib
+*.dll
+
+# CGO shared library (keep .so rule but be more specific)
 *.so
+!bindings/nodejs/build/Release/*.node
 
 # IDE files
 *.swp
@@ -38,3 +44,27 @@ go.work
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Python bindings
+bindings/python/.venv/
+bindings/python/__pycache__/
+bindings/python/*.egg-info/
+bindings/python/dist/
+bindings/python/.pytest_cache/
+bindings/python/uv.lock
+*.pyc
+*.pyo
+
+# Node.js bindings
+bindings/nodejs/node_modules/
+bindings/nodejs/dist/
+bindings/nodejs/build/
+bindings/nodejs/lib/*.node
+bindings/nodejs/lib/*.so
+bindings/nodejs/lib/*.dylib
+bindings/nodejs/lib/*.dll
+bindings/nodejs/.npmrc
+bindings/nodejs/package-lock.json
+
+# CGO header (generated)
+cgo/*.h

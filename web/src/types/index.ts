@@ -1,3 +1,5 @@
 export * from './workflow'
 export * from './node'
 export * from './api'
+export * from './schedule'
+export * from './version'

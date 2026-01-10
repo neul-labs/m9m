@@ -20,15 +20,15 @@ import (
 
 // DistributedScheduler wraps WorkflowScheduler with distributed coordination
 type DistributedScheduler struct {
-	raft              *consensus.RaftNode
-	engine            engine.WorkflowEngine
-	storage           storage.WorkflowStorage
-	scheduler         *WorkflowScheduler
-	isLeader          bool
-	leadershipMutex   sync.RWMutex
-	ctx               context.Context
-	cancel            context.CancelFunc
-	leadershipTicker  *time.Ticker
+	raft             *consensus.RaftNode
+	engine           engine.WorkflowEngine
+	storage          storage.WorkflowStorage
+	scheduler        *WorkflowScheduler
+	isLeader         bool
+	leadershipMutex  sync.RWMutex
+	ctx              context.Context
+	cancel           context.CancelFunc
+	leadershipTicker *time.Ticker
 }
 
 // NewDistributedScheduler creates a new distributed scheduler
@@ -248,13 +248,13 @@ func (ds *DistributedScheduler) GetExecutionHistory(scheduleID string, limit int
 	return ds.scheduler.GetExecutionHistory(scheduleID, limit)
 }
 
-// GetMetrics returns scheduler metrics
-func (ds *DistributedScheduler) GetMetrics() *SchedulerMetrics {
+// GetMetrics returns scheduler metrics as a snapshot
+func (ds *DistributedScheduler) GetMetrics() SchedulerMetricsSnapshot {
 	ds.leadershipMutex.RLock()
 	defer ds.leadershipMutex.RUnlock()
 
 	if !ds.isLeader {
-		return &SchedulerMetrics{}
+		return SchedulerMetricsSnapshot{}
 	}
 
 	return ds.scheduler.GetMetrics()

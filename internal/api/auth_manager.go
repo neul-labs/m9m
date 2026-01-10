@@ -26,15 +26,15 @@ type AuthManager struct {
 
 // APIKey represents an API key with metadata
 type APIKey struct {
-	ID          string    `json:"id"`
-	Name        string    `json:"name"`
-	Key         string    `json:"key"`
-	HashedKey   string    `json:"-"` // Never expose the actual key
-	Permissions []string  `json:"permissions"`
-	CreatedAt   time.Time `json:"created_at"`
-	LastUsed    time.Time `json:"last_used"`
+	ID          string     `json:"id"`
+	Name        string     `json:"name"`
+	Key         string     `json:"key"`
+	HashedKey   string     `json:"-"` // Never expose the actual key
+	Permissions []string   `json:"permissions"`
+	CreatedAt   time.Time  `json:"created_at"`
+	LastUsed    time.Time  `json:"last_used"`
 	ExpiresAt   *time.Time `json:"expires_at,omitempty"`
-	Active      bool      `json:"active"`
+	Active      bool       `json:"active"`
 }
 
 // Session represents a user session
@@ -109,15 +109,14 @@ func (am *AuthManager) authenticateRequest(r *http.Request) (*AuthContext, error
 		}
 	}
 
-	// Try API key authentication
+	// Try API key authentication (header only - query params are insecure)
 	if apiKey := r.Header.Get("X-API-Key"); apiKey != "" {
 		return am.validateAPIKey(apiKey, r.RemoteAddr, r.UserAgent())
 	}
 
-	// Try API key from query parameter (less secure, but sometimes needed)
-	if apiKey := r.URL.Query().Get("api_key"); apiKey != "" {
-		return am.validateAPIKey(apiKey, r.RemoteAddr, r.UserAgent())
-	}
+	// NOTE: API key from query parameter removed for security reasons.
+	// Query parameters are logged in server logs, browser history, and proxy caches.
+	// Use X-API-Key header instead.
 
 	return nil, fmt.Errorf("no valid authentication provided")
 }

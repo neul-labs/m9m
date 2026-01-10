@@ -62,23 +62,33 @@ func DefaultReliableEngineConfig() *ReliableEngineConfig {
 
 // ReliableWorkflowEngine wraps the base engine with reliability features
 type ReliableWorkflowEngine struct {
-	baseEngine        *workflowEngineImpl
-	config            *ReliableEngineConfig
-	circuitBreakers   map[string]*reliability.CircuitBreaker
-	bulkheads         map[string]*reliability.Bulkhead
-	mu                sync.RWMutex
-	executionMetrics  *ExecutionMetrics
+	baseEngine       *workflowEngineImpl
+	config           *ReliableEngineConfig
+	circuitBreakers  map[string]*reliability.CircuitBreaker
+	bulkheads        map[string]*reliability.Bulkhead
+	mu               sync.RWMutex
+	executionMetrics *ExecutionMetrics
 }
 
 // ExecutionMetrics tracks execution statistics
 type ExecutionMetrics struct {
-	TotalExecutions    int64
-	SuccessfulNodes    int64
-	FailedNodes        int64
-	RetriedNodes       int64
+	TotalExecutions     int64
+	SuccessfulNodes     int64
+	FailedNodes         int64
+	RetriedNodes        int64
 	CircuitBreakerTrips int64
-	AverageLatencyMs   float64
-	mu                 sync.RWMutex
+	AverageLatencyMs    float64
+	mu                  sync.RWMutex // protects all fields above
+}
+
+// ExecutionMetricsSnapshot is a copy of ExecutionMetrics without the mutex (safe to return by value)
+type ExecutionMetricsSnapshot struct {
+	TotalExecutions     int64   `json:"totalExecutions"`
+	SuccessfulNodes     int64   `json:"successfulNodes"`
+	FailedNodes         int64   `json:"failedNodes"`
+	RetriedNodes        int64   `json:"retriedNodes"`
+	CircuitBreakerTrips int64   `json:"circuitBreakerTrips"`
+	AverageLatencyMs    float64 `json:"averageLatencyMs"`
 }
 
 // NewReliableWorkflowEngine creates a new reliable workflow engine
@@ -88,7 +98,7 @@ func NewReliableWorkflowEngine(config *ReliableEngineConfig) *ReliableWorkflowEn
 	}
 
 	return &ReliableWorkflowEngine{
-		baseEngine:       &workflowEngineImpl{
+		baseEngine: &workflowEngineImpl{
 			nodeRegistry:     make(NodeRegistry),
 			connectionRouter: connections.NewConnectionRouter(),
 		},
@@ -280,15 +290,19 @@ func (e *ReliableWorkflowEngine) executeNodeWithReliability(
 	bulkhead := e.bulkheads[node.Type]
 	e.mu.RUnlock()
 
-	// Core execution function
+	// Capture result from execution to avoid double execution
+	var result []model.DataItem
+	var resultErr error
+
+	// Core execution function - captures result in closure
 	coreExec := func(execCtx context.Context) error {
 		select {
 		case <-execCtx.Done():
 			return execCtx.Err()
 		default:
 		}
-		_, err := executor.Execute(inputData, params)
-		return err
+		result, resultErr = executor.Execute(inputData, params)
+		return resultErr
 	}
 
 	// Wrap with bulkhead if enabled
@@ -342,17 +356,23 @@ func (e *ReliableWorkflowEngine) executeNodeWithReliability(
 		if err != nil {
 			return nil, err
 		}
-		// Re-execute to get the result after successful retry
-		result, execErr := executor.Execute(inputData, params)
-		return result, execErr
+		// Return the captured result from the successful execution
+		return result, nil
 	}
 
-	// Execute without retries
+	// Execute without retries - check context first
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+	}
+
 	err := execWithCB(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return executor.Execute(inputData, params)
+	// Return the captured result from the successful execution
+	return result, nil
 }
 
 // ExecuteWorkflowParallel executes multiple workflows in parallel
@@ -387,11 +407,18 @@ func (e *ReliableWorkflowEngine) ExecuteWorkflowParallel(workflows []*model.Work
 	return results, nil
 }
 
-// GetMetrics returns execution metrics
-func (e *ReliableWorkflowEngine) GetMetrics() ExecutionMetrics {
+// GetMetrics returns execution metrics as a snapshot (safe to use without mutex concerns)
+func (e *ReliableWorkflowEngine) GetMetrics() ExecutionMetricsSnapshot {
 	e.executionMetrics.mu.RLock()
 	defer e.executionMetrics.mu.RUnlock()
-	return *e.executionMetrics
+	return ExecutionMetricsSnapshot{
+		TotalExecutions:     e.executionMetrics.TotalExecutions,
+		SuccessfulNodes:     e.executionMetrics.SuccessfulNodes,
+		FailedNodes:         e.executionMetrics.FailedNodes,
+		RetriedNodes:        e.executionMetrics.RetriedNodes,
+		CircuitBreakerTrips: e.executionMetrics.CircuitBreakerTrips,
+		AverageLatencyMs:    e.executionMetrics.AverageLatencyMs,
+	}
 }
 
 // GetCircuitBreakerStatus returns circuit breaker status for all node types
