@@ -4,6 +4,11 @@ Documentation for m9m, a high-performance workflow automation platform built in 
 
 ## Documentation Structure
 
+### Claude Code Integration (MCP)
+- [MCP Overview](mcp/README.md) - Use Claude Code to orchestrate workflows conversationally
+- 37 MCP tools for workflow automation, debugging, and plugin development
+- Local mode (SQLite/Postgres) and Cloud mode (remote API) support
+
 ### Getting Started
 - [Technical Specification](technical-spec.md) - System overview and architecture
 - [Performance Report](performance-report.md) - Benchmarks and optimization

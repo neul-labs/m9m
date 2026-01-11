@@ -96,6 +96,11 @@ nav:
     - Installation: getting-started/installation.md
     - Quick Start: getting-started/quickstart.md
     - Your First Workflow: getting-started/first-workflow.md
+  - Claude Code (MCP):
+    - Overview: mcp/overview.md
+    - Available Tools: mcp/tools.md
+    - Custom Plugins: mcp/plugins.md
+    - Examples: mcp/examples.md
   - User Guide:
     - Workflows: user-guide/workflows.md
     - Expressions: user-guide/expressions.md

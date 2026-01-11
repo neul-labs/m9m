@@ -26,6 +26,64 @@ m9m is a high-performance, cloud-native workflow automation platform built in Go
 - **Cloud platforms** with AWS, GCP, and Azure native support
 - **Productivity tools** including Google Sheets and Microsoft 365
 
+## Claude Code Integration (MCP)
+
+m9m includes a built-in MCP (Model Context Protocol) server that enables Claude Code to orchestrate workflows conversationally. This allows you to create, execute, and manage workflows using natural language.
+
+### Quick Start with Claude Code
+
+```bash
+# Build the MCP server
+go build -o mcp-server ./cmd/mcp-server
+
+# Add to Claude Code MCP settings (~/.claude/claude_desktop_config.json)
+{
+  "mcpServers": {
+    "m9m": {
+      "command": "/path/to/mcp-server",
+      "args": ["--data", "./data"]
+    }
+  }
+}
+```
+
+### MCP Server Modes
+
+| Mode | Command | Description |
+|------|---------|-------------|
+| **Local + SQLite** | `./mcp-server` | Default, persists to `./data/m9m.db` |
+| **Local + Postgres** | `./mcp-server --postgres "postgres://..."` | Production local setup |
+| **Cloud** | `./mcp-server --api-url https://m9m.example.com` | Connect to remote m9m |
+
+### Available MCP Tools (37 tools)
+
+| Category | Tools | Description |
+|----------|-------|-------------|
+| **Node Discovery** | 4 | List/search available node types |
+| **Quick Actions** | 6 | `http_request`, `send_slack`, `ai_openai`, etc. |
+| **Workflow Management** | 9 | Create, update, delete, activate workflows |
+| **Execution** | 7 | Run, monitor, cancel, retry workflows |
+| **Debugging** | 5 | Execution logs, node outputs, performance |
+| **Plugins** | 6 | Create JavaScript/REST custom nodes |
+
+### Example Conversations
+
+```
+You: "Send a Slack message to #alerts saying 'Deployment complete'"
+Claude: [Uses send_slack tool to send the message]
+
+You: "Create a workflow that checks our API health every 5 minutes"
+Claude: [Creates workflow with HTTP Request + Slack nodes, schedules it]
+
+You: "My last workflow failed, what went wrong?"
+Claude: [Gets execution logs and explains the error]
+
+You: "Create a custom node that formats timestamps"
+Claude: [Creates JavaScript plugin node using Goja runtime]
+```
+
+See [MCP Documentation](docs/mcp/README.md) for detailed usage.
+
 ## Quick Start
 
 ### Installation
@@ -423,6 +481,7 @@ make build
 ## Documentation
 
 - [Documentation Index](docs/README.md)
+- [MCP / Claude Code Integration](docs/mcp/README.md)
 - [Architecture](docs/architecture/README.md)
 - [API Reference](docs/api/API_COMPATIBILITY.md)
 - [SDK & Bindings](docs/sdk/README.md)
