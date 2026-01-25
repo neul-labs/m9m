@@ -1,20 +1,17 @@
 # Binaries
 m9m
-/bin/m9m
-/bin/*
+mcp-server
+n8n-go
+/bin/
 *.exe
 *.exe~
 
 # Build artifacts
 *.o
 *.a
-/build/
+*.so
 *.dylib
 *.dll
-
-# CGO shared library (keep .so rule but be more specific)
-*.so
-!bindings/nodejs/build/Release/*.node
 
 # IDE files
 *.swp
@@ -45,7 +42,11 @@ go.work
 ehthumbs.db
 Thumbs.db
 
-# Python bindings
+# Web frontend
+web/node_modules/
+web/dist/
+
+# Python bindings (build artifacts)
 bindings/python/.venv/
 bindings/python/__pycache__/
 bindings/python/*.egg-info/
@@ -55,7 +56,7 @@ bindings/python/uv.lock
 *.pyc
 *.pyo
 
-# Node.js bindings
+# Node.js bindings (build artifacts)
 bindings/nodejs/node_modules/
 bindings/nodejs/dist/
 bindings/nodejs/build/
@@ -63,8 +64,4 @@ bindings/nodejs/lib/*.node
 bindings/nodejs/lib/*.so
 bindings/nodejs/lib/*.dylib
 bindings/nodejs/lib/*.dll
-bindings/nodejs/.npmrc
 bindings/nodejs/package-lock.json
-
-# CGO header (generated)
-cgo/*.h

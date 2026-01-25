@@ -2,7 +2,7 @@
 
 # Build variables
 BINARY_NAME=m9m
-MAIN_FILE=cmd/m9m/main.go
+MAIN_PKG=./cmd/mcp-server
 
 # Default target
 .PHONY: all
@@ -11,7 +11,7 @@ all: build
 # Build the application
 .PHONY: build
 build:
-	go build -o ${BINARY_NAME} ${MAIN_FILE}
+	go build -o ${BINARY_NAME} ${MAIN_PKG}
 
 # Install dependencies
 .PHONY: deps
@@ -81,14 +81,14 @@ web-dev: web-deps
 build-with-frontend: web-build
 	mkdir -p internal/web/dist
 	cp -r ${WEB_DIR}/dist/* internal/web/dist/
-	go build -o ${BINARY_NAME} ${MAIN_FILE}
+	go build -o ${BINARY_NAME} ${MAIN_PKG}
 
-# Run development mode (backend + frontend proxy)
+# Run development mode
 .PHONY: dev
 dev:
 	@echo "Starting m9m in development mode..."
 	@echo "Run 'make web-dev' in another terminal for frontend hot-reload"
-	./${BINARY_NAME} --mode control
+	./${BINARY_NAME}
 
 # Install golint if not present
 .PHONY: install-lint
