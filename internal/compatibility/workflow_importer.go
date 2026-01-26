@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dipankar/m9m/internal/model"
+	"github.com/neul-labs/m9m/internal/model"
 )
 
 type N8nWorkflowImporter struct {

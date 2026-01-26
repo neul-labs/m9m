@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/dipankar/m9m/internal/expressions"
-	"github.com/dipankar/m9m/internal/model"
-	"github.com/dipankar/m9m/internal/nodes/base"
+	"github.com/neul-labs/m9m/internal/expressions"
+	"github.com/neul-labs/m9m/internal/model"
+	"github.com/neul-labs/m9m/internal/nodes/base"
 )
 
 // JSONNode implements the JSON node functionality for parsing and manipulating JSON data

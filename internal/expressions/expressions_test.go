@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dipankar/m9m/internal/model"
+	"github.com/neul-labs/m9m/internal/model"
 )
 
 // TestExpressionCompatibility tests n8n expression compatibility

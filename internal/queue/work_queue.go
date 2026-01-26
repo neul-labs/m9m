@@ -15,7 +15,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dipankar/m9m/internal/model"
+	"github.com/neul-labs/m9m/internal/model"
 	"go.nanomsg.org/mangos/v3"
 	"go.nanomsg.org/mangos/v3/protocol/pull"
 	"go.nanomsg.org/mangos/v3/protocol/push"

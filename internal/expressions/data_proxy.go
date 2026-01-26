@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/dop251/goja"
-	"github.com/dipankar/m9m/internal/model"
+	"github.com/neul-labs/m9m/internal/model"
 )
 
 // WorkflowExecuteMode represents the execution mode of the workflow

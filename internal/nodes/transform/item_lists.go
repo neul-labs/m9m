@@ -6,8 +6,8 @@ package transform
 import (
 	"fmt"
 	
-	"github.com/dipankar/m9m/internal/model"
-	"github.com/dipankar/m9m/internal/nodes/base"
+	"github.com/neul-labs/m9m/internal/model"
+	"github.com/neul-labs/m9m/internal/nodes/base"
 )
 
 // ItemListsNode implements the Item Lists node functionality

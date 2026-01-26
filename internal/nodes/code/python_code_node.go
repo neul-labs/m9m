@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/dipankar/m9m/internal/model"
-	"github.com/dipankar/m9m/internal/nodes/base"
-	"github.com/dipankar/m9m/internal/runtime"
+	"github.com/neul-labs/m9m/internal/model"
+	"github.com/neul-labs/m9m/internal/nodes/base"
+	"github.com/neul-labs/m9m/internal/runtime"
 )
 
 // PythonCodeNode executes Python code with n8n compatibility

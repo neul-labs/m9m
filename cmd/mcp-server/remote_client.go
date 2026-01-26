@@ -10,12 +10,12 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/dipankar/m9m/internal/connections"
-	"github.com/dipankar/m9m/internal/credentials"
-	"github.com/dipankar/m9m/internal/engine"
-	"github.com/dipankar/m9m/internal/model"
-	"github.com/dipankar/m9m/internal/nodes/base"
-	"github.com/dipankar/m9m/internal/storage"
+	"github.com/neul-labs/m9m/internal/connections"
+	"github.com/neul-labs/m9m/internal/credentials"
+	"github.com/neul-labs/m9m/internal/engine"
+	"github.com/neul-labs/m9m/internal/model"
+	"github.com/neul-labs/m9m/internal/nodes/base"
+	"github.com/neul-labs/m9m/internal/storage"
 )
 
 // RemoteClient implements both WorkflowStorage and WorkflowEngine interfaces

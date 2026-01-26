@@ -6,7 +6,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/dipankar/m9m/internal/storage"
+	"github.com/neul-labs/m9m/internal/storage"
 )
 
 // TagStorage defines the interface for tag persistence

@@ -3,7 +3,7 @@ package storage
 import (
 	"time"
 
-	"github.com/dipankar/m9m/internal/model"
+	"github.com/neul-labs/m9m/internal/model"
 )
 
 // WorkflowStorage defines the interface for workflow persistence

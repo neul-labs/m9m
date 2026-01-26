@@ -2,7 +2,7 @@ package base
 
 import (
 	"testing"
-	"github.com/dipankar/m9m/internal/model"
+	"github.com/neul-labs/m9m/internal/model"
 )
 
 func TestBaseNodeCreation(t *testing.T) {

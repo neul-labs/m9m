@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dipankar/m9m/internal/auth"
+	"github.com/neul-labs/m9m/internal/auth"
 )
 
 // SecurityHeadersMiddleware adds security headers to all responses

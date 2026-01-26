@@ -9,12 +9,12 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/dipankar/m9m/internal/engine"
-	"github.com/dipankar/m9m/internal/model"
-	"github.com/dipankar/m9m/internal/nodes/core"
-	"github.com/dipankar/m9m/internal/nodes/transform"
-	"github.com/dipankar/m9m/internal/nodes/http"
-	"github.com/dipankar/m9m/internal/nodes/trigger"
+	"github.com/neul-labs/m9m/internal/engine"
+	"github.com/neul-labs/m9m/internal/model"
+	"github.com/neul-labs/m9m/internal/nodes/core"
+	"github.com/neul-labs/m9m/internal/nodes/transform"
+	"github.com/neul-labs/m9m/internal/nodes/http"
+	"github.com/neul-labs/m9m/internal/nodes/trigger"
 )
 
 func main() {

@@ -13,23 +13,23 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/dipankar/m9m/internal/credentials"
-	"github.com/dipankar/m9m/internal/engine"
-	"github.com/dipankar/m9m/internal/model"
-	"github.com/dipankar/m9m/internal/storage"
-	"github.com/dipankar/m9m/internal/workspace"
+	"github.com/neul-labs/m9m/internal/credentials"
+	"github.com/neul-labs/m9m/internal/engine"
+	"github.com/neul-labs/m9m/internal/model"
+	"github.com/neul-labs/m9m/internal/storage"
+	"github.com/neul-labs/m9m/internal/workspace"
 
 	// Import node packages
-	"github.com/dipankar/m9m/internal/nodes/ai"
-	"github.com/dipankar/m9m/internal/nodes/core"
-	"github.com/dipankar/m9m/internal/nodes/database"
-	"github.com/dipankar/m9m/internal/nodes/email"
-	"github.com/dipankar/m9m/internal/nodes/http"
-	"github.com/dipankar/m9m/internal/nodes/messaging"
-	"github.com/dipankar/m9m/internal/nodes/timer"
-	"github.com/dipankar/m9m/internal/nodes/transform"
-	"github.com/dipankar/m9m/internal/nodes/trigger"
-	"github.com/dipankar/m9m/internal/nodes/vcs"
+	"github.com/neul-labs/m9m/internal/nodes/ai"
+	"github.com/neul-labs/m9m/internal/nodes/core"
+	"github.com/neul-labs/m9m/internal/nodes/database"
+	"github.com/neul-labs/m9m/internal/nodes/email"
+	"github.com/neul-labs/m9m/internal/nodes/http"
+	"github.com/neul-labs/m9m/internal/nodes/messaging"
+	"github.com/neul-labs/m9m/internal/nodes/timer"
+	"github.com/neul-labs/m9m/internal/nodes/transform"
+	"github.com/neul-labs/m9m/internal/nodes/trigger"
+	"github.com/neul-labs/m9m/internal/nodes/vcs"
 )
 
 const (

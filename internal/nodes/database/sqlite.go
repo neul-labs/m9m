@@ -9,8 +9,8 @@ import (
 	
 	_ "github.com/mattn/go-sqlite3" // SQLite driver
 	
-	"github.com/dipankar/m9m/internal/model"
-	"github.com/dipankar/m9m/internal/nodes/base"
+	"github.com/neul-labs/m9m/internal/model"
+	"github.com/neul-labs/m9m/internal/nodes/base"
 )
 
 // SQLiteNode implements the SQLite node functionality

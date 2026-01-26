@@ -36,8 +36,8 @@ Use the App Platform with our Dockerfile.
 
 ```bash
 # Pull and run
-docker pull ghcr.io/dipankar/m9m:latest
-docker run -d -p 8080:8080 ghcr.io/dipankar/m9m:latest
+docker pull ghcr.io/neul-labs/m9m:latest
+docker run -d -p 8080:8080 ghcr.io/neul-labs/m9m:latest
 
 # With docker-compose
 docker-compose up -d
@@ -120,5 +120,5 @@ helm install m9m m9m/m9m
 ## Support
 
 - Documentation: https://docs.m9m.io
-- GitHub Issues: https://github.com/dipankar/m9m/issues
+- GitHub Issues: https://github.com/neul-labs/m9m/issues
 - Discord: https://discord.gg/m9m

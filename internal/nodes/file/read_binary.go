@@ -13,9 +13,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dipankar/m9m/internal/expressions"
-	"github.com/dipankar/m9m/internal/model"
-	"github.com/dipankar/m9m/internal/nodes/base"
+	"github.com/neul-labs/m9m/internal/expressions"
+	"github.com/neul-labs/m9m/internal/model"
+	"github.com/neul-labs/m9m/internal/nodes/base"
 )
 
 // ReadBinaryFileNode reads binary files from the filesystem with enhanced security and features

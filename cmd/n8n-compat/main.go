@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/dipankar/m9m/internal/compatibility"
-	"github.com/dipankar/m9m/internal/runtime"
-	"github.com/dipankar/m9m/internal/model"
+	"github.com/neul-labs/m9m/internal/compatibility"
+	"github.com/neul-labs/m9m/internal/runtime"
+	"github.com/neul-labs/m9m/internal/model"
 )
 
 var (

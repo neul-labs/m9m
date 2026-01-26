@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dipankar/m9m/internal/storage"
+	"github.com/neul-labs/m9m/internal/storage"
 )
 
 // VersionStorage defines the interface for version persistence

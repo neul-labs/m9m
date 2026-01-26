@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/dipankar/m9m/internal/api"
+	"github.com/neul-labs/m9m/internal/api"
 	"github.com/gorilla/mux"
 )
 

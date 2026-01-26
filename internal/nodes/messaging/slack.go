@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/dipankar/m9m/internal/model"
-	"github.com/dipankar/m9m/internal/nodes/base"
+	"github.com/neul-labs/m9m/internal/model"
+	"github.com/neul-labs/m9m/internal/nodes/base"
 )
 
 // SlackNode sends messages to Slack

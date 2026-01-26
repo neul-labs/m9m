@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dipankar/m9m/internal/engine"
-	"github.com/dipankar/m9m/internal/mcp"
-	"github.com/dipankar/m9m/internal/plugins"
+	"github.com/neul-labs/m9m/internal/engine"
+	"github.com/neul-labs/m9m/internal/mcp"
+	"github.com/neul-labs/m9m/internal/plugins"
 )
 
 // PluginCreateJSTool creates a JavaScript plugin

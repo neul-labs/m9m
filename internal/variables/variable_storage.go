@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dipankar/m9m/internal/storage"
+	"github.com/neul-labs/m9m/internal/storage"
 )
 
 // VariableStorage defines the interface for variable persistence

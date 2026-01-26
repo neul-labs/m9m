@@ -12,7 +12,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dipankar/m9m/internal/expressions"
+	"github.com/neul-labs/m9m/internal/expressions"
 )
 
 type MarketplaceManager struct {

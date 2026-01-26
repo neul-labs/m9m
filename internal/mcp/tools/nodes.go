@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/dipankar/m9m/internal/mcp"
+	"github.com/neul-labs/m9m/internal/mcp"
 )
 
 // NodeTypeInfo describes a node type

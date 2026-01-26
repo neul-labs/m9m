@@ -8,8 +8,8 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/dipankar/m9m/internal/model"
-	"github.com/dipankar/m9m/internal/nodes/base"
+	"github.com/neul-labs/m9m/internal/model"
+	"github.com/neul-labs/m9m/internal/nodes/base"
 )
 
 // GoogleSheetsNode provides Google Sheets API integration

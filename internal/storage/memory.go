@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dipankar/m9m/internal/model"
+	"github.com/neul-labs/m9m/internal/model"
 )
 
 // MemoryStorage provides in-memory workflow storage (data will not persist)

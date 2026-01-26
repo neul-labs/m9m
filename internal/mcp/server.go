@@ -8,10 +8,10 @@ import (
 	"log"
 	"sync"
 
-	"github.com/dipankar/m9m/internal/credentials"
-	"github.com/dipankar/m9m/internal/engine"
-	"github.com/dipankar/m9m/internal/scheduler"
-	"github.com/dipankar/m9m/internal/storage"
+	"github.com/neul-labs/m9m/internal/credentials"
+	"github.com/neul-labs/m9m/internal/engine"
+	"github.com/neul-labs/m9m/internal/scheduler"
+	"github.com/neul-labs/m9m/internal/storage"
 )
 
 // Server represents an MCP server for m9m

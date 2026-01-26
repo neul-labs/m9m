@@ -6,8 +6,8 @@ package timer
 import (
 	"time"
 	
-	"github.com/dipankar/m9m/internal/model"
-	"github.com/dipankar/m9m/internal/nodes/base"
+	"github.com/neul-labs/m9m/internal/model"
+	"github.com/neul-labs/m9m/internal/nodes/base"
 )
 
 // CronNode implements the Cron node functionality

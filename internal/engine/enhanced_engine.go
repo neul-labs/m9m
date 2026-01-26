@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/dipankar/m9m/internal/expressions"
-	"github.com/dipankar/m9m/internal/model"
+	"github.com/neul-labs/m9m/internal/expressions"
+	"github.com/neul-labs/m9m/internal/model"
 )
 
 // EnhancedWorkflowEngine extends the base engine with expression evaluation

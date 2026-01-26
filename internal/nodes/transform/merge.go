@@ -3,9 +3,9 @@ package transform
 import (
 	"fmt"
 
-	"github.com/dipankar/m9m/internal/expressions"
-	"github.com/dipankar/m9m/internal/model"
-	"github.com/dipankar/m9m/internal/nodes/base"
+	"github.com/neul-labs/m9m/internal/expressions"
+	"github.com/neul-labs/m9m/internal/model"
+	"github.com/neul-labs/m9m/internal/nodes/base"
 )
 
 // MergeNode implements the Merge node functionality for combining data from multiple inputs

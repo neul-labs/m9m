@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dipankar/m9m/internal/model"
-	"github.com/dipankar/m9m/internal/runtime"
+	"github.com/neul-labs/m9m/internal/model"
+	"github.com/neul-labs/m9m/internal/runtime"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

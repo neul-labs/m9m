@@ -6,9 +6,9 @@ package transform
 import (
 	"fmt"
 
-	"github.com/dipankar/m9m/internal/model"
-	"github.com/dipankar/m9m/internal/nodes/base"
-	"github.com/dipankar/m9m/internal/expressions"
+	"github.com/neul-labs/m9m/internal/model"
+	"github.com/neul-labs/m9m/internal/nodes/base"
+	"github.com/neul-labs/m9m/internal/expressions"
 )
 
 // CodeNode implements the Code node functionality for executing custom code

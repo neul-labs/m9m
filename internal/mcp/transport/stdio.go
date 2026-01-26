@@ -8,7 +8,7 @@ import (
 	"io"
 	"sync"
 
-	"github.com/dipankar/m9m/internal/mcp"
+	"github.com/neul-labs/m9m/internal/mcp"
 )
 
 // StdioTransport implements MCP transport over stdin/stdout

@@ -173,10 +173,10 @@ build_from_source() {
     local cleanup_build_dir=false
 
     # Check if we're already in the m9m repo
-    if [ -f "go.mod" ] && grep -q "module github.com/dipankar/m9m" go.mod 2>/dev/null; then
+    if [ -f "go.mod" ] && grep -q "module github.com/neul-labs/m9m" go.mod 2>/dev/null; then
         info "Building from current directory..."
         build_dir="$(pwd)"
-    elif [ -f "../go.mod" ] && grep -q "module github.com/dipankar/m9m" ../go.mod 2>/dev/null; then
+    elif [ -f "../go.mod" ] && grep -q "module github.com/neul-labs/m9m" ../go.mod 2>/dev/null; then
         info "Building from parent directory..."
         build_dir="$(cd .. && pwd)"
     else
@@ -191,7 +191,7 @@ build_from_source() {
             info "Cloning repository..."
             if ! git clone --depth 1 "${REPO_URL}.git" "${build_dir}" 2>/dev/null; then
                 # Try alternate URL
-                if ! git clone --depth 1 "https://github.com/dipankar/m9m.git" "${build_dir}" 2>/dev/null; then
+                if ! git clone --depth 1 "https://github.com/neul-labs/m9m.git" "${build_dir}" 2>/dev/null; then
                     rm -rf "$tmp_dir"
                     error "Failed to clone repository"
                 fi
@@ -201,7 +201,7 @@ build_from_source() {
             local archive_url="${REPO_URL}/archive/refs/heads/main.tar.gz"
             if ! curl -sSL -o "${tmp_dir}/m9m.tar.gz" "$archive_url" 2>/dev/null; then
                 # Try alternate URL
-                archive_url="https://github.com/dipankar/m9m/archive/refs/heads/main.tar.gz"
+                archive_url="https://github.com/neul-labs/m9m/archive/refs/heads/main.tar.gz"
                 if ! curl -sSL -o "${tmp_dir}/m9m.tar.gz" "$archive_url"; then
                     rm -rf "$tmp_dir"
                     error "Failed to download source"

@@ -133,7 +133,7 @@ import (
     "time"
 
     badger "github.com/dgraph-io/badger/v4"
-    "github.com/dipankar/m9m/internal/model"
+    "github.com/neul-labs/m9m/internal/model"
 )
 
 // BadgerStorage implements WorkflowStorage using BadgerDB
@@ -633,9 +633,9 @@ import (
     "time"
 
     "github.com/robfig/cron/v3"
-    "github.com/dipankar/m9m/internal/consensus"
-    "github.com/dipankar/m9m/internal/engine"
-    "github.com/dipankar/m9m/internal/model"
+    "github.com/neul-labs/m9m/internal/consensus"
+    "github.com/neul-labs/m9m/internal/engine"
+    "github.com/neul-labs/m9m/internal/model"
 )
 
 // DistributedScheduler manages scheduled workflows in a Raft cluster
@@ -780,8 +780,8 @@ package api
 
 import (
     "github.com/gorilla/websocket"
-    "github.com/dipankar/m9m/internal/messaging"
-    "github.com/dipankar/m9m/internal/model"
+    "github.com/neul-labs/m9m/internal/messaging"
+    "github.com/neul-labs/m9m/internal/model"
 )
 
 // DistributedWebSocketManager manages WebSocket connections across nodes
@@ -856,12 +856,12 @@ import (
     "github.com/gorilla/mux"
     badger "github.com/dgraph-io/badger/v4"
 
-    "github.com/dipankar/m9m/internal/api"
-    "github.com/dipankar/m9m/internal/consensus"
-    "github.com/dipankar/m9m/internal/engine"
-    "github.com/dipankar/m9m/internal/messaging"
-    "github.com/dipankar/m9m/internal/scheduler"
-    "github.com/dipankar/m9m/internal/storage"
+    "github.com/neul-labs/m9m/internal/api"
+    "github.com/neul-labs/m9m/internal/consensus"
+    "github.com/neul-labs/m9m/internal/engine"
+    "github.com/neul-labs/m9m/internal/messaging"
+    "github.com/neul-labs/m9m/internal/scheduler"
+    "github.com/neul-labs/m9m/internal/storage"
 )
 
 var (

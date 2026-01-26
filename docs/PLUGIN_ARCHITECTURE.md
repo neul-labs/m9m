@@ -152,7 +152,7 @@ module.exports = {
 // plugins/mycustomnode/node.go
 package main
 
-import "github.com/dipankar/m9m/internal/nodes/base"
+import "github.com/neul-labs/m9m/internal/nodes/base"
 
 type MyCustomNode struct {
     *base.BaseNode

@@ -9,10 +9,10 @@ import (
 	"runtime/debug"
 	"sync"
 
-	"github.com/dipankar/m9m/internal/connections"
-	"github.com/dipankar/m9m/internal/credentials"
-	"github.com/dipankar/m9m/internal/model"
-	"github.com/dipankar/m9m/internal/nodes/base"
+	"github.com/neul-labs/m9m/internal/connections"
+	"github.com/neul-labs/m9m/internal/credentials"
+	"github.com/neul-labs/m9m/internal/model"
+	"github.com/neul-labs/m9m/internal/nodes/base"
 )
 
 // ExecutionResult represents the result of a workflow execution

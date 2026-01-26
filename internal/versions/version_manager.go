@@ -5,8 +5,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/dipankar/m9m/internal/model"
-	"github.com/dipankar/m9m/internal/storage"
+	"github.com/neul-labs/m9m/internal/model"
+	"github.com/neul-labs/m9m/internal/storage"
 )
 
 // VersionManager manages workflow versions

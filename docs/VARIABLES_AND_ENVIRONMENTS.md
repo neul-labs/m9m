@@ -773,5 +773,5 @@ def list_variables(var_type=None):
 ## Support
 
 For issues or questions:
-- GitHub Issues: https://github.com/dipankar/m9m/issues
-- Documentation: https://github.com/dipankar/m9m/docs
+- GitHub Issues: https://github.com/neul-labs/m9m/issues
+- Documentation: https://github.com/neul-labs/m9m/docs

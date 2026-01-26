@@ -5,7 +5,7 @@ import (
 	"context"
 	"sync"
 
-	"github.com/dipankar/m9m/internal/mcp"
+	"github.com/neul-labs/m9m/internal/mcp"
 )
 
 // Tool is the interface that all MCP tools must implement

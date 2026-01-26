@@ -733,7 +733,7 @@ We welcome plugin contributions! To share your plugins:
 
 1. Test your plugin thoroughly
 2. Add documentation and examples
-3. Submit a pull request to the [m9m-plugins](https://github.com/dipankar/m9m-plugins) repository
+3. Submit a pull request to the [m9m-plugins](https://github.com/neul-labs/m9m-plugins) repository
 
 ## Support
 

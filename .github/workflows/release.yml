@@ -52,7 +52,7 @@ jobs:
 
             ### Docker
             ```bash
-            docker pull dipankar/m9m:${{ steps.get_version.outputs.version }}
+            docker pull neul-labs/m9m:${{ steps.get_version.outputs.version }}
             ```
 
             ### Binary
@@ -60,7 +60,7 @@ jobs:
 
             ### From Source
             ```bash
-            git clone https://github.com/dipankar/m9m.git
+            git clone https://github.com/neul-labs/m9m.git
             cd m9m
             git checkout v${{ steps.get_version.outputs.version }}
             make build
@@ -178,7 +178,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            dipankar/m9m
+            neul-labs/m9m
             ghcr.io/${{ github.repository }}
           tags: |
             type=semver,pattern={{version}}
@@ -216,7 +216,7 @@ jobs:
         run: |
           VERSION=${{ needs.release.outputs.version }}
           sed -i "s/version \".*\"/version \"$VERSION\"/" Formula/m9m.rb
-          sed -i "s|url \".*\"|url \"https://github.com/dipankar/m9m/releases/download/v$VERSION/m9m-darwin-amd64\"|" Formula/m9m.rb
+          sed -i "s|url \".*\"|url \"https://github.com/neul-labs/m9m/releases/download/v$VERSION/m9m-darwin-amd64\"|" Formula/m9m.rb
 
       - name: Commit and push
         run: |

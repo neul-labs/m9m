@@ -218,7 +218,7 @@ const changePassword = async () => {
           <p>Agent-Native Workflow Automation Platform</p>
           <p class="mt-4">
             <a
-              href="https://github.com/dipankar/m9m"
+              href="https://github.com/neul-labs/m9m"
               target="_blank"
               class="text-primary-600 dark:text-primary-400 hover:underline"
             >

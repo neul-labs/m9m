@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dipankar/m9m/internal/mcp"
+	"github.com/neul-labs/m9m/internal/mcp"
 )
 
 // HTTPRequestTool makes HTTP requests

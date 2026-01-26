@@ -12,8 +12,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dipankar/m9m/internal/messaging"
-	"github.com/dipankar/m9m/internal/model"
+	"github.com/neul-labs/m9m/internal/messaging"
+	"github.com/neul-labs/m9m/internal/model"
 	"github.com/gorilla/websocket"
 )
 

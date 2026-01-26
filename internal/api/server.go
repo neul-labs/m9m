@@ -9,11 +9,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dipankar/m9m/internal/engine"
-	"github.com/dipankar/m9m/internal/expressions"
-	"github.com/dipankar/m9m/internal/model"
-	"github.com/dipankar/m9m/internal/scheduler"
-	"github.com/dipankar/m9m/internal/storage"
+	"github.com/neul-labs/m9m/internal/engine"
+	"github.com/neul-labs/m9m/internal/expressions"
+	"github.com/neul-labs/m9m/internal/model"
+	"github.com/neul-labs/m9m/internal/scheduler"
+	"github.com/neul-labs/m9m/internal/storage"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 )

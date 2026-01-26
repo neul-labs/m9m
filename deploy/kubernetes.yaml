@@ -52,7 +52,7 @@ spec:
     spec:
       containers:
         - name: m9m
-          image: ghcr.io/dipankar/m9m:latest
+          image: ghcr.io/neul-labs/m9m:latest
           args: ["--mode", "control"]
           ports:
             - name: http
@@ -107,7 +107,7 @@ spec:
     spec:
       containers:
         - name: m9m-worker
-          image: ghcr.io/dipankar/m9m:latest
+          image: ghcr.io/neul-labs/m9m:latest
           args: ["--mode", "worker"]
           envFrom:
             - configMapRef:

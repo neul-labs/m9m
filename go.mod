@@ -1,4 +1,4 @@
-module github.com/dipankar/m9m
+module github.com/neul-labs/m9m
 
 go 1.24.0
 

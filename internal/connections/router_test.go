@@ -2,7 +2,7 @@ package connections
 
 import (
 	"testing"
-	"github.com/dipankar/m9m/internal/model"
+	"github.com/neul-labs/m9m/internal/model"
 )
 
 func TestConnectionRouterCreation(t *testing.T) {
