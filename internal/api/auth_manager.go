@@ -265,7 +265,7 @@ func (am *AuthManager) CreateJWTToken(userID string, permissions []string, sessi
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(am.tokenTTL)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			NotBefore: jwt.NewNumericDate(time.Now()),
-			Issuer:    "n8n-go",
+			Issuer:    "m9m",
 			Subject:   userID,
 			ID:        generateID(),
 		},

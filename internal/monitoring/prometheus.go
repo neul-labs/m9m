@@ -38,7 +38,7 @@ func NewPrometheusCollector() *PrometheusCollector {
 		// Workflow metrics
 		workflowExecutions: prometheus.NewCounterVec(
 			prometheus.CounterOpts{
-				Namespace: "n8n_go",
+				Namespace: "m9m",
 				Subsystem: "workflow",
 				Name:      "executions_total",
 				Help:      "Total number of workflow executions",
@@ -47,7 +47,7 @@ func NewPrometheusCollector() *PrometheusCollector {
 		),
 		workflowDuration: prometheus.NewHistogramVec(
 			prometheus.HistogramOpts{
-				Namespace: "n8n_go",
+				Namespace: "m9m",
 				Subsystem: "workflow",
 				Name:      "duration_seconds",
 				Help:      "Duration of workflow executions",
@@ -57,7 +57,7 @@ func NewPrometheusCollector() *PrometheusCollector {
 		),
 		workflowErrors: prometheus.NewCounterVec(
 			prometheus.CounterOpts{
-				Namespace: "n8n_go",
+				Namespace: "m9m",
 				Subsystem: "workflow",
 				Name:      "errors_total",
 				Help:      "Total number of workflow errors",
@@ -66,7 +66,7 @@ func NewPrometheusCollector() *PrometheusCollector {
 		),
 		concurrentWorkflows: prometheus.NewGauge(
 			prometheus.GaugeOpts{
-				Namespace: "n8n_go",
+				Namespace: "m9m",
 				Subsystem: "workflow",
 				Name:      "concurrent_executions",
 				Help:      "Number of workflows currently executing",
@@ -76,7 +76,7 @@ func NewPrometheusCollector() *PrometheusCollector {
 		// Node metrics
 		nodeExecutions: prometheus.NewCounterVec(
 			prometheus.CounterOpts{
-				Namespace: "n8n_go",
+				Namespace: "m9m",
 				Subsystem: "node",
 				Name:      "executions_total",
 				Help:      "Total number of node executions",
@@ -85,7 +85,7 @@ func NewPrometheusCollector() *PrometheusCollector {
 		),
 		nodeDuration: prometheus.NewHistogramVec(
 			prometheus.HistogramOpts{
-				Namespace: "n8n_go",
+				Namespace: "m9m",
 				Subsystem: "node",
 				Name:      "duration_seconds",
 				Help:      "Duration of node executions",
@@ -95,7 +95,7 @@ func NewPrometheusCollector() *PrometheusCollector {
 		),
 		nodeErrors: prometheus.NewCounterVec(
 			prometheus.CounterOpts{
-				Namespace: "n8n_go",
+				Namespace: "m9m",
 				Subsystem: "node",
 				Name:      "errors_total",
 				Help:      "Total number of node errors",
@@ -106,7 +106,7 @@ func NewPrometheusCollector() *PrometheusCollector {
 		// System metrics
 		queueSize: prometheus.NewGauge(
 			prometheus.GaugeOpts{
-				Namespace: "n8n_go",
+				Namespace: "m9m",
 				Subsystem: "system",
 				Name:      "queue_size",
 				Help:      "Number of workflows in the execution queue",
@@ -114,7 +114,7 @@ func NewPrometheusCollector() *PrometheusCollector {
 		),
 		databaseConnections: prometheus.NewGauge(
 			prometheus.GaugeOpts{
-				Namespace: "n8n_go",
+				Namespace: "m9m",
 				Subsystem: "system",
 				Name:      "database_connections",
 				Help:      "Number of active database connections",
@@ -122,7 +122,7 @@ func NewPrometheusCollector() *PrometheusCollector {
 		),
 		httpRequests: prometheus.NewCounterVec(
 			prometheus.CounterOpts{
-				Namespace: "n8n_go",
+				Namespace: "m9m",
 				Subsystem: "http",
 				Name:      "requests_total",
 				Help:      "Total number of HTTP requests",
@@ -131,7 +131,7 @@ func NewPrometheusCollector() *PrometheusCollector {
 		),
 		httpDuration: prometheus.NewHistogramVec(
 			prometheus.HistogramOpts{
-				Namespace: "n8n_go",
+				Namespace: "m9m",
 				Subsystem: "http",
 				Name:      "duration_seconds",
 				Help:      "Duration of HTTP requests",
@@ -141,7 +141,7 @@ func NewPrometheusCollector() *PrometheusCollector {
 		),
 		memoryUsage: prometheus.NewGauge(
 			prometheus.GaugeOpts{
-				Namespace: "n8n_go",
+				Namespace: "m9m",
 				Subsystem: "system",
 				Name:      "memory_bytes",
 				Help:      "Current memory usage in bytes",
@@ -149,7 +149,7 @@ func NewPrometheusCollector() *PrometheusCollector {
 		),
 		cpuUsage: prometheus.NewGauge(
 			prometheus.GaugeOpts{
-				Namespace: "n8n_go",
+				Namespace: "m9m",
 				Subsystem: "system",
 				Name:      "cpu_percent",
 				Help:      "Current CPU usage percentage",
@@ -157,7 +157,7 @@ func NewPrometheusCollector() *PrometheusCollector {
 		),
 		goroutines: prometheus.NewGauge(
 			prometheus.GaugeOpts{
-				Namespace: "n8n_go",
+				Namespace: "m9m",
 				Subsystem: "system",
 				Name:      "goroutines",
 				Help:      "Number of goroutines",

@@ -12,6 +12,7 @@ import (
 	"github.com/neul-labs/m9m/internal/engine"
 	"github.com/neul-labs/m9m/internal/expressions"
 	"github.com/neul-labs/m9m/internal/model"
+	"github.com/neul-labs/m9m/internal/queue"
 	"github.com/neul-labs/m9m/internal/scheduler"
 	"github.com/neul-labs/m9m/internal/storage"
 	"github.com/gorilla/mux"
@@ -47,11 +48,12 @@ func DefaultAPIServerConfig() *APIServerConfig {
 	return config
 }
 
-// APIServer provides n8n-compatible REST API
+// APIServer provides REST API with workflow compatibility
 type APIServer struct {
 	engine    engine.WorkflowEngine
 	scheduler *scheduler.WorkflowScheduler
 	storage   storage.WorkflowStorage
+	jobQueue  queue.JobQueue
 	upgrader  websocket.Upgrader
 	wsClients map[string]*websocket.Conn
 	config    *APIServerConfig
@@ -102,6 +104,11 @@ func NewAPIServerWithConfig(eng engine.WorkflowEngine, scheduler *scheduler.Work
 	return server
 }
 
+// SetJobQueue sets the job queue for async execution
+func (s *APIServer) SetJobQueue(jq queue.JobQueue) {
+	s.jobQueue = jq
+}
+
 // RegisterRoutes registers all API routes
 func (s *APIServer) RegisterRoutes(router *mux.Router) {
 	// Health and info endpoints
@@ -123,8 +130,13 @@ func (s *APIServer) RegisterRoutes(router *mux.Router) {
 
 	// Workflow execution
 	api.HandleFunc("/workflows/{id}/execute", s.ExecuteWorkflow).Methods("POST", "OPTIONS")
+	api.HandleFunc("/workflows/{id}/execute-async", s.ExecuteWorkflowAsync).Methods("POST", "OPTIONS")
 	api.HandleFunc("/workflows/{id}/duplicate", s.DuplicateWorkflow).Methods("POST", "OPTIONS")
-	api.HandleFunc("/workflows/run", s.ExecuteWorkflow).Methods("POST", "OPTIONS") // n8n alias
+	api.HandleFunc("/workflows/run", s.ExecuteWorkflow).Methods("POST", "OPTIONS") // alias
+
+	// Job management (async execution)
+	api.HandleFunc("/jobs", s.ListJobs).Methods("GET", "OPTIONS")
+	api.HandleFunc("/jobs/{id}", s.GetJob).Methods("GET", "OPTIONS")
 
 	// Workflow Templates
 	api.HandleFunc("/templates", s.ListTemplates).Methods("GET", "OPTIONS")
@@ -230,7 +242,7 @@ func (s *APIServer) GetVersion(w http.ResponseWriter, r *http.Request) {
 	s.sendJSON(w, http.StatusOK, map[string]interface{}{
 		"n8nVersion":     "1.0.0-compatible",
 		"serverVersion":  "0.2.0",
-		"implementation": "n8n-go",
+		"implementation": "m9m",
 		"compatibility": map[string]interface{}{
 			"workflows":   true,
 			"nodes":       true,
@@ -254,7 +266,7 @@ func (s *APIServer) GetSettings(w http.ResponseWriter, r *http.Request) {
 		"versionNotifications": map[string]bool{
 			"enabled": false,
 		},
-		"instanceId": "n8n-go-instance",
+		"instanceId": "m9m-instance",
 		"telemetry": map[string]bool{
 			"enabled": false,
 		},
@@ -310,7 +322,7 @@ func (s *APIServer) UpdateSettings(w http.ResponseWriter, r *http.Request) {
 
 // GetLicense returns license information (enterprise feature stub)
 func (s *APIServer) GetLicense(w http.ResponseWriter, r *http.Request) {
-	// License management is an enterprise feature not implemented in open-source n8n-go
+	// License management is an enterprise feature not implemented in open-source m9m
 	s.sendJSON(w, http.StatusOK, map[string]interface{}{
 		"licensed":    false,
 		"licenseType": "community",
@@ -322,7 +334,7 @@ func (s *APIServer) GetLicense(w http.ResponseWriter, r *http.Request) {
 
 // GetLDAP returns LDAP configuration (enterprise feature stub)
 func (s *APIServer) GetLDAP(w http.ResponseWriter, r *http.Request) {
-	// LDAP is an enterprise feature not implemented in open-source n8n-go
+	// LDAP is an enterprise feature not implemented in open-source m9m
 	s.sendJSON(w, http.StatusOK, map[string]interface{}{
 		"enabled":    false,
 		"configured": false,
@@ -717,6 +729,112 @@ func (s *APIServer) ExecuteWorkflow(w http.ResponseWriter, r *http.Request) {
 	s.storage.SaveExecution(execution)
 
 	s.sendJSON(w, http.StatusOK, execution)
+}
+
+// ExecuteWorkflowAsync enqueues a workflow for async execution
+func (s *APIServer) ExecuteWorkflowAsync(w http.ResponseWriter, r *http.Request) {
+	if s.jobQueue == nil {
+		s.sendError(w, http.StatusServiceUnavailable, "Job queue not available", nil)
+		return
+	}
+
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	// Load workflow
+	workflow, err := s.storage.GetWorkflow(id)
+	if err != nil {
+		s.sendError(w, http.StatusNotFound, "Workflow not found", err)
+		return
+	}
+
+	// Parse input data if provided
+	var inputData []model.DataItem
+	if r.Body != nil {
+		json.NewDecoder(r.Body).Decode(&inputData)
+	}
+	if len(inputData) == 0 {
+		inputData = []model.DataItem{{JSON: make(map[string]interface{})}}
+	}
+
+	// Create job
+	jobID := fmt.Sprintf("job_%d", time.Now().UnixNano())
+	job := &queue.Job{
+		ID:         jobID,
+		WorkflowID: id,
+		Workflow:   workflow,
+		InputData:  inputData,
+		Priority:   0,
+		MaxRetries: 3,
+		CreatedAt:  time.Now(),
+	}
+
+	if err := s.jobQueue.Enqueue(job); err != nil {
+		s.sendError(w, http.StatusInternalServerError, "Failed to enqueue job", err)
+		return
+	}
+
+	s.sendJSON(w, http.StatusAccepted, map[string]interface{}{
+		"jobId":      jobID,
+		"workflowId": id,
+		"status":     "pending",
+		"message":    "Workflow execution queued",
+	})
+}
+
+// ListJobs returns a list of jobs
+func (s *APIServer) ListJobs(w http.ResponseWriter, r *http.Request) {
+	if s.jobQueue == nil {
+		s.sendError(w, http.StatusServiceUnavailable, "Job queue not available", nil)
+		return
+	}
+
+	// Parse status filter
+	var status *queue.JobStatus
+	if statusStr := r.URL.Query().Get("status"); statusStr != "" {
+		s := queue.JobStatus(statusStr)
+		status = &s
+	}
+
+	// Parse limit
+	limit := 100
+	if limitStr := r.URL.Query().Get("limit"); limitStr != "" {
+		if l, err := strconv.Atoi(limitStr); err == nil && l > 0 {
+			limit = l
+		}
+	}
+
+	jobs, err := s.jobQueue.ListJobs(status, limit)
+	if err != nil {
+		s.sendError(w, http.StatusInternalServerError, "Failed to list jobs", err)
+		return
+	}
+
+	s.sendJSON(w, http.StatusOK, map[string]interface{}{
+		"jobs":    jobs,
+		"count":   len(jobs),
+		"pending": s.jobQueue.GetPendingCount(),
+		"running": s.jobQueue.GetRunningCount(),
+	})
+}
+
+// GetJob returns details of a specific job
+func (s *APIServer) GetJob(w http.ResponseWriter, r *http.Request) {
+	if s.jobQueue == nil {
+		s.sendError(w, http.StatusServiceUnavailable, "Job queue not available", nil)
+		return
+	}
+
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	job, err := s.jobQueue.GetJob(id)
+	if err != nil {
+		s.sendError(w, http.StatusNotFound, "Job not found", err)
+		return
+	}
+
+	s.sendJSON(w, http.StatusOK, job)
 }
 
 // Execution handlers

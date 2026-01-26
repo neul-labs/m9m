@@ -1,5 +1,5 @@
 /*
-Package http provides HTTP-related node implementations for n8n-go.
+Package http provides HTTP-related node implementations for m9m.
 */
 package http
 
@@ -172,7 +172,7 @@ func (h *HTTPRequestNode) Execute(inputData []model.DataItem, nodeParams map[str
 		
 		// Set default user agent if not provided
 		if req.Header.Get("User-Agent") == "" {
-			req.Header.Set("User-Agent", "n8n-go/1.0")
+			req.Header.Set("User-Agent", "m9m/1.0")
 		}
 		
 		// Execute request

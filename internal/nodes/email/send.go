@@ -1,5 +1,5 @@
 /*
-Package email provides email-related node implementations for n8n-go.
+Package email provides email-related node implementations for m9m.
 */
 package email
 

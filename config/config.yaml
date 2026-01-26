@@ -14,13 +14,14 @@ server:
 # Database Configuration
 database:
   # Supported types: postgres, mysql, sqlite, mongodb
-  type: "postgres"
+  # Default: sqlite for zero-dependency local development
+  type: "sqlite"
 
   postgres:
     host: "localhost"
     port: 5432
-    database: "n8n"
-    user: "n8n"
+    database: "m9m"
+    user: "m9m"
     password: "changeme"
     ssl_mode: "disable"
     max_connections: 25
@@ -30,36 +31,45 @@ database:
   mysql:
     host: "localhost"
     port: 3306
-    database: "n8n"
-    user: "n8n"
+    database: "m9m"
+    user: "m9m"
     password: "changeme"
     charset: "utf8mb4"
     max_connections: 25
 
   sqlite:
-    path: "/app/data/n8n.db"
+    path: "./data/m9m.db"
 
   mongodb:
-    url: "mongodb://localhost:27017/n8n"
-    database: "n8n"
+    url: "mongodb://localhost:27017/m9m"
+    database: "m9m"
 
 # Queue Configuration
 queue:
-  # Supported types: memory, redis, rabbitmq
-  type: "redis"
+  # Supported types: memory, sqlite, redis, rabbitmq
+  # - memory: Fast, no persistence (jobs lost on restart)
+  # - sqlite: Persistent, zero external dependencies (recommended for single-node)
+  # - redis/rabbitmq: For distributed deployments
+  type: "sqlite"
 
   # Number of concurrent workflow executions
   max_workers: 10
 
+  # SQLite queue settings (used when type: sqlite)
+  sqlite:
+    path: "./data/queue.db"
+
+  # Redis settings (used when type: redis)
   redis:
     url: "redis://localhost:6379"
     password: ""
     db: 0
-    key_prefix: "n8n:"
+    key_prefix: "m9m:"
 
+  # RabbitMQ settings (used when type: rabbitmq)
   rabbitmq:
     url: "amqp://guest:guest@localhost:5672/"
-    exchange: "n8n"
+    exchange: "m9m"
     queue: "workflows"
     durable: true
 

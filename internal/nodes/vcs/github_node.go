@@ -161,7 +161,7 @@ func (n *GitHubNode) makeAPIRequest(method, path, token string, body interface{}
 
 	req.Header.Set("Authorization", "token "+token)
 	req.Header.Set("Accept", "application/vnd.github.v3+json")
-	req.Header.Set("User-Agent", "n8n-go")
+	req.Header.Set("User-Agent", "m9m")
 
 	resp, err := n.httpClient.Do(req)
 	if err != nil {

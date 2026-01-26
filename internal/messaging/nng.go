@@ -1,5 +1,5 @@
 /*
-Package messaging implements peer-to-peer messaging for distributed n8n-go using NNG.
+Package messaging implements peer-to-peer messaging for distributed m9m using NNG.
 
 This package provides lightweight messaging between cluster nodes without requiring
 external message brokers. It supports broadcasting execution updates, WebSocket

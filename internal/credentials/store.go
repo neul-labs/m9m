@@ -1,5 +1,5 @@
 /*
-Package credentials provides secure credential management for n8n-go.
+Package credentials provides secure credential management for m9m.
 */
 package credentials
 

@@ -37,7 +37,7 @@ func (n *SlackNode) Execute(inputData []model.DataItem, nodeParams map[string]in
 	webhookURL := n.GetStringParameter(nodeParams, "webhookUrl", "")
 	text := n.GetStringParameter(nodeParams, "text", "")
 	channel := n.GetStringParameter(nodeParams, "channel", "")
-	username := n.GetStringParameter(nodeParams, "username", "n8n-go Bot")
+	username := n.GetStringParameter(nodeParams, "username", "m9m Bot")
 
 	// Also check for authentication token
 	token := n.GetStringParameter(nodeParams, "token", "")

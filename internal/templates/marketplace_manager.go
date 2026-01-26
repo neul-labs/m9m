@@ -601,13 +601,13 @@ func (mm *MarketplaceManager) syncAllRepositories() {
 func (mm *MarketplaceManager) initializeDefaultRepositories() {
 	officialRepo := &Repository{
 		ID:   "official",
-		Name: "Official n8n-go Templates",
-		URL:  "https://marketplace.n8n-go.dev/api/templates",
+		Name: "Official m9m Templates",
+		URL:  "https://marketplace.m9m.dev/api/templates",
 		Type: "http",
 		Enabled: true,
 		Metadata: &RepositoryMetadata{
-			Description: "Official templates maintained by the n8n-go team",
-			Owner:       "n8n-go",
+			Description: "Official templates maintained by the m9m team",
+			Owner:       "m9m",
 			Official:    true,
 			Verified:    true,
 		},

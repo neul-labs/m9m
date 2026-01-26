@@ -1,5 +1,5 @@
 /*
-Package engine provides the core workflow execution engine for n8n-go.
+Package engine provides the core workflow execution engine for m9m.
 */
 package engine
 

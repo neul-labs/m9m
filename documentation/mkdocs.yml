@@ -1,0 +1,144 @@
+site_name: m9m Documentation
+site_url: https://docs.neullabs.com/m9m
+site_description: High-performance workflow automation platform - 5-10x faster than n8n
+site_author: Neul Labs
+repo_url: https://github.com/neul-labs/m9m
+repo_name: neul-labs/m9m
+edit_uri: edit/main/documentation/docs/
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  icon:
+    repo: fontawesome/brands/github
+
+plugins:
+  - search
+  - tags
+
+markdown_extensions:
+  - admonition
+  - codehilite:
+      guess_lang: false
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.details
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/neul-labs/m9m
+  generator: false
+
+copyright: Copyright &copy; 2024 Neul Labs
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Overview: getting-started/index.md
+    - Installation: getting-started/installation.md
+    - First Workflow: getting-started/first-workflow.md
+    - Core Concepts: getting-started/concepts.md
+  - Configuration:
+    - Overview: configuration/index.md
+    - Server: configuration/server.md
+    - Database: configuration/database.md
+    - Queue: configuration/queue.md
+    - Security: configuration/security.md
+    - Environment Variables: configuration/environment.md
+  - CLI Reference:
+    - Overview: cli/index.md
+    - serve: cli/serve.md
+    - Workflow Commands: cli/workflows.md
+    - Execution Commands: cli/executions.md
+    - Node Commands: cli/nodes.md
+    - Workspace Commands: cli/workspace.md
+  - API Reference:
+    - Overview: api/index.md
+    - Authentication: api/authentication.md
+    - Workflows: api/workflows.md
+    - Executions: api/executions.md
+    - Jobs: api/jobs.md
+    - Schedules: api/schedules.md
+    - Credentials: api/credentials.md
+    - Webhooks: api/webhooks.md
+  - Nodes:
+    - Overview: nodes/index.md
+    - Core: nodes/core.md
+    - Transform: nodes/transform.md
+    - HTTP: nodes/http.md
+    - Triggers: nodes/triggers.md
+    - Database: nodes/database.md
+    - Messaging: nodes/messaging.md
+    - AI & LLM: nodes/ai.md
+    - CLI Execution: nodes/cli.md
+    - Cloud Storage: nodes/cloud.md
+    - Version Control: nodes/vcs.md
+    - Email: nodes/email.md
+    - File Operations: nodes/file.md
+  - Workflows:
+    - Overview: workflows/index.md
+    - Creating Workflows: workflows/creating.md
+    - Executing Workflows: workflows/executing.md
+    - Data Flow: workflows/data-flow.md
+    - Examples: workflows/examples.md
+  - Expressions:
+    - Overview: expressions/index.md
+    - Variables: expressions/variables.md
+    - Functions: expressions/functions.md
+  - Credentials:
+    - Overview: credentials/index.md
+    - Credential Types: credentials/types.md
+  - Scheduling:
+    - Overview: scheduling/index.md
+    - Cron Expressions: scheduling/cron.md
+  - Webhooks:
+    - Overview: webhooks/index.md
+    - Authentication: webhooks/authentication.md
+  - Deployment:
+    - Overview: deployment/index.md
+    - Docker: deployment/docker.md
+    - Kubernetes: deployment/kubernetes.md
+    - Production: deployment/production.md
+  - Architecture:
+    - Overview: architecture/index.md
+    - Workflow Engine: architecture/engine.md
+    - Job Queue: architecture/queue.md
+  - Troubleshooting:
+    - Common Issues: troubleshooting/index.md
+    - FAQ: troubleshooting/faq.md

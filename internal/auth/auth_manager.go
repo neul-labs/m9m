@@ -18,7 +18,7 @@ type AuthManager struct {
 func NewAuthManager(userStorage UserStorage, jwtSecretKey string, tokenDuration time.Duration) *AuthManager {
 	return &AuthManager{
 		userStorage:    userStorage,
-		jwtManager:     NewJWTManager(jwtSecretKey, tokenDuration, "n8n-go"),
+		jwtManager:     NewJWTManager(jwtSecretKey, tokenDuration, "m9m"),
 		passwordHasher: NewPasswordHasher(),
 	}
 }

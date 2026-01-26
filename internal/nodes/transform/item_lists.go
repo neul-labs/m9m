@@ -1,5 +1,5 @@
 /*
-Package transform provides data transformation node implementations for n8n-go.
+Package transform provides data transformation node implementations for m9m.
 */
 package transform
 

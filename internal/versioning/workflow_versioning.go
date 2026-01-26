@@ -85,7 +85,7 @@ func (vm *VersionManager) initGitRepo() error {
 
 		// Create README
 		readmePath := filepath.Join(vm.storagePath, "README.md")
-		readmeContent := `# Workflow Version Control\n\nThis repository tracks workflow versions for n8n-go.`
+		readmeContent := `# Workflow Version Control\n\nThis repository tracks workflow versions for m9m.`
 		if err := os.WriteFile(readmePath, []byte(readmeContent), 0644); err != nil {
 			return err
 		}
@@ -98,8 +98,8 @@ func (vm *VersionManager) initGitRepo() error {
 
 		_, err = w.Commit("Initial commit", &git.CommitOptions{
 			Author: &object.Signature{
-				Name:  "n8n-go",
-				Email: "system@n8n-go.local",
+				Name:  "m9m",
+				Email: "system@m9m.local",
 				When:  time.Now(),
 			},
 		})
@@ -444,7 +444,7 @@ func (vm *VersionManager) commitVersion(workflowID string, version *WorkflowVers
 	_, err = vm.workTree.Commit(version.Message, &git.CommitOptions{
 		Author: &object.Signature{
 			Name:  version.Author,
-			Email: fmt.Sprintf("%s@n8n-go.local", strings.ReplaceAll(version.Author, " ", "")),
+			Email: fmt.Sprintf("%s@m9m.local", strings.ReplaceAll(version.Author, " ", "")),
 			When:  version.Timestamp,
 		},
 	})

@@ -36,7 +36,7 @@ func (n *DiscordNode) Execute(inputData []model.DataItem, nodeParams map[string]
 	// Get parameters
 	webhookURL := n.GetStringParameter(nodeParams, "webhookUrl", "")
 	content := n.GetStringParameter(nodeParams, "content", "")
-	username := n.GetStringParameter(nodeParams, "username", "n8n-go Bot")
+	username := n.GetStringParameter(nodeParams, "username", "m9m Bot")
 	avatarURL := n.GetStringParameter(nodeParams, "avatarUrl", "")
 
 	if webhookURL == "" {

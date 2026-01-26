@@ -1,8 +1,8 @@
 /*
-Package consensus implements Raft-based distributed consensus for n8n-go.
+Package consensus implements Raft-based distributed consensus for m9m.
 
 This package provides leader election and log replication to ensure consistency
-across multiple n8n-go instances in a cluster. Only the leader runs scheduled
+across multiple m9m instances in a cluster. Only the leader runs scheduled
 workflows to prevent duplicate executions.
 */
 package consensus

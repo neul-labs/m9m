@@ -1,5 +1,5 @@
 /*
-Package connections provides connection routing and data flow management for n8n-go workflows.
+Package connections provides connection routing and data flow management for m9m workflows.
 */
 package connections
 

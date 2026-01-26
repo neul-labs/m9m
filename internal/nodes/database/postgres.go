@@ -1,5 +1,5 @@
 /*
-Package database provides database-related node implementations for n8n-go.
+Package database provides database-related node implementations for m9m.
 */
 package database
 

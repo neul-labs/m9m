@@ -1,5 +1,5 @@
 /*
-Package expressions provides n8n-style expression parsing and evaluation for n8n-go.
+Package expressions provides n8n-style expression parsing and evaluation for m9m.
 */
 package expressions
 

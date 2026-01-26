@@ -1,5 +1,5 @@
 /*
-Package timer provides timer and trigger node implementations for n8n-go.
+Package timer provides timer and trigger node implementations for m9m.
 */
 package timer
 
