@@ -2,16 +2,26 @@
 
 # Build variables
 BINARY_NAME=m9m
-MAIN_PKG=./cmd/mcp-server
+MAIN_PKG=./cmd/m9m
+MCP_SERVER=mcp-server
 
 # Default target
 .PHONY: all
 all: build
 
-# Build the application
+# Build the CLI application
 .PHONY: build
 build:
 	go build -o ${BINARY_NAME} ${MAIN_PKG}
+
+# Build the MCP server
+.PHONY: build-mcp
+build-mcp:
+	go build -o ${MCP_SERVER} ./cmd/mcp-server
+
+# Build both CLI and MCP server
+.PHONY: build-all
+build-all: build build-mcp
 
 # Install dependencies
 .PHONY: deps
