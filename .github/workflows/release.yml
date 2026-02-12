@@ -112,9 +112,12 @@ jobs:
         env:
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
-          CGO_ENABLED: 1
+          CGO_ENABLED: 0
         run: |
-          go build -ldflags="-w -s -X main.Version=${{ needs.release.outputs.version }}" -o ${{ matrix.artifact_name }} ./cmd/m9m
+          COMMIT="${GITHUB_SHA::7}"
+          BUILD_DATE="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+          go build -trimpath -ldflags="-w -s -X main.Version=${{ needs.release.outputs.version }} -X main.Commit=${COMMIT} -X main.BuildDate=${BUILD_DATE}" -o ${{ matrix.artifact_name }} ./cmd/m9m
+        shell: bash
 
       - name: Generate checksum
         run: |
@@ -216,12 +219,17 @@ jobs:
         run: |
           VERSION=${{ needs.release.outputs.version }}
           sed -i "s/version \".*\"/version \"$VERSION\"/" Formula/m9m.rb
-          sed -i "s|url \".*\"|url \"https://github.com/neul-labs/m9m/releases/download/v$VERSION/m9m-darwin-amd64\"|" Formula/m9m.rb
+          sed -i "s|https://github.com/neul-labs/m9m/releases/download/v[^/\\\"]*/m9m-darwin-amd64|https://github.com/neul-labs/m9m/releases/download/v$VERSION/m9m-darwin-amd64|g" Formula/m9m.rb
+          sed -i "s|https://github.com/neul-labs/m9m/releases/download/v[^/\\\"]*/m9m-darwin-arm64|https://github.com/neul-labs/m9m/releases/download/v$VERSION/m9m-darwin-arm64|g" Formula/m9m.rb
 
       - name: Commit and push
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           git add Formula/m9m.rb
+          if git diff --cached --quiet; then
+            echo "No formula changes to commit"
+            exit 0
+          fi
           git commit -m "Update m9m to v${{ needs.release.outputs.version }}"
           git push

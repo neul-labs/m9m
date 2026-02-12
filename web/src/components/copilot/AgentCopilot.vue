@@ -3,13 +3,12 @@
  * Agent Copilot Component
  * AI-powered workflow assistance for m9m
  */
-import { ref, computed, watch } from 'vue';
+import { ref, watch } from 'vue';
 import {
   SparklesIcon,
   PaperAirplaneIcon,
   XMarkIcon,
   LightBulbIcon,
-  WrenchScrewdriverIcon,
   ChatBubbleLeftRightIcon,
   DocumentTextIcon,
   ChevronDownIcon,

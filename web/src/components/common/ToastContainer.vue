@@ -4,7 +4,6 @@
  * Renders all active toast notifications
  */
 import { computed } from 'vue';
-import { TransitionGroup } from 'vue';
 import { useNotificationStore } from '@/stores/notifications';
 import Toast from './Toast.vue';
 

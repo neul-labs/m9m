@@ -88,7 +88,7 @@ m9m includes a built-in MCP server for AI-powered workflow orchestration:
 ### Docker (Recommended)
 
 ```bash
-docker run -p 8080:8080 neullabs/m9m:latest
+docker run -p 8080:8080 neul-labs/m9m:latest
 ```
 
 ### Binary

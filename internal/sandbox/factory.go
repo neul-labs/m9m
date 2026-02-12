@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"sync"
 	"syscall"
 	"time"
 )
@@ -176,6 +177,7 @@ type noSandboxStreaming struct {
 
 	startTime time.Time
 	done      chan struct{}
+	waitOnce  sync.Once
 	result    *ExecutionResult
 	resultErr error
 }
@@ -245,9 +247,6 @@ func newNoSandboxStreaming(ctx context.Context, config *SandboxConfig, command s
 		done:      make(chan struct{}),
 	}
 
-	// Start background waiter
-	go se.waitLoop()
-
 	return se, nil
 }
 
@@ -264,6 +263,7 @@ func (se *noSandboxStreaming) Stderr() io.Reader {
 }
 
 func (se *noSandboxStreaming) Wait() (*ExecutionResult, error) {
+	se.waitOnce.Do(se.waitLoop)
 	<-se.done
 	return se.result, se.resultErr
 }
@@ -321,4 +321,3 @@ func (se *noSandboxStreaming) waitLoop() {
 		}
 	}
 }
-

@@ -93,8 +93,8 @@ sudo mkdir -p /opt/m9m
 cd /opt/m9m
 
 # Download latest release
-LATEST_VERSION=$(curl -s https://api.github.com/repos/m9m/m9m/releases/latest | grep tag_name | cut -d '"' -f 4)
-curl -L "https://github.com/m9m/m9m/releases/download/${LATEST_VERSION}/m9m-linux-amd64" -o m9m
+LATEST_VERSION=$(curl -s https://api.github.com/repos/neul-labs/m9m/releases/latest | grep tag_name | cut -d '"' -f 4)
+curl -L "https://github.com/neul-labs/m9m/releases/download/${LATEST_VERSION}/m9m-linux-amd64" -o m9m
 
 # Make executable
 chmod +x m9m
@@ -122,7 +122,7 @@ Type=simple
 User=m9m
 Group=m9m
 WorkingDirectory=/opt/m9m
-ExecStart=/opt/m9m/m9m server --config /opt/m9m/config/production.yaml
+ExecStart=/opt/m9m/m9m serve --config /opt/m9m/config/production.yaml
 ExecReload=/bin/kill -HUP $MAINPID
 Restart=always
 RestartSec=5
@@ -1337,7 +1337,7 @@ ps aux | grep m9m
 top -p $(pgrep m9m)
 
 # Enable memory profiling
-./m9m server --profile-memory --config /opt/m9m/config/production.yaml
+./m9m serve --profile-memory --config /opt/m9m/config/production.yaml
 
 # Analyze memory profile
 go tool pprof http://localhost:6060/debug/pprof/heap
@@ -1360,7 +1360,7 @@ curl http://localhost:9090/metrics | grep n8n_db_connections
 
 ```bash
 # Enable performance profiling
-./m9m server --profile-cpu --config /opt/m9m/config/production.yaml
+./m9m serve --profile-cpu --config /opt/m9m/config/production.yaml
 
 # Analyze CPU profile
 go tool pprof http://localhost:6060/debug/pprof/profile

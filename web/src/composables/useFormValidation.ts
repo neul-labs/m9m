@@ -51,10 +51,10 @@ export function useFormValidation<T extends Record<string, unknown>>(
 ): FormState<T> {
   const {
     initialValues,
-    rules = {},
     validateOnChange = true,
     validateOnBlur = true,
   } = options;
+  const rules: Partial<Record<keyof T, ValidationRule | ValidationRule[]>> = options.rules ?? {};
 
   // Create reactive form values
   const values = reactive({ ...initialValues }) as T;

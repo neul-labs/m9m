@@ -31,8 +31,8 @@ const wsReconnecting = ref(false)
 let connectionCheckInterval: ReturnType<typeof setInterval> | null = null
 
 function updateConnectionState() {
-  wsConnected.value = wsConnection.isConnected()
-  wsReconnecting.value = !wsConnected.value && wsConnection.isConnected() === false
+  wsConnected.value = wsConnection.isConnected
+  wsReconnecting.value = wsConnection.connectionState === 'connecting'
 }
 
 onMounted(() => {

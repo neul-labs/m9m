@@ -83,7 +83,7 @@ make deps
 make build
 
 # The binary is at ./m9m
-./m9m --version
+./m9m version
 ```
 
 ### Binary Downloads
@@ -128,7 +128,7 @@ Check that m9m is installed correctly:
 
 ```bash
 # Check version
-m9m --version
+m9m version
 
 # Start the server
 m9m serve

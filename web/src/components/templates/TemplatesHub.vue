@@ -3,10 +3,9 @@
  * Templates Hub Component
  * Curated workflow templates for quick start
  */
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed } from 'vue';
 import {
   MagnifyingGlassIcon,
-  FunnelIcon,
   RocketLaunchIcon,
   ClockIcon,
   GlobeAltIcon,
@@ -39,7 +38,6 @@ interface Template {
 // State
 const searchQuery = ref('');
 const selectedCategory = ref('all');
-const isLoading = ref(false);
 
 // Categories
 const categories = [

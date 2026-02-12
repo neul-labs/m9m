@@ -41,7 +41,7 @@ git clone https://github.com/your-username/m9m.git
 cd m9m
 
 # Add upstream remote
-git remote add upstream https://github.com/m9m/m9m.git
+git remote add upstream https://github.com/neul-labs/m9m.git
 ```
 
 ### 2. Install Dependencies

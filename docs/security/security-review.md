@@ -407,7 +407,7 @@ Type=simple
 User=m9m
 Group=m9m
 WorkingDirectory=/opt/m9m
-ExecStart=/opt/m9m/m9m server --config /opt/m9m/config.yaml
+ExecStart=/opt/m9m/m9m serve --config /opt/m9m/config.yaml
 Restart=always
 RestartSec=5
 

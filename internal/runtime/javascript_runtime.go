@@ -20,36 +20,36 @@ import (
 )
 
 type JavaScriptRuntime struct {
-	mu              sync.RWMutex
-	vm              *goja.Runtime
-	registry        *require.Registry
-	npmCache        map[string]*NpmPackage
-	nodeModulesPath string
-	globalModules   map[string]interface{}
-	n8nHelpers      *N8nHelpers
+	mu               sync.RWMutex
+	vm               *goja.Runtime
+	registry         *require.Registry
+	npmCache         map[string]*NpmPackage
+	nodeModulesPath  string
+	globalModules    map[string]interface{}
+	n8nHelpers       *N8nHelpers
 	executionContext *ExecutionContext
 }
 
 type NpmPackage struct {
-	Name         string                 `json:"name"`
-	Version      string                 `json:"version"`
-	Main         string                 `json:"main"`
-	Dependencies map[string]string      `json:"dependencies"`
-	CachePath    string                 `json:"cache_path"`
-	LoadedAt     time.Time              `json:"loaded_at"`
-	Module       interface{}            `json:"-"`
+	Name         string            `json:"name"`
+	Version      string            `json:"version"`
+	Main         string            `json:"main"`
+	Dependencies map[string]string `json:"dependencies"`
+	CachePath    string            `json:"cache_path"`
+	LoadedAt     time.Time         `json:"loaded_at"`
+	Module       interface{}       `json:"-"`
 }
 
 type ExecutionContext struct {
-	WorkflowID   string                 `json:"workflow_id"`
-	ExecutionID  string                 `json:"execution_id"`
-	NodeID       string                 `json:"node_id"`
-	ItemIndex    int                    `json:"item_index"`
-	RunIndex     int                    `json:"run_index"`
-	Mode         string                 `json:"mode"` // "manual", "trigger", "webhook", etc.
-	Timezone     string                 `json:"timezone"`
-	Variables    map[string]interface{} `json:"variables"`
-	Credentials  map[string]interface{} `json:"credentials"`
+	WorkflowID  string                 `json:"workflow_id"`
+	ExecutionID string                 `json:"execution_id"`
+	NodeID      string                 `json:"node_id"`
+	ItemIndex   int                    `json:"item_index"`
+	RunIndex    int                    `json:"run_index"`
+	Mode        string                 `json:"mode"` // "manual", "trigger", "webhook", etc.
+	Timezone    string                 `json:"timezone"`
+	Variables   map[string]interface{} `json:"variables"`
+	Credentials map[string]interface{} `json:"credentials"`
 }
 
 type N8nHelpers struct {
@@ -57,23 +57,23 @@ type N8nHelpers struct {
 }
 
 type NodeJSGlobals struct {
-	Process   *ProcessObject   `json:"process"`
-	Buffer    *BufferObject    `json:"Buffer"`
-	Global    interface{}      `json:"global"`
-	Console   interface{}      `json:"console"`
-	SetTimeout func(goja.FunctionCall) goja.Value `json:"setTimeout"`
-	ClearTimeout func(goja.FunctionCall) goja.Value `json:"clearTimeout"`
-	SetInterval func(goja.FunctionCall) goja.Value `json:"setInterval"`
+	Process       *ProcessObject                     `json:"process"`
+	Buffer        *BufferObject                      `json:"Buffer"`
+	Global        interface{}                        `json:"global"`
+	Console       interface{}                        `json:"console"`
+	SetTimeout    func(goja.FunctionCall) goja.Value `json:"setTimeout"`
+	ClearTimeout  func(goja.FunctionCall) goja.Value `json:"clearTimeout"`
+	SetInterval   func(goja.FunctionCall) goja.Value `json:"setInterval"`
 	ClearInterval func(goja.FunctionCall) goja.Value `json:"clearInterval"`
 }
 
 type ProcessObject struct {
-	Env     map[string]string `json:"env"`
-	Version string           `json:"version"`
-	Platform string          `json:"platform"`
-	Arch    string           `json:"arch"`
-	Argv    []string         `json:"argv"`
-	Pid     int              `json:"pid"`
+	Env      map[string]string `json:"env"`
+	Version  string            `json:"version"`
+	Platform string            `json:"platform"`
+	Arch     string            `json:"arch"`
+	Argv     []string          `json:"argv"`
+	Pid      int               `json:"pid"`
 }
 
 type BufferObject struct {
@@ -152,16 +152,16 @@ func (js *JavaScriptRuntime) initializeNodeJSGlobals() {
 func (js *JavaScriptRuntime) initializeBuiltinModules() {
 	// Core Node.js modules simulation
 	modules := map[string]interface{}{
-		"util":   js.createUtilModule(),
-		"crypto": js.createCryptoModule(),
-		"path":   js.createPathModule(),
-		"fs":     js.createFsModule(),
-		"http":   js.createHttpModule(),
-		"https":  js.createHttpsModule(),
-		"url":    js.createUrlModule(),
+		"util":        js.createUtilModule(),
+		"crypto":      js.createCryptoModule(),
+		"path":        js.createPathModule(),
+		"fs":          js.createFsModule(),
+		"http":        js.createHttpModule(),
+		"https":       js.createHttpsModule(),
+		"url":         js.createUrlModule(),
 		"querystring": js.createQueryStringModule(),
-		"os":     js.createOsModule(),
-		"events": js.createEventsModule(),
+		"os":          js.createOsModule(),
+		"events":      js.createEventsModule(),
 	}
 
 	for name, module := range modules {
@@ -253,20 +253,7 @@ func (js *JavaScriptRuntime) downloadNpmPackage(name, version string) (*NpmPacka
 		return nil, err
 	}
 
-	// Download package.json
-	packageJsonUrl := fmt.Sprintf("https://registry.npmjs.org/%s/%s", name, version)
-	resp, err := http.Get(packageJsonUrl)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	var packageInfo map[string]interface{}
-	if err := json.NewDecoder(resp.Body).Decode(&packageInfo); err != nil {
-		return nil, err
-	}
-
-	// Extract package information
+	// Prepare a default package shape for mock/fallback paths.
 	pkg := &NpmPackage{
 		Name:         name,
 		Version:      version,
@@ -275,6 +262,34 @@ func (js *JavaScriptRuntime) downloadNpmPackage(name, version string) (*NpmPacka
 		CachePath:    cacheDir,
 	}
 
+	// Download package.json
+	packageJsonUrl := fmt.Sprintf("https://registry.npmjs.org/%s/%s", name, version)
+	resp, err := http.Get(packageJsonUrl)
+	if err != nil {
+		// Offline/failure fallback: keep deterministic mocked behavior.
+		if mockErr := js.createMockPackage(pkg); mockErr != nil {
+			return nil, mockErr
+		}
+		return pkg, nil
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		if mockErr := js.createMockPackage(pkg); mockErr != nil {
+			return nil, mockErr
+		}
+		return pkg, nil
+	}
+
+	var packageInfo map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&packageInfo); err != nil {
+		if mockErr := js.createMockPackage(pkg); mockErr != nil {
+			return nil, mockErr
+		}
+		return pkg, nil
+	}
+
+	// Extract package information
 	if main, ok := packageInfo["main"].(string); ok {
 		pkg.Main = main
 	}
@@ -287,12 +302,14 @@ func (js *JavaScriptRuntime) downloadNpmPackage(name, version string) (*NpmPacka
 
 	// For now, we'll create a simple mock of the package
 	// In a full implementation, you would download the actual tarball
-	js.createMockPackage(pkg)
+	if err := js.createMockPackage(pkg); err != nil {
+		return nil, err
+	}
 
 	return pkg, nil
 }
 
-func (js *JavaScriptRuntime) createMockPackage(pkg *NpmPackage) {
+func (js *JavaScriptRuntime) createMockPackage(pkg *NpmPackage) error {
 	var mockCode string
 
 	switch pkg.Name {
@@ -318,7 +335,14 @@ func (js *JavaScriptRuntime) createMockPackage(pkg *NpmPackage) {
 	}
 
 	mainFile := filepath.Join(pkg.CachePath, pkg.Main)
-	ioutil.WriteFile(mainFile, []byte(mockCode), 0644)
+	if err := os.MkdirAll(filepath.Dir(mainFile), 0755); err != nil {
+		return fmt.Errorf("failed to create mock package directory: %w", err)
+	}
+	if err := ioutil.WriteFile(mainFile, []byte(mockCode), 0644); err != nil {
+		return fmt.Errorf("failed to write mock package file: %w", err)
+	}
+
+	return nil
 }
 
 func (js *JavaScriptRuntime) executeModuleCode(code string, pkg *NpmPackage) (interface{}, error) {

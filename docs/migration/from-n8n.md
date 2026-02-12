@@ -80,20 +80,20 @@ SELECT name, workflow FROM workflow_entity WHERE active = true;
 #### Download Pre-built Binary
 ```bash
 # Linux x86_64
-curl -L https://github.com/m9m/m9m/releases/latest/download/m9m-linux-amd64 -o m9m
+curl -L https://github.com/neul-labs/m9m/releases/latest/download/m9m-linux-amd64 -o m9m
 chmod +x m9m
 
 # macOS
-curl -L https://github.com/m9m/m9m/releases/latest/download/m9m-darwin-amd64 -o m9m
+curl -L https://github.com/neul-labs/m9m/releases/latest/download/m9m-darwin-amd64 -o m9m
 chmod +x m9m
 
 # Windows
-curl -L https://github.com/m9m/m9m/releases/latest/download/m9m-windows-amd64.exe -o m9m.exe
+curl -L https://github.com/neul-labs/m9m/releases/latest/download/m9m-windows-amd64.exe -o m9m.exe
 ```
 
 #### Build from Source
 ```bash
-git clone https://github.com/m9m/m9m.git
+git clone https://github.com/neul-labs/m9m.git
 cd m9m
 go build -o m9m cmd/m9m/main.go
 ```
@@ -162,7 +162,7 @@ Deploy m9m in your production environment:
 
 ```bash
 # Run as webhook server
-./m9m server --port 3000 --webhook-path "/webhook"
+./m9m serve --port 3000 --webhook-path "/webhook"
 
 # Run specific workflow
 ./m9m execute --workflow ./workflows/production-workflow.json
@@ -254,7 +254,7 @@ n8n export:workflow --output=simple-workflow.json --id=123
 ./m9m execute --workflow simple-workflow.json
 
 # 4. Deploy
-./m9m server --workflows ./workflows/
+./m9m serve --workflows ./workflows/
 ```
 
 ### Scenario 2: Webhook-based Workflows
@@ -269,7 +269,7 @@ n8n export:workflow --output=webhook-workflow.json --id=456
 # Edit webhook-workflow.json if needed
 
 # 3. Start m9m webhook server
-./m9m server --port 3000
+./m9m serve --port 3000
 
 # 4. Test webhook endpoint
 curl -X POST http://localhost:3000/webhook/test \
@@ -420,7 +420,7 @@ cat results.json | jq '.executionsPerSecond'
 #### Issue: Webhook not receiving requests
 ```bash
 # Solution: Check webhook configuration
-./m9m server --port 3000 --debug
+./m9m serve --port 3000 --debug
 
 # Verify webhook URLs and authentication
 ```
@@ -439,7 +439,7 @@ cat results.json | jq '.executionsPerSecond'
 If you encounter issues during migration:
 
 1. **Check Documentation**: Visit [docs.m9m.com](https://docs.m9m.com)
-2. **GitHub Issues**: Report bugs at [github.com/m9m/m9m/issues](https://github.com/m9m/m9m/issues)
+2. **GitHub Issues**: Report bugs at [github.com/neul-labs/m9m/issues](https://github.com/neul-labs/m9m/issues)
 3. **Community Support**: Join the community forum
 4. **Professional Support**: Contact for enterprise migration assistance
 
@@ -499,7 +499,7 @@ chmod 700 ./workflows/
 
 # Run with limited privileges
 useradd -r -s /bin/false m9m
-sudo -u m9m ./m9m server
+sudo -u m9m ./m9m serve
 ```
 
 ## Migration Checklist

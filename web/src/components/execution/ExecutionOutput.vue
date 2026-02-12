@@ -151,14 +151,21 @@ function hasBinaryData(items: DataItem[]): boolean {
   return items.some((item) => item.binary && Object.keys(item.binary).length > 0);
 }
 
+function getItemJson(item: DataItem): Record<string, unknown> | null {
+  const normalized = item.json ?? (item as DataItem & { JSON?: Record<string, unknown> }).JSON;
+  return normalized && typeof normalized === 'object' ? normalized : null;
+}
+
 // Get table columns from data
 function getTableColumns(items: DataItem[]): string[] {
   const columns = new Set<string>();
   for (const item of items) {
-    if (item.JSON && typeof item.JSON === 'object') {
-      for (const key of Object.keys(item.JSON)) {
-        columns.add(key);
-      }
+    const jsonValue = getItemJson(item);
+    if (!jsonValue) {
+      continue;
+    }
+    for (const key of Object.keys(jsonValue)) {
+      columns.add(key);
     }
   }
   return Array.from(columns);
@@ -176,6 +183,12 @@ function formatDuration(ms?: number): string {
   if (!ms) return '-';
   if (ms < 1000) return `${ms}ms`;
   return `${(ms / 1000).toFixed(2)}s`;
+}
+
+function formatBinarySize(fileSize?: string): string {
+  const bytes = Number(fileSize);
+  if (!Number.isFinite(bytes) || bytes <= 0) return 'Unknown size';
+  return `${(bytes / 1024).toFixed(1)} KB`;
 }
 </script>
 
@@ -335,7 +348,7 @@ function formatDuration(ms?: number): string {
                     :key="col"
                     class="px-4 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap"
                   >
-                    {{ formatCellValue((item.JSON as Record<string, unknown>)?.[col]) }}
+                    {{ formatCellValue(getItemJson(item)?.[col]) }}
                   </td>
                 </tr>
               </tbody>
@@ -362,7 +375,7 @@ function formatDuration(ms?: number): string {
                   <div>
                     <p class="font-medium text-gray-900 dark:text-gray-100">{{ key }}</p>
                     <p class="text-sm text-gray-500 dark:text-gray-400">
-                      {{ binary.mimeType }} | {{ binary.fileSize ? `${(binary.fileSize / 1024).toFixed(1)} KB` : 'Unknown size' }}
+                      {{ binary.mimeType }} | {{ formatBinarySize(binary.fileSize) }}
                     </p>
                   </div>
                 </div>

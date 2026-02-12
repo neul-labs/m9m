@@ -338,7 +338,7 @@ server.RegisterWebhook(webhookInfo.Path, webhookInfo.Method, func(w http.Respons
 Use m9m's built-in webhook server:
 
 ```bash
-m9m server --webhook-port 3000 --webhook-path "/webhook"
+m9m serve --webhook-port 3000 --webhook-path "/webhook"
 ```
 
 ## Performance
