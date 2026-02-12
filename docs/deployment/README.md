@@ -2,12 +2,14 @@
 
 This guide covers production deployment strategies for m9m across different environments and platforms.
 
+Note: official support is currently focused on the single binary/package-manager path. Kubernetes sections are experimental reference manifests.
+
 ## Overview
 
 m9m is designed for cloud-native deployments with multiple deployment options:
 - Single binary execution
 - Docker containers
-- Kubernetes clusters
+- Kubernetes clusters (experimental)
 - Serverless environments (planned)
 
 ## Prerequisites
@@ -30,23 +32,23 @@ m9m is designed for cloud-native deployments with multiple deployment options:
 ### Quick Start
 ```bash
 # Pull latest image
-docker pull m9m/m9m:latest
+docker pull neul-labs/m9m:latest
 
 # Run with default settings
-docker run -p 8080:8080 m9m/m9m:latest
+docker run -p 8080:8080 neul-labs/m9m:latest
 
 # Run with custom configuration
 docker run -p 8080:8080 \
   -e M9M_QUEUE_TYPE=redis \
   -e M9M_QUEUE_URL=redis://redis:6379 \
   -v /host/workflows:/app/workflows \
-  m9m/m9m:latest
+  neul-labs/m9m:latest
 ```
 
 ### Production Docker Setup
 ```dockerfile
 # Dockerfile for custom build
-FROM m9m/m9m:latest
+FROM neul-labs/m9m:latest
 
 # Copy custom configuration
 COPY config.yaml /app/config.yaml
@@ -72,7 +74,7 @@ version: '3.8'
 
 services:
   m9m:
-    image: m9m/m9m:latest
+    image: neul-labs/m9m:latest
     ports:
       - "8080:8080"
       - "9090:9090"
@@ -235,7 +237,7 @@ spec:
     spec:
       containers:
       - name: m9m
-        image: m9m/m9m:latest
+        image: neul-labs/m9m:latest
         ports:
         - containerPort: 8080
           name: http

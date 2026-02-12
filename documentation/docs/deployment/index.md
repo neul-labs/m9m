@@ -2,14 +2,16 @@
 
 Deploy m9m to your infrastructure.
 
+Official launch path: single binary distribution via package managers and release artifacts.
+
 ## Deployment Options
 
 | Method | Best For |
 |--------|----------|
+| Binary / Package Manager | Official production path |
 | Docker | Quick setup, single server |
 | Docker Compose | Multi-service local dev |
-| Kubernetes | Production, scalability |
-| Binary | Minimal overhead, edge |
+| Kubernetes | Experimental reference manifests |
 
 ## Quick Start
 
@@ -20,18 +22,17 @@ docker run -d \
   --name m9m \
   -p 8080:8080 \
   -v m9m-data:/data \
-  neullabs/m9m:latest
+  neul-labs/m9m:latest
 ```
 
-### Binary
+### Binary (Recommended)
 
 ```bash
-# Download binary
-curl -L https://github.com/neul-labs/m9m/releases/latest/download/m9m-linux-amd64 -o m9m
-chmod +x m9m
+# Install latest binary
+curl -fsSL https://raw.githubusercontent.com/neul-labs/m9m/main/install.sh | bash
 
 # Run
-./m9m serve --port 8080
+m9m serve --port 8080
 ```
 
 ## System Requirements
@@ -198,5 +199,5 @@ M9M_LOG_FORMAT=json
 ## Next Steps
 
 - [Docker Deployment](docker.md) - Detailed Docker guide
-- [Kubernetes Deployment](kubernetes.md) - K8s deployment
+- [Kubernetes Deployment](kubernetes.md) - Experimental K8s reference
 - [Production Checklist](production.md) - Production readiness

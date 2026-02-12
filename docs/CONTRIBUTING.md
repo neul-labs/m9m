@@ -578,7 +578,7 @@ Contributors will be recognized in:
 
 ## License
 
-By contributing to m9m, you agree that your contributions will be licensed under the Apache 2.0 License.
+By contributing to m9m, you agree that your contributions will be licensed under the MIT License.
 
 ---
 

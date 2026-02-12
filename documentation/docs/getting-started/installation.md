@@ -10,7 +10,22 @@ This guide covers all methods for installing m9m.
 
 ## Installation Methods
 
-### Go Install (Recommended)
+### Package Manager / Installer (Recommended)
+
+Install the latest release binary:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/neul-labs/m9m/main/install.sh | bash
+```
+
+### Homebrew (macOS/Linux)
+
+```bash
+brew tap dipankar/tap
+brew install m9m
+```
+
+### Go Install (Alternative)
 
 The simplest way to install m9m:
 
@@ -20,7 +35,7 @@ go install github.com/neul-labs/m9m/cmd/m9m@latest
 
 This installs the `m9m` binary to your `$GOPATH/bin` directory.
 
-### Docker
+### Docker (Optional)
 
 Run m9m in a container:
 

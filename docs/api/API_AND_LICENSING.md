@@ -141,7 +141,7 @@ n8n workflows work **as-is** in m9m!
 - ❌ **Cannot** compete with n8n cloud
 
 **Previous Licenses**:
-- Apache 2.0 (2019-2020)
+- Permissive open-source license (2019-2020)
 - Fair-code License (2020-2024)
 - Sustainable Use License (2024+)
 
@@ -151,7 +151,7 @@ n8n workflows work **as-is** in m9m!
 
 ### m9m License (This Project)
 
-**License**: Apache 2.0
+**License**: MIT
 
 **What This Means**:
 ✅ **Open Source** - Truly free and open
@@ -170,7 +170,7 @@ n8n workflows work **as-is** in m9m!
 - ✅ Keep modifications private (not required to share)
 
 **You MUST**:
-- Include Apache 2.0 license notice
+- Include MIT license notice
 - Include copyright notice
 - State changes if you modify it
 
@@ -181,7 +181,7 @@ n8n workflows work **as-is** in m9m!
 | Aspect | n8n | m9m |
 |--------|-----|--------|
 | **Codebase** | Node.js/TypeScript | Go (from scratch) |
-| **License** | Sustainable Use (restrictive) | Apache 2.0 (permissive) |
+| **License** | Sustainable Use (restrictive) | MIT (permissive) |
 | **Commercial Use** | Requires license | Free |
 | **Code Sharing** | None (clean room) | N/A |
 | **API Format** | Original | Compatible implementation |
@@ -227,7 +227,7 @@ Add to README and documentation:
 ```markdown
 ## Legal Notice
 
-m9m is an independent, Apache 2.0 licensed workflow automation 
+m9m is an independent, MIT licensed workflow automation 
 platform built from scratch in Go. It is designed to be compatible 
 with n8n workflow formats and API structure for interoperability.
 
@@ -265,7 +265,7 @@ m9m is a clean-room implementation with no code sharing.
 
 | Scenario | n8n | m9m |
 |----------|-----|--------|
-| Sell as software | ❌ Requires license | ✅ Free (Apache) |
+| Sell as software | ❌ Requires license | ✅ Free (MIT) |
 | Bundle with hardware | ⚠️ Unclear | ✅ Free |
 | White-label for clients | ❌ Requires license | ✅ Free |
 | Consulting/integration | ✅ Allowed | ✅ Allowed |
@@ -284,7 +284,7 @@ m9m is a clean-room implementation with no code sharing.
 
 ### Low Risk ✅
 
-- Using m9m for any commercial purpose (Apache 2.0)
+- Using m9m for any commercial purpose (MIT)
 - API/workflow format compatibility (legal precedent)
 - Clean-room implementation (no code copied)
 - Using "compatible with n8n workflows" language
@@ -308,7 +308,7 @@ m9m is a clean-room implementation with no code sharing.
 
 ### For Commercial Use
 
-1. ✅ **Use m9m** - Fully permissive Apache 2.0
+1. ✅ **Use m9m** - Fully permissive MIT
 2. ✅ **Build your own UI** - Avoid n8n frontend licensing
 3. ✅ **Contribute back** - Help m9m improve (optional)
 4. ✅ **Clear disclaimers** - Not affiliated with n8n.io
@@ -333,7 +333,7 @@ m9m is a clean-room implementation with no code sharing.
 ### For Enterprise
 
 If building commercial product:
-1. Review Apache 2.0 obligations (simple)
+1. Review MIT obligations (simple)
 2. Add license notices
 3. Keep trademark usage clear
 4. Consider contributing improvements back
@@ -355,7 +355,7 @@ If building commercial product:
 - Use advanced UI features
 - Expect 100% feature parity
 
-### Licensing: Apache 2.0 = Full Freedom
+### Licensing: MIT = Full Freedom
 
 **You CAN**:
 - ✅ Use commercially without restrictions
@@ -365,7 +365,7 @@ If building commercial product:
 - ✅ Sell as software
 
 **You MUST**:
-- Include Apache license notice
+- Include MIT license notice
 - Not use n8n trademarks improperly
 - Not imply false affiliation
 
@@ -383,6 +383,6 @@ If building commercial product:
 
 ---
 
-**Bottom Line**: m9m provides ~70% API compatibility with **100% commercial freedom** through clean-room implementation and Apache 2.0 licensing. Perfect for building commercial automation platforms without licensing costs! 🚀
+**Bottom Line**: m9m provides ~70% API compatibility with **100% commercial freedom** through clean-room implementation and MIT licensing. Perfect for building commercial automation platforms without licensing costs! 🚀
 
 **Disclaimer**: This is technical/general information, not legal advice. Consult a lawyer for specific legal questions about your use case.

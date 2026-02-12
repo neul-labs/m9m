@@ -173,15 +173,16 @@ server:
 |----------|----------------|
 | Development | Docker |
 | Single server | Docker Compose |
-| Production, scaling | Kubernetes |
+| Production | Binary / package manager |
 | Edge deployment | Binary |
+| Kubernetes | Experimental |
 
 ### How do I scale m9m?
 
 1. Run multiple instances behind load balancer
 2. Use Redis for distributed queue
 3. Use PostgreSQL for shared storage
-4. Configure HPA in Kubernetes
+4. Use orchestration only if you are prepared to run experimental Kubernetes manifests
 
 ### How do I backup m9m?
 

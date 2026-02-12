@@ -2,6 +2,8 @@
 
 Documentation for m9m, a high-performance workflow automation platform built in Go.
 
+Official launch path: single binary distribution via package managers and release artifacts. Kubernetes content in this directory should be treated as experimental reference material.
+
 ## Documentation Structure
 
 ### Claude Code Integration (MCP)
@@ -73,4 +75,4 @@ Documentation for m9m, a high-performance workflow automation platform built in 
 
 ## License
 
-m9m is released under the Apache 2.0 License.
+m9m is released under the MIT License.

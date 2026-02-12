@@ -9,7 +9,7 @@ A blazing-fast, cloud-native workflow engine built in Go. 5-10x faster than Node
 [![Coverage](https://img.shields.io/codecov/c/github/neul-labs/m9m?style=flat-square&logo=codecov)](https://codecov.io/gh/neul-labs/m9m)
 [![Go Reference](https://img.shields.io/badge/go.dev-reference-007d9c?style=flat-square&logo=go)](https://pkg.go.dev/github.com/neul-labs/m9m)
 [![Release](https://img.shields.io/github/v/release/neul-labs/m9m?style=flat-square&logo=github)](https://github.com/neul-labs/m9m/releases)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=flat-square)](https://opensource.org/licenses/Apache-2.0)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 
 ---
 
@@ -85,19 +85,29 @@ m9m includes a built-in MCP server for AI-powered workflow orchestration:
 
 ## Quick Start
 
-### Docker (Recommended)
+### Single Binary (Recommended)
 
 ```bash
-docker run -p 8080:8080 neul-labs/m9m:latest
+# Install latest binary (Linux/macOS)
+curl -fsSL https://raw.githubusercontent.com/neul-labs/m9m/main/install.sh | bash
+
+# Verify
+m9m version
 ```
 
-### Binary
+### Binary Download
 
 ```bash
-# Download latest release
+# Download latest release manually
 curl -fsSL https://github.com/neul-labs/m9m/releases/latest/download/m9m-linux-amd64 -o m9m
 chmod +x m9m
 ./m9m serve
+```
+
+### Docker (Optional)
+
+```bash
+docker run -p 8080:8080 neul-labs/m9m:latest
 ```
 
 ### From Source
@@ -108,6 +118,8 @@ cd m9m
 make build
 ./m9m serve
 ```
+
+Kubernetes manifests exist in the repository but are currently experimental and not part of the official launch path.
 
 ### Execute a Workflow
 
@@ -327,7 +339,7 @@ make build
 
 ## License
 
-m9m is released under the [Apache 2.0 License](LICENSE).
+m9m is released under the [MIT License](LICENSE).
 
 ---
 

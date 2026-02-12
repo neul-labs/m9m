@@ -1,6 +1,9 @@
 # Kubernetes Deployment
 
-Deploy m9m on Kubernetes for production workloads.
+Deploy m9m on Kubernetes using experimental reference manifests.
+
+> Kubernetes deployment is currently experimental and not part of the official launch path.  
+> Use the single binary/package-manager distribution for production.
 
 ## Prerequisites
 
@@ -30,7 +33,7 @@ spec:
     spec:
       containers:
       - name: m9m
-        image: neullabs/m9m:latest
+        image: neul-labs/m9m:latest
         ports:
         - containerPort: 8080
         env:
@@ -130,7 +133,7 @@ spec:
       serviceAccountName: m9m
       containers:
       - name: m9m
-        image: neullabs/m9m:latest
+        image: neul-labs/m9m:latest
         ports:
         - name: http
           containerPort: 8080
@@ -391,7 +394,7 @@ helm install m9m m9m/m9m -n m9m --create-namespace
 replicaCount: 3
 
 image:
-  repository: neullabs/m9m
+  repository: neul-labs/m9m
   tag: latest
 
 resources:
@@ -527,7 +530,7 @@ kubectl get events -n m9m --sort-by=.metadata.creationTimestamp
 
 ```bash
 # Update image
-kubectl set image deployment/m9m m9m=neullabs/m9m:1.1.0 -n m9m
+kubectl set image deployment/m9m m9m=neul-labs/m9m:1.1.0 -n m9m
 
 # Or with Helm
 helm upgrade m9m m9m/m9m --set image.tag=1.1.0 -n m9m

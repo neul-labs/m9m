@@ -61,7 +61,7 @@ This comprehensive guide covers deploying m9m in production environments, includ
 ### Operating System Support
 
 - **Linux**: Ubuntu 20.04+, CentOS 8+, RHEL 8+, Debian 11+
-- **Container**: Docker 20.10+, Kubernetes 1.20+
+- **Container**: Docker 20.10+ (Kubernetes manifests are experimental)
 - **Cloud**: AWS, GCP, Azure, DigitalOcean
 
 ### Network Requirements
@@ -313,7 +313,7 @@ echo "your-grafana-admin-password" | docker secret create grafana_password -
 docker-compose -f docker-compose.prod.yml up -d
 ```
 
-### Method 3: Kubernetes Deployment
+### Method 3: Kubernetes Deployment (Experimental)
 
 #### Namespace and ConfigMap
 

@@ -24,18 +24,18 @@ m9m is a high-performance workflow automation platform built in Go. It provides 
 - **Job Queue** - Persistent job queue with SQLite or in-memory options
 - **REST API** - Complete API for workflow management
 - **CLI Tool** - Powerful command-line interface
-- **Cloud Native** - Built for containers and Kubernetes
+- **Cloud Native** - Built for containers and bare-metal deployment
 
 ## Quick Start
 
 ```bash
-# Install m9m
-go install github.com/neul-labs/m9m/cmd/m9m@latest
+# Install m9m (official single-binary path)
+curl -fsSL https://raw.githubusercontent.com/neul-labs/m9m/main/install.sh | bash
 
 # Start the server
 m9m serve
 
-# Or run with Docker
+# Or run with Docker (optional)
 docker run -p 8080:8080 ghcr.io/neul-labs/m9m:latest
 ```
 
@@ -134,7 +134,7 @@ m9m run hello-world.json
 
     ---
 
-    Deploy with Docker, Kubernetes, or bare metal
+    Deploy with single binaries, Docker, or bare metal
 
 </div>
 
