@@ -2,15 +2,16 @@ package tools
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/neul-labs/m9m/internal/engine"
 	"github.com/neul-labs/m9m/internal/mcp"
 	"github.com/neul-labs/m9m/internal/model"
 	"github.com/neul-labs/m9m/internal/storage"
-	"github.com/google/uuid"
 )
 
 // ExecutionManager manages workflow executions
@@ -19,6 +20,7 @@ type ExecutionManager struct {
 	engine     engine.WorkflowEngine
 	storage    storage.WorkflowStorage
 	executions map[string]*model.WorkflowExecution
+	cancels    map[string]context.CancelFunc
 }
 
 // NewExecutionManager creates a new execution manager
@@ -27,6 +29,7 @@ func NewExecutionManager(eng engine.WorkflowEngine, store storage.WorkflowStorag
 		engine:     eng,
 		storage:    store,
 		executions: make(map[string]*model.WorkflowExecution),
+		cancels:    make(map[string]context.CancelFunc),
 	}
 }
 
@@ -110,18 +113,19 @@ func (t *ExecutionRunTool) Execute(ctx context.Context, args map[string]interfac
 	}
 
 	// Execute workflow
-	result, err := t.engine.ExecuteWorkflow(workflow, inputData)
+	result, err := engine.ExecuteWorkflowWithContext(ctx, t.engine, workflow, inputData)
+	executionErr := engine.ResolveExecutionError(result, err)
 
 	// Update execution status
 	finishedAt := time.Now()
 	execution.FinishedAt = &finishedAt
 	execution.UpdatedAt = finishedAt
 
-	if err != nil {
+	if executionErr != nil {
 		execution.Status = "failed"
-		execution.Error = err
+		execution.Error = executionErr
 		t.storage.SaveExecution(execution)
-		return mcp.ErrorContent(fmt.Sprintf("Workflow execution failed: %v", err)), nil
+		return mcp.ErrorContent(fmt.Sprintf("Workflow execution failed: %v", executionErr)), nil
 	}
 
 	execution.Status = "completed"
@@ -219,19 +223,30 @@ func (t *ExecutionRunAsyncTool) Execute(ctx context.Context, args map[string]int
 	t.manager.storage.SaveExecution(execution)
 
 	// Run async
+	execCtx, cancel := context.WithCancel(context.Background())
+	t.manager.mu.Lock()
+	t.manager.cancels[executionId] = cancel
+	t.manager.mu.Unlock()
+
 	go func() {
-		result, err := t.manager.engine.ExecuteWorkflow(workflow, inputData)
+		result, err := engine.ExecuteWorkflowWithContext(execCtx, t.manager.engine, workflow, inputData)
+		executionErr := engine.ResolveExecutionError(result, err)
 
 		t.manager.mu.Lock()
 		defer t.manager.mu.Unlock()
+		delete(t.manager.cancels, executionId)
 
 		finishedAt := time.Now()
 		execution.FinishedAt = &finishedAt
 		execution.UpdatedAt = finishedAt
 
-		if err != nil {
-			execution.Status = "failed"
-			execution.Error = err
+		if executionErr != nil {
+			if errors.Is(executionErr, context.Canceled) {
+				execution.Status = "cancelled"
+			} else {
+				execution.Status = "failed"
+			}
+			execution.Error = executionErr
 		} else {
 			execution.Status = "completed"
 			execution.Data = result.Data
@@ -390,21 +405,17 @@ func (t *ExecutionCancelTool) Execute(ctx context.Context, args map[string]inter
 		return mcp.ErrorContent(fmt.Sprintf("Execution is not running (status: %s)", exec.Status)), nil
 	}
 
-	// Mark as cancelled
-	exec.Status = "cancelled"
-	finishedAt := time.Now()
-	exec.FinishedAt = &finishedAt
-	exec.UpdatedAt = finishedAt
-
-	if t.manager.storage != nil {
-		t.manager.storage.SaveExecution(exec)
+	cancel, exists := t.manager.cancels[executionId]
+	if !exists {
+		return mcp.ErrorContent(fmt.Sprintf("Execution is running but cannot be cancelled: %s", executionId)), nil
 	}
+	cancel()
 
 	return mcp.SuccessJSON(map[string]interface{}{
 		"success":     true,
 		"executionId": executionId,
-		"status":      "cancelled",
-		"message":     "Execution cancelled",
+		"status":      "cancel_requested",
+		"message":     "Execution cancellation requested",
 	}), nil
 }
 
@@ -480,17 +491,18 @@ func (t *ExecutionRetryTool) Execute(ctx context.Context, args map[string]interf
 		inputData = []model.DataItem{{JSON: map[string]interface{}{}}}
 	}
 
-	result, err := t.engine.ExecuteWorkflow(workflow, inputData)
+	result, err := engine.ExecuteWorkflowWithContext(ctx, t.engine, workflow, inputData)
+	executionErr := engine.ResolveExecutionError(result, err)
 
 	finishedAt := time.Now()
 	execution.FinishedAt = &finishedAt
 	execution.UpdatedAt = finishedAt
 
-	if err != nil {
+	if executionErr != nil {
 		execution.Status = "failed"
-		execution.Error = err
+		execution.Error = executionErr
 		t.storage.SaveExecution(execution)
-		return mcp.ErrorContent(fmt.Sprintf("Retry failed: %v", err)), nil
+		return mcp.ErrorContent(fmt.Sprintf("Retry failed: %v", executionErr)), nil
 	}
 
 	execution.Status = "completed"

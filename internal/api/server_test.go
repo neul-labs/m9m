@@ -2,7 +2,9 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -22,15 +24,37 @@ import (
 
 // MockWorkflowEngine implements engine.WorkflowEngine for testing
 type MockWorkflowEngine struct {
-	executeResult *engine.ExecutionResult
-	executeError  error
+	executeResult          *engine.ExecutionResult
+	executeError           error
+	executeWithContextFunc func(ctx context.Context, workflow *model.Workflow, inputData []model.DataItem) (*engine.ExecutionResult, error)
+	lastWorkflow           *model.Workflow
+	lastInputData          []model.DataItem
 }
 
 func (m *MockWorkflowEngine) ExecuteWorkflow(workflow *model.Workflow, inputData []model.DataItem) (*engine.ExecutionResult, error) {
+	if m.executeWithContextFunc != nil {
+		return m.executeWithContextFunc(context.Background(), workflow, inputData)
+	}
+	m.lastWorkflow = workflow
+	m.lastInputData = inputData
 	if m.executeError != nil {
 		return nil, m.executeError
 	}
-	return m.executeResult, nil
+	if m.executeResult != nil {
+		return m.executeResult, nil
+	}
+	return &engine.ExecutionResult{
+		Data: []model.DataItem{{JSON: map[string]interface{}{"ok": true}}},
+	}, nil
+}
+
+func (m *MockWorkflowEngine) ExecuteWorkflowWithContext(ctx context.Context, workflow *model.Workflow, inputData []model.DataItem) (*engine.ExecutionResult, error) {
+	m.lastWorkflow = workflow
+	m.lastInputData = inputData
+	if m.executeWithContextFunc != nil {
+		return m.executeWithContextFunc(ctx, workflow, inputData)
+	}
+	return m.ExecuteWorkflow(workflow, inputData)
 }
 
 func (m *MockWorkflowEngine) ExecuteWorkflowParallel(workflows []*model.Workflow, inputData [][]model.DataItem) ([]*engine.ExecutionResult, error) {
@@ -470,12 +494,219 @@ func TestCancelExecution_Running(t *testing.T) {
 
 	router.ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, http.StatusConflict, w.Code)
 
-	// Verify execution is cancelled
+	// Verify execution state is unchanged
 	updated, _ := store.GetExecution("exec-1")
-	assert.Equal(t, "cancelled", updated.Status)
-	assert.NotNil(t, updated.FinishedAt)
+	assert.Equal(t, "running", updated.Status)
+	assert.Nil(t, updated.FinishedAt)
+}
+
+func TestCancelExecution_TrackedRunning(t *testing.T) {
+	store := storage.NewMemoryStorage()
+	mockEngine := &MockWorkflowEngine{
+		executeWithContextFunc: func(ctx context.Context, workflow *model.Workflow, inputData []model.DataItem) (*engine.ExecutionResult, error) {
+			<-ctx.Done()
+			return nil, ctx.Err()
+		},
+	}
+	server := NewAPIServer(mockEngine, nil, store)
+
+	router := mux.NewRouter()
+	server.RegisterRoutes(router)
+
+	store.SaveWorkflow(&model.Workflow{
+		ID:   "wf-1",
+		Name: "Cancelable Workflow",
+		Nodes: []model.Node{
+			{ID: "start", Name: "Start", Type: "n8n-nodes-base.start"},
+		},
+	})
+
+	execResponseChan := make(chan *httptest.ResponseRecorder, 1)
+	go func() {
+		req := httptest.NewRequest("POST", "/api/v1/workflows/wf-1/execute", bytes.NewReader([]byte(`[]`)))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+		execResponseChan <- w
+	}()
+
+	var executionID string
+	deadline := time.Now().Add(2 * time.Second)
+	for time.Now().Before(deadline) {
+		executions, _, err := store.ListExecutions(storage.ExecutionFilters{Status: "running"})
+		require.NoError(t, err)
+		if len(executions) > 0 {
+			executionID = executions[0].ID
+			break
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	require.NotEmpty(t, executionID)
+
+	cancelReq := httptest.NewRequest("POST", fmt.Sprintf("/api/v1/executions/%s/cancel", executionID), nil)
+	cancelResp := httptest.NewRecorder()
+	router.ServeHTTP(cancelResp, cancelReq)
+	assert.Equal(t, http.StatusAccepted, cancelResp.Code)
+
+	select {
+	case execResp := <-execResponseChan:
+		assert.Equal(t, http.StatusOK, execResp.Code)
+	case <-time.After(2 * time.Second):
+		t.Fatalf("timed out waiting for execution response")
+	}
+
+	var final *model.WorkflowExecution
+	for i := 0; i < 100; i++ {
+		current, err := store.GetExecution(executionID)
+		require.NoError(t, err)
+		if current.Status == "cancelled" {
+			final = current
+			break
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+
+	require.NotNil(t, final)
+	assert.Equal(t, "cancelled", final.Status)
+	assert.NotNil(t, final.FinishedAt)
+}
+
+func TestExecuteWorkflow_InputEnvelope(t *testing.T) {
+	store := storage.NewMemoryStorage()
+	mockEngine := &MockWorkflowEngine{
+		executeResult: &engine.ExecutionResult{
+			Data: []model.DataItem{{JSON: map[string]interface{}{"status": "ok"}}},
+		},
+	}
+	server := NewAPIServer(mockEngine, nil, store)
+
+	router := mux.NewRouter()
+	server.RegisterRoutes(router)
+
+	store.SaveWorkflow(&model.Workflow{
+		ID:   "wf-1",
+		Name: "Test",
+		Nodes: []model.Node{
+			{ID: "start", Name: "Start", Type: "n8n-nodes-base.start"},
+		},
+	})
+
+	body := []byte(`{"inputData":[{"json":{"hello":"world"}}]}`)
+	req := httptest.NewRequest("POST", "/api/v1/workflows/wf-1/execute", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	require.Len(t, mockEngine.lastInputData, 1)
+	assert.Equal(t, "world", mockEngine.lastInputData[0].JSON["hello"])
+}
+
+func TestExecuteWorkflow_InvalidInputPayload(t *testing.T) {
+	store := storage.NewMemoryStorage()
+	mockEngine := &MockWorkflowEngine{}
+	server := NewAPIServer(mockEngine, nil, store)
+
+	router := mux.NewRouter()
+	server.RegisterRoutes(router)
+
+	store.SaveWorkflow(&model.Workflow{
+		ID:   "wf-1",
+		Name: "Test",
+		Nodes: []model.Node{
+			{ID: "start", Name: "Start", Type: "n8n-nodes-base.start"},
+		},
+	})
+
+	req := httptest.NewRequest("POST", "/api/v1/workflows/wf-1/execute", bytes.NewReader([]byte(`{"inputData"`)))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+func TestExecuteWorkflowByDefinition(t *testing.T) {
+	store := storage.NewMemoryStorage()
+	mockEngine := &MockWorkflowEngine{
+		executeResult: &engine.ExecutionResult{
+			Data: []model.DataItem{{JSON: map[string]interface{}{"inline": true}}},
+		},
+	}
+	server := NewAPIServer(mockEngine, nil, store)
+
+	router := mux.NewRouter()
+	server.RegisterRoutes(router)
+
+	reqBody := map[string]interface{}{
+		"workflow": map[string]interface{}{
+			"id":   "wf-inline",
+			"name": "Inline Workflow",
+			"nodes": []map[string]interface{}{
+				{
+					"id":   "start",
+					"name": "Start",
+					"type": "n8n-nodes-base.start",
+				},
+			},
+		},
+		"inputData": []map[string]interface{}{
+			{
+				"json": map[string]interface{}{"value": 42},
+			},
+		},
+	}
+	body, err := json.Marshal(reqBody)
+	require.NoError(t, err)
+
+	req := httptest.NewRequest("POST", "/api/v1/workflows/run", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	require.NotNil(t, mockEngine.lastWorkflow)
+	assert.Equal(t, "wf-inline", mockEngine.lastWorkflow.ID)
+	require.Len(t, mockEngine.lastInputData, 1)
+	assert.Equal(t, float64(42), mockEngine.lastInputData[0].JSON["value"])
+}
+
+func TestExecuteWorkflow_ResultErrorMarksFailed(t *testing.T) {
+	store := storage.NewMemoryStorage()
+	mockEngine := &MockWorkflowEngine{
+		executeResult: &engine.ExecutionResult{
+			Error: fmt.Errorf("node execution failed"),
+		},
+	}
+	server := NewAPIServer(mockEngine, nil, store)
+
+	router := mux.NewRouter()
+	server.RegisterRoutes(router)
+
+	store.SaveWorkflow(&model.Workflow{
+		ID:   "wf-1",
+		Name: "Test",
+		Nodes: []model.Node{
+			{ID: "start", Name: "Start", Type: "n8n-nodes-base.start"},
+		},
+	})
+
+	req := httptest.NewRequest("POST", "/api/v1/workflows/wf-1/execute", bytes.NewReader([]byte(`[]`)))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	var execution map[string]interface{}
+	err := json.Unmarshal(w.Body.Bytes(), &execution)
+	require.NoError(t, err)
+	assert.Equal(t, "failed", execution["status"])
 }
 
 // Credential Tests

@@ -25,6 +25,7 @@ import (
 
 	// Node imports
 	"github.com/neul-labs/m9m/internal/nodes/ai"
+	"github.com/neul-labs/m9m/internal/nodes/cli"
 	"github.com/neul-labs/m9m/internal/nodes/core"
 	"github.com/neul-labs/m9m/internal/nodes/database"
 	"github.com/neul-labs/m9m/internal/nodes/email"
@@ -307,4 +308,7 @@ func registerServerNodes(eng engine.WorkflowEngine) {
 	// VCS nodes
 	eng.RegisterNodeExecutor("n8n-nodes-base.github", vcs.NewGitHubNode())
 	eng.RegisterNodeExecutor("n8n-nodes-base.gitlab", vcs.NewGitLabNode())
+
+	// CLI nodes
+	eng.RegisterNodeExecutor("n8n-nodes-base.cliExecute", cli.NewExecuteNode())
 }

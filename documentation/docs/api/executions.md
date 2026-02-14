@@ -28,7 +28,7 @@ GET /api/v1/executions
 |--------|-------------|
 | `pending` | Queued, waiting to run |
 | `running` | Currently executing |
-| `success` | Completed successfully |
+| `completed` | Completed successfully |
 | `failed` | Completed with errors |
 | `cancelled` | Manually cancelled |
 
@@ -56,11 +56,17 @@ curl "http://localhost:8080/api/v1/executions?workflowId=wf-123&status=failed&li
       "id": "exec-123456",
       "workflowId": "550e8400-e29b-41d4-a716-446655440000",
       "workflowName": "Daily Report",
-      "status": "success",
+      "status": "completed",
       "mode": "manual",
       "startedAt": "2024-01-26T10:00:00Z",
       "finishedAt": "2024-01-26T10:00:01Z",
       "duration": 1234
+    }
+  ],
+  "executions": [
+    {
+      "id": "exec-123456",
+      "status": "completed"
     }
   ],
   "total": 150,
@@ -93,7 +99,7 @@ curl http://localhost:8080/api/v1/executions/exec-123456 \
   "id": "exec-123456",
   "workflowId": "550e8400-e29b-41d4-a716-446655440000",
   "workflowName": "Daily Report",
-  "status": "success",
+  "status": "completed",
   "mode": "manual",
   "startedAt": "2024-01-26T10:00:00Z",
   "finishedAt": "2024-01-26T10:00:01Z",
@@ -116,7 +122,7 @@ curl http://localhost:8080/api/v1/executions/exec-123456 \
     {
       "nodeId": "start-1",
       "nodeName": "Start",
-      "status": "success",
+      "status": "completed",
       "startedAt": "2024-01-26T10:00:00.000Z",
       "finishedAt": "2024-01-26T10:00:00.001Z",
       "duration": 1,
@@ -125,7 +131,7 @@ curl http://localhost:8080/api/v1/executions/exec-123456 \
     {
       "nodeId": "http-1",
       "nodeName": "Fetch Data",
-      "status": "success",
+      "status": "completed",
       "startedAt": "2024-01-26T10:00:00.001Z",
       "finishedAt": "2024-01-26T10:00:00.824Z",
       "duration": 823,
@@ -206,10 +212,10 @@ curl -X POST http://localhost:8080/api/v1/executions/exec-789/retry \
 {
   "id": "exec-790",
   "workflowId": "550e8400-e29b-41d4-a716-446655440000",
-  "status": "pending",
-  "mode": "manual",
-  "retryOf": "exec-789",
-  "startedAt": "2024-01-26T16:00:00Z"
+  "status": "completed",
+  "mode": "retry",
+  "startedAt": "2024-01-26T16:00:00Z",
+  "finishedAt": "2024-01-26T16:00:01Z"
 }
 ```
 
@@ -230,15 +236,30 @@ curl -X POST http://localhost:8080/api/v1/executions/exec-running/cancel \
   -H "Authorization: Bearer <token>"
 ```
 
-### Response
+### Response (cancellation requested)
 
 ```json
 {
-  "id": "exec-running",
-  "status": "cancelled",
-  "finishedAt": "2024-01-26T16:00:00Z"
+  "message": "Cancellation requested",
+  "executionId": "exec-running",
+  "status": "cancel_requested"
 }
 ```
+
+Status code: `202 Accepted`
+
+### Response (runtime cannot cancel this execution)
+
+```json
+{
+  "error": true,
+  "message": "Execution is running but cancellation is not supported by this runtime",
+  "executionId": "exec-running",
+  "status": "running"
+}
+```
+
+Status code: `409 Conflict`
 
 ---
 
@@ -360,8 +381,10 @@ curl "http://localhost:8080/api/v1/executions/stats?since=2024-01-01" \
 
 ```json
 {
-  "error": "Cannot cancel completed execution",
-  "code": "INVALID_STATE"
+  "error": true,
+  "message": "Execution is running but cancellation is not supported by this runtime",
+  "executionId": "exec-running",
+  "status": "running"
 }
 ```
 
@@ -369,7 +392,8 @@ curl "http://localhost:8080/api/v1/executions/stats?since=2024-01-01" \
 
 ```json
 {
-  "error": "Cannot retry successful execution",
-  "code": "INVALID_OPERATION"
+  "error": true,
+  "message": "Execution is not running",
+  "code": 400
 }
 ```

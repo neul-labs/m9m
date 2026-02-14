@@ -6,7 +6,9 @@ Workers pull work from the control plane, execute workflows, and push results ba
 package worker
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"sync"
@@ -23,11 +25,11 @@ import (
 
 // WorkerConfig contains worker configuration
 type WorkerConfig struct {
-	WorkerID        string   // Unique worker ID
-	ControlPlane    []string // Control plane addresses (for failover)
-	MaxConcurrent   int      // Max concurrent workflow executions
+	WorkerID          string        // Unique worker ID
+	ControlPlane      []string      // Control plane addresses (for failover)
+	MaxConcurrent     int           // Max concurrent workflow executions
 	HeartbeatInterval time.Duration // Heartbeat interval
-	WorkTimeout     time.Duration // Timeout for single workflow execution
+	WorkTimeout       time.Duration // Timeout for single workflow execution
 }
 
 // Worker represents a worker node that executes workflows
@@ -49,8 +51,8 @@ type Worker struct {
 	statsMutex sync.RWMutex
 
 	// Control
-	stopChan chan struct{}
-	wg       sync.WaitGroup
+	stopChan  chan struct{}
+	wg        sync.WaitGroup
 	startTime time.Time
 }
 
@@ -187,12 +189,12 @@ func (w *Worker) connectToControlPlane() error {
 // register registers this worker with the control plane
 func (w *Worker) register() error {
 	reg := queue.WorkerRegistration{
-		Type:           "register",
-		WorkerID:       w.config.WorkerID,
-		Capabilities:   []string{"*"}, // Support all node types
-		MaxConcurrent:  w.config.MaxConcurrent,
+		Type:             "register",
+		WorkerID:         w.config.WorkerID,
+		Capabilities:     []string{"*"}, // Support all node types
+		MaxConcurrent:    w.config.MaxConcurrent,
 		ActiveExecutions: 0,
-		UptimeSeconds:  0,
+		UptimeSeconds:    0,
 	}
 
 	data, err := json.Marshal(reg)
@@ -319,53 +321,61 @@ func (w *Worker) executeWork(work *queue.WorkMessage) {
 
 // executeWithTimeout executes a workflow with timeout
 func (w *Worker) executeWithTimeout(work *queue.WorkMessage, cancel chan struct{}) *queue.ResultMessage {
-	resultChan := make(chan *queue.ResultMessage, 1)
+	execCtx, cancelFunc := context.WithTimeout(context.Background(), w.config.WorkTimeout)
+	defer cancelFunc()
 
-	// Execute in goroutine
+	cancelDone := make(chan struct{})
 	go func() {
-		result := w.executeWorkflow(work)
-		resultChan <- result
-	}()
-
-	// Wait for result or timeout
-	select {
-	case result := <-resultChan:
-		return result
-	case <-time.After(w.config.WorkTimeout):
-		log.Printf("Workflow execution timeout: execution_id=%s", work.ExecutionID)
-		return &queue.ResultMessage{
-			Type:        "execution_result",
-			ExecutionID: work.ExecutionID,
-			Status:      "timeout",
-			Error:       fmt.Sprintf("execution timeout after %v", w.config.WorkTimeout),
+		select {
+		case <-cancel:
+			cancelFunc()
+		case <-cancelDone:
 		}
-	case <-cancel:
-		log.Printf("Workflow execution cancelled: execution_id=%s", work.ExecutionID)
-		return &queue.ResultMessage{
-			Type:        "execution_result",
-			ExecutionID: work.ExecutionID,
-			Status:      "cancelled",
-			Error:       "execution cancelled",
+	}()
+	defer close(cancelDone)
+
+	result := w.executeWorkflow(execCtx, work)
+	if result.Status == "failed" && result.Error != "" {
+		if errors.Is(execCtx.Err(), context.DeadlineExceeded) {
+			log.Printf("Workflow execution timeout: execution_id=%s", work.ExecutionID)
+			return &queue.ResultMessage{
+				Type:        "execution_result",
+				ExecutionID: work.ExecutionID,
+				Status:      "timeout",
+				Error:       fmt.Sprintf("execution timeout after %v", w.config.WorkTimeout),
+			}
+		}
+		if errors.Is(execCtx.Err(), context.Canceled) {
+			log.Printf("Workflow execution cancelled: execution_id=%s", work.ExecutionID)
+			return &queue.ResultMessage{
+				Type:        "execution_result",
+				ExecutionID: work.ExecutionID,
+				Status:      "cancelled",
+				Error:       "execution cancelled",
+			}
 		}
 	}
+
+	return result
 }
 
 // executeWorkflow executes a workflow and returns the result
-func (w *Worker) executeWorkflow(work *queue.WorkMessage) *queue.ResultMessage {
+func (w *Worker) executeWorkflow(ctx context.Context, work *queue.WorkMessage) *queue.ResultMessage {
 	log.Printf("Executing workflow: execution_id=%s, workflow_id=%s",
 		work.ExecutionID, work.WorkflowID)
 
 	// Execute workflow using the engine
-	resultData, err := w.engine.ExecuteWorkflow(work.Workflow, work.InputData)
+	resultData, err := engine.ExecuteWorkflowWithContext(ctx, w.engine, work.Workflow, work.InputData)
+	executionErr := engine.ResolveExecutionError(resultData, err)
 
-	if err != nil {
+	if executionErr != nil {
 		log.Printf("Workflow execution failed: execution_id=%s, error=%v",
-			work.ExecutionID, err)
+			work.ExecutionID, executionErr)
 		return &queue.ResultMessage{
 			Type:        "execution_result",
 			ExecutionID: work.ExecutionID,
 			Status:      "failed",
-			Error:       err.Error(),
+			Error:       executionErr.Error(),
 		}
 	}
 

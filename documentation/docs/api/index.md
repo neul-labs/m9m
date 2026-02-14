@@ -32,11 +32,13 @@ http://localhost:8080/api/v1
 | DELETE | `/workflows/{id}` | Delete workflow |
 | POST | `/workflows/{id}/execute` | Execute workflow |
 | POST | `/workflows/{id}/execute-async` | Execute asynchronously |
+| POST | `/workflows/run` | Execute inline workflow definition |
 
 ### Executions
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
+| POST | `/executions` | Create/update execution record |
 | GET | `/executions` | List executions |
 | GET | `/executions/{id}` | Get execution |
 | DELETE | `/executions/{id}` | Delete execution |
@@ -161,7 +163,7 @@ curl -X POST http://localhost:8080/api/v1/workflows/wf-123/execute \
   -H "Content-Type: application/json" \
   -d '{"inputData": [{"json": {"key": "value"}}]}'
 
-# Response: {"id": "exec-456", "status": "success", ...}
+# Response: {"id": "exec-456", "status": "completed", ...}
 
 # 3. Check execution
 curl http://localhost:8080/api/v1/executions/exec-456

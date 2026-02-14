@@ -291,20 +291,32 @@ func (s *PostgresStorage) SaveExecution(execution *model.WorkflowExecution) erro
 	if execution.ID == "" {
 		execution.ID = generateID("exec")
 	}
+	if execution.StartedAt.IsZero() {
+		execution.StartedAt = time.Now()
+	}
 
 	dataJSON, _ := json.Marshal(execution.Data)
 	errorText := ""
 	if execution.Error != nil {
 		errorText = execution.Error.Error()
 	}
+	createdAt := time.Now()
 
 	query := `
 		INSERT INTO executions (id, workflow_id, status, mode, started_at, finished_at, data, error, created_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		ON CONFLICT (id) DO UPDATE SET
+			workflow_id = EXCLUDED.workflow_id,
+			status = EXCLUDED.status,
+			mode = EXCLUDED.mode,
+			started_at = EXCLUDED.started_at,
+			finished_at = EXCLUDED.finished_at,
+			data = EXCLUDED.data,
+			error = EXCLUDED.error
 	`
 
 	_, err := s.db.Exec(query, execution.ID, execution.WorkflowID, execution.Status,
-		execution.Mode, execution.StartedAt, execution.FinishedAt, dataJSON, errorText, time.Now())
+		execution.Mode, execution.StartedAt, execution.FinishedAt, dataJSON, errorText, createdAt)
 
 	return err
 }

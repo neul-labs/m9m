@@ -145,8 +145,20 @@ func (e *ReliableWorkflowEngine) SetConnectionRouter(connectionRouter connection
 
 // ExecuteWorkflow executes a workflow with reliability features
 func (e *ReliableWorkflowEngine) ExecuteWorkflow(workflow *model.Workflow, inputData []model.DataItem) (*ExecutionResult, error) {
+	return e.ExecuteWorkflowWithContext(context.Background(), workflow, inputData)
+}
+
+// ExecuteWorkflowWithContext executes a workflow with reliability features and cancellation support.
+func (e *ReliableWorkflowEngine) ExecuteWorkflowWithContext(
+	ctx context.Context,
+	workflow *model.Workflow,
+	inputData []model.DataItem,
+) (*ExecutionResult, error) {
 	if workflow == nil {
 		return nil, fmt.Errorf("workflow cannot be nil")
+	}
+	if ctx == nil {
+		ctx = context.Background()
 	}
 
 	e.executionMetrics.mu.Lock()
@@ -193,6 +205,12 @@ func (e *ReliableWorkflowEngine) ExecuteWorkflow(workflow *model.Workflow, input
 
 	// Execute each node with reliability features
 	for _, nodeName := range executionOrder {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+		}
+
 		var node *model.Node
 		for i := range workflow.Nodes {
 			if workflow.Nodes[i].Name == nodeName {
@@ -230,7 +248,7 @@ func (e *ReliableWorkflowEngine) ExecuteWorkflow(workflow *model.Workflow, input
 		}
 
 		// Execute with reliability features
-		outputData, err := e.executeNodeWithReliability(node, executor, inputDataForNode, finalNodeParams)
+		outputData, err := e.executeNodeWithReliability(ctx, node, executor, inputDataForNode, finalNodeParams)
 		if err != nil {
 			e.executionMetrics.mu.Lock()
 			e.executionMetrics.FailedNodes++
@@ -272,12 +290,16 @@ func (e *ReliableWorkflowEngine) ExecuteWorkflow(workflow *model.Workflow, input
 
 // executeNodeWithReliability executes a node with retry, circuit breaker, and bulkhead
 func (e *ReliableWorkflowEngine) executeNodeWithReliability(
+	parentCtx context.Context,
 	node *model.Node,
 	executor base.NodeExecutor,
 	inputData []model.DataItem,
 	params map[string]interface{},
 ) ([]model.DataItem, error) {
-	ctx := context.Background()
+	ctx := parentCtx
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	if e.config.ExecutionTimeout > 0 {
 		var cancel context.CancelFunc
 		ctx, cancel = context.WithTimeout(ctx, e.config.ExecutionTimeout)
@@ -301,7 +323,11 @@ func (e *ReliableWorkflowEngine) executeNodeWithReliability(
 			return execCtx.Err()
 		default:
 		}
-		result, resultErr = executor.Execute(inputData, params)
+		if contextExecutor, ok := executor.(base.ContextAwareNodeExecutor); ok {
+			result, resultErr = contextExecutor.ExecuteWithContext(execCtx, inputData, params)
+		} else {
+			result, resultErr = executor.Execute(inputData, params)
+		}
 		return resultErr
 	}
 

@@ -172,6 +172,7 @@ func (m *WebhookManager) ExecuteWebhook(webhook *Webhook, request *WebhookReques
 	// Execute workflow
 	executionID := generateExecutionID()
 	result, err := m.engine.ExecuteWorkflow(workflow, inputData)
+	executionErr := engine.ResolveExecutionError(result, err)
 
 	// Create execution record
 	execution := &WebhookExecution{
@@ -183,11 +184,11 @@ func (m *WebhookManager) ExecuteWebhook(webhook *Webhook, request *WebhookReques
 		Duration:    time.Since(startTime).Milliseconds(),
 	}
 
-	if err != nil {
+	if executionErr != nil {
 		execution.Status = "failed"
-		execution.Error = err.Error()
+		execution.Error = executionErr.Error()
 		m.storage.SaveWebhookExecution(execution)
-		return nil, fmt.Errorf("workflow execution failed: %w", err)
+		return nil, fmt.Errorf("workflow execution failed: %w", executionErr)
 	}
 
 	execution.Status = "success"

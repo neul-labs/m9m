@@ -3,6 +3,7 @@ package scheduler
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"sync"
@@ -481,10 +482,10 @@ func (s *WorkflowScheduler) executeScheduledWorkflow(scheduleID string) {
 	}
 
 	// Load workflow
-	workflow, err := s.loadWorkflow(config.WorkflowID)
-	if err != nil {
-		s.completeExecution(scheduleID, execution.ID, "failed", err.Error(), nil)
-		log.Printf("Failed to load workflow %s: %v", config.WorkflowID, err)
+	workflow, loadErr := s.loadWorkflow(config.WorkflowID)
+	if loadErr != nil {
+		s.completeExecution(scheduleID, execution.ID, "failed", loadErr.Error(), nil)
+		log.Printf("Failed to load workflow %s: %v", config.WorkflowID, loadErr)
 		return
 	}
 
@@ -494,16 +495,19 @@ func (s *WorkflowScheduler) executeScheduledWorkflow(scheduleID string) {
 		inputData = []model.DataItem{{JSON: make(map[string]interface{})}}
 	}
 
-	// Execute workflow
+	// Execute workflow and honor schedule timeout at the scheduler layer.
 	startTime := time.Now()
-	// Note: Using ExecuteWorkflow as ExecuteWorkflowWithContext is not available
-	// TODO: Add context support to WorkflowEngine interface and use ctx for timeout
-	_ = ctx // Silence unused warning until context support is added
-	result, err := s.engine.ExecuteWorkflow(workflow, inputData)
+	result, execErr := engine.ExecuteWorkflowWithContext(ctx, s.engine, workflow, inputData)
+	err := engine.ResolveExecutionError(result, execErr)
+
 	duration := time.Since(startTime)
 
 	if err != nil {
-		s.completeExecution(scheduleID, execution.ID, "failed", err.Error(), nil)
+		status := "failed"
+		if errors.Is(err, context.DeadlineExceeded) {
+			status = "timeout"
+		}
+		s.completeExecution(scheduleID, execution.ID, status, err.Error(), nil)
 		log.Printf("Scheduled execution %s failed: %v", execution.ID, err)
 	} else {
 		s.completeExecution(scheduleID, execution.ID, "success", "", result)

@@ -115,12 +115,13 @@ func (p *WorkerPool) processJob(workerID int, job *Job) {
 
 	// Execute the workflow
 	result, err := p.engine.ExecuteWorkflow(job.Workflow, job.InputData)
+	executionErr := engine.ResolveExecutionError(result, err)
 
 	duration := time.Since(startTime)
 
-	if err != nil {
-		log.Printf("Worker %d: job %s failed after %v: %v", workerID, job.ID, duration, err)
-		if nackErr := p.queue.Nack(job.ID, err); nackErr != nil {
+	if executionErr != nil {
+		log.Printf("Worker %d: job %s failed after %v: %v", workerID, job.ID, duration, executionErr)
+		if nackErr := p.queue.Nack(job.ID, executionErr); nackErr != nil {
 			log.Printf("Worker %d: failed to nack job %s: %v", workerID, job.ID, nackErr)
 		}
 		return
@@ -132,9 +133,6 @@ func (p *WorkerPool) processJob(workerID int, job *Job) {
 	jobResult := &JobResult{
 		Data: result.Data,
 	}
-	if result.Error != nil {
-		jobResult.Error = result.Error
-	}
 
 	if ackErr := p.queue.Ack(job.ID, jobResult); ackErr != nil {
 		log.Printf("Worker %d: failed to ack job %s: %v", workerID, job.ID, ackErr)
@@ -144,9 +142,9 @@ func (p *WorkerPool) processJob(workerID int, job *Job) {
 // GetStats returns worker pool statistics
 func (p *WorkerPool) GetStats() map[string]interface{} {
 	return map[string]interface{}{
-		"workers":       p.numWorkers,
-		"pending_jobs":  p.queue.GetPendingCount(),
-		"running_jobs":  p.queue.GetRunningCount(),
+		"workers":      p.numWorkers,
+		"pending_jobs": p.queue.GetPendingCount(),
+		"running_jobs": p.queue.GetRunningCount(),
 	}
 }
 

@@ -293,6 +293,10 @@ POST /api/v1/workflows/{id}/execute
 
 ### Request Body
 
+`m9m` accepts either of these request shapes:
+
+1. Envelope form:
+
 ```json
 {
   "inputData": [
@@ -303,6 +307,18 @@ POST /api/v1/workflows/{id}/execute
     }
   ]
 }
+```
+
+2. Direct array form:
+
+```json
+[
+  {
+    "json": {
+      "key": "value"
+    }
+  }
+]
 ```
 
 ### Example Request
@@ -322,7 +338,7 @@ curl -X POST http://localhost:8080/api/v1/workflows/550e8400-e29b-41d4-a716-4466
 {
   "id": "exec-123456",
   "workflowId": "550e8400-e29b-41d4-a716-446655440000",
-  "status": "success",
+  "status": "completed",
   "mode": "manual",
   "startedAt": "2024-01-26T16:00:00Z",
   "finishedAt": "2024-01-26T16:00:01Z",
@@ -334,6 +350,63 @@ curl -X POST http://localhost:8080/api/v1/workflows/550e8400-e29b-41d4-a716-4466
       }
     }
   ]
+}
+```
+
+---
+
+## Execute Inline Workflow Definition
+
+Execute a workflow definition without creating it first.
+
+```http
+POST /api/v1/workflows/run
+```
+
+### Request Body
+
+```json
+{
+  "workflow": {
+    "name": "Inline Workflow",
+    "nodes": [
+      {
+        "id": "start",
+        "name": "Start",
+        "type": "n8n-nodes-base.start",
+        "parameters": {}
+      }
+    ],
+    "connections": {}
+  },
+  "inputData": [
+    {
+      "json": {
+        "requestId": "abc-123"
+      }
+    }
+  ]
+}
+```
+
+### Response
+
+```json
+{
+  "data": [
+    {
+      "json": {}
+    }
+  ]
+}
+```
+
+On execution failure, this endpoint returns:
+
+```json
+{
+  "data": [],
+  "error": "error message"
 }
 ```
 

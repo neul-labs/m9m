@@ -72,3 +72,4 @@ After starting m9m, you can access:
 1. **[Installation](installation.md)** - Detailed installation options
 2. **[First Workflow](first-workflow.md)** - Create your first workflow
 3. **[Core Concepts](concepts.md)** - Understand workflows, nodes, and data flow
+4. **[Agent Usage Guide](agent-usage.md)** - Use m9m from AI agents via MCP or REST API

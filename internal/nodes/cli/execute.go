@@ -83,6 +83,15 @@ func (n *ExecuteNode) ValidateParameters(params map[string]interface{}) error {
 
 // Execute runs the CLI command
 func (n *ExecuteNode) Execute(inputData []model.DataItem, nodeParams map[string]interface{}) ([]model.DataItem, error) {
+	return n.executeWithContext(context.Background(), inputData, nodeParams)
+}
+
+// ExecuteWithContext executes CLI command honoring caller cancellation.
+func (n *ExecuteNode) ExecuteWithContext(ctx context.Context, inputData []model.DataItem, nodeParams map[string]interface{}) ([]model.DataItem, error) {
+	return n.executeWithContext(ctx, inputData, nodeParams)
+}
+
+func (n *ExecuteNode) executeWithContext(ctx context.Context, inputData []model.DataItem, nodeParams map[string]interface{}) ([]model.DataItem, error) {
 	if err := n.ValidateParameters(nodeParams); err != nil {
 		return nil, err
 	}
@@ -94,6 +103,7 @@ func (n *ExecuteNode) Execute(inputData []model.DataItem, nodeParams map[string]
 	workDir := n.GetStringParameter(nodeParams, "workDir", "")
 	useShell := n.GetBoolParameter(nodeParams, "shell", false)
 	sandboxEnabled := n.GetBoolParameter(nodeParams, "sandboxEnabled", true)
+	allowUnsafeFallback := n.GetBoolParameter(nodeParams, "allowUnsafeFallback", false)
 	isolationLevel := n.GetStringParameter(nodeParams, "isolationLevel", "standard")
 	networkAccess := n.GetStringParameter(nodeParams, "networkAccess", "host")
 	timeoutSecs := n.GetIntParameter(nodeParams, "timeout", 60)
@@ -116,6 +126,9 @@ func (n *ExecuteNode) Execute(inputData []model.DataItem, nodeParams map[string]
 		sb, err = n.factory.DetectBest()
 		if err != nil {
 			return nil, fmt.Errorf("failed to create sandbox: %w", err)
+		}
+		if sb.Type() == sandbox.SandboxTypeNone && !allowUnsafeFallback {
+			return nil, fmt.Errorf("sandboxEnabled=true but no secure sandbox backend is available; disable sandboxing explicitly or set allowUnsafeFallback=true")
 		}
 	} else {
 		sb = sandbox.NewNoSandbox()
@@ -142,8 +155,14 @@ func (n *ExecuteNode) Execute(inputData []model.DataItem, nodeParams map[string]
 	}
 
 	// Create context with timeout
-	ctx, cancel := context.WithTimeout(context.Background(), config.Limits.ExecutionTimeout)
-	defer cancel()
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if config.Limits.ExecutionTimeout > 0 {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, config.Limits.ExecutionTimeout)
+		defer cancel()
+	}
 
 	// Handle streaming vs one-shot execution
 	if inputFromPrevious && len(inputData) > 0 {

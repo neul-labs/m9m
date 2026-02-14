@@ -2,8 +2,9 @@
 // This server can be used with Claude Code to orchestrate workflows conversationally.
 //
 // Usage modes:
-//   Local mode (default):  ./mcp-server --db ./data/m9m.db
-//   Cloud mode:            ./mcp-server --api-url https://m9m.example.com
+//
+//	Local mode (default):  ./mcp-server --db ./data/m9m.db
+//	Cloud mode:            ./mcp-server --api-url https://m9m.example.com
 package main
 
 import (
@@ -27,6 +28,7 @@ import (
 
 	// Import node packages to register them
 	"github.com/neul-labs/m9m/internal/nodes/ai"
+	"github.com/neul-labs/m9m/internal/nodes/cli"
 	"github.com/neul-labs/m9m/internal/nodes/core"
 	"github.com/neul-labs/m9m/internal/nodes/database"
 	"github.com/neul-labs/m9m/internal/nodes/email"
@@ -258,4 +260,7 @@ func registerNodes(eng engine.WorkflowEngine) {
 	// VCS nodes
 	eng.RegisterNodeExecutor("n8n-nodes-base.github", vcs.NewGitHubNode())
 	eng.RegisterNodeExecutor("n8n-nodes-base.gitlab", vcs.NewGitLabNode())
+
+	// CLI nodes
+	eng.RegisterNodeExecutor("n8n-nodes-base.cliExecute", cli.NewExecuteNode())
 }

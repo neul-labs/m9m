@@ -83,6 +83,7 @@ func (c *RemoteClient) ListWorkflows(filters storage.WorkflowFilters) ([]*model.
 
 	var response struct {
 		Workflows []*model.Workflow `json:"workflows"`
+		Data      []*model.Workflow `json:"data"`
 		Total     int               `json:"total"`
 	}
 
@@ -95,7 +96,12 @@ func (c *RemoteClient) ListWorkflows(filters storage.WorkflowFilters) ([]*model.
 		return nil, 0, err
 	}
 
-	return response.Workflows, response.Total, nil
+	workflows := response.Workflows
+	if workflows == nil {
+		workflows = response.Data
+	}
+
+	return workflows, response.Total, nil
 }
 
 func (c *RemoteClient) UpdateWorkflow(id string, workflow *model.Workflow) error {
@@ -146,6 +152,7 @@ func (c *RemoteClient) ListExecutions(filters storage.ExecutionFilters) ([]*mode
 
 	var response struct {
 		Executions []*model.WorkflowExecution `json:"executions"`
+		Data       []*model.WorkflowExecution `json:"data"`
 		Total      int                        `json:"total"`
 	}
 
@@ -158,7 +165,12 @@ func (c *RemoteClient) ListExecutions(filters storage.ExecutionFilters) ([]*mode
 		return nil, 0, err
 	}
 
-	return response.Executions, response.Total, nil
+	executions := response.Executions
+	if executions == nil {
+		executions = response.Data
+	}
+
+	return executions, response.Total, nil
 }
 
 func (c *RemoteClient) DeleteExecution(id string) error {
@@ -183,10 +195,17 @@ func (c *RemoteClient) ListCredentials() ([]*storage.Credential, error) {
 	var response struct {
 		Credentials []*storage.Credential `json:"credentials"`
 	}
-	if err := c.get("/api/v1/credentials", &response); err != nil {
+	if err := c.get("/api/v1/credentials", &response); err == nil {
+		if response.Credentials != nil {
+			return response.Credentials, nil
+		}
+	}
+
+	var credentials []*storage.Credential
+	if err := c.get("/api/v1/credentials", &credentials); err != nil {
 		return nil, err
 	}
-	return response.Credentials, nil
+	return credentials, nil
 }
 
 func (c *RemoteClient) UpdateCredential(id string, credential *storage.Credential) error {
@@ -216,10 +235,17 @@ func (c *RemoteClient) ListTags() ([]*storage.Tag, error) {
 	var response struct {
 		Tags []*storage.Tag `json:"tags"`
 	}
-	if err := c.get("/api/v1/tags", &response); err != nil {
+	if err := c.get("/api/v1/tags", &response); err == nil {
+		if response.Tags != nil {
+			return response.Tags, nil
+		}
+	}
+
+	var tags []*storage.Tag
+	if err := c.get("/api/v1/tags", &tags); err != nil {
 		return nil, err
 	}
-	return response.Tags, nil
+	return tags, nil
 }
 
 func (c *RemoteClient) UpdateTag(id string, tag *storage.Tag) error {
@@ -289,7 +315,7 @@ func (c *RemoteClient) ExecuteWorkflow(workflow *model.Workflow, inputData []mod
 		Error string           `json:"error,omitempty"`
 	}
 
-	if err := c.post("/api/v1/execute", request, &response); err != nil {
+	if err := c.post("/api/v1/workflows/run", request, &response); err != nil {
 		return nil, err
 	}
 

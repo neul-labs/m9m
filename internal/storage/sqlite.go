@@ -295,20 +295,32 @@ func (s *SQLiteStorage) SaveExecution(execution *model.WorkflowExecution) error 
 	if execution.ID == "" {
 		execution.ID = generateID("exec")
 	}
+	if execution.StartedAt.IsZero() {
+		execution.StartedAt = time.Now()
+	}
 
 	dataJSON, _ := json.Marshal(execution.Data)
 	errorText := ""
 	if execution.Error != nil {
 		errorText = execution.Error.Error()
 	}
+	createdAt := time.Now()
 
 	query := `
 		INSERT INTO executions (id, workflow_id, status, mode, started_at, finished_at, data, error, created_at)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+		ON CONFLICT(id) DO UPDATE SET
+			workflow_id = excluded.workflow_id,
+			status = excluded.status,
+			mode = excluded.mode,
+			started_at = excluded.started_at,
+			finished_at = excluded.finished_at,
+			data = excluded.data,
+			error = excluded.error
 	`
 
 	_, err := s.db.Exec(query, execution.ID, execution.WorkflowID, execution.Status,
-		execution.Mode, execution.StartedAt, execution.FinishedAt, string(dataJSON), errorText, time.Now())
+		execution.Mode, execution.StartedAt, execution.FinishedAt, string(dataJSON), errorText, createdAt)
 
 	return err
 }

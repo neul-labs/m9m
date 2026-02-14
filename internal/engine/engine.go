@@ -4,6 +4,7 @@ Package engine provides the core workflow execution engine for m9m.
 package engine
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"runtime/debug"
@@ -86,8 +87,16 @@ func (e *workflowEngineImpl) SetConnectionRouter(connectionRouter connections.Co
 
 // ExecuteWorkflow executes a complete workflow
 func (e *workflowEngineImpl) ExecuteWorkflow(workflow *model.Workflow, inputData []model.DataItem) (*ExecutionResult, error) {
+	return e.ExecuteWorkflowWithContext(context.Background(), workflow, inputData)
+}
+
+// ExecuteWorkflowWithContext executes a workflow honoring caller cancellation.
+func (e *workflowEngineImpl) ExecuteWorkflowWithContext(ctx context.Context, workflow *model.Workflow, inputData []model.DataItem) (*ExecutionResult, error) {
 	if workflow == nil {
 		return nil, fmt.Errorf("workflow cannot be nil")
+	}
+	if ctx == nil {
+		ctx = context.Background()
 	}
 
 	// Handle empty workflow
@@ -145,6 +154,12 @@ func (e *workflowEngineImpl) ExecuteWorkflow(workflow *model.Workflow, inputData
 
 	// Execute each node in order
 	for _, nodeName := range executionOrder {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+		}
+
 		// Get the node by name using O(1) lookup
 		node := nodeMap[nodeName]
 		if node == nil {
@@ -183,7 +198,7 @@ func (e *workflowEngineImpl) ExecuteWorkflow(workflow *model.Workflow, inputData
 		}
 
 		// Execute the node, passing the input data and node parameters
-		outputData, err := executor.Execute(inputDataForNode, finalNodeParams)
+		outputData, err := e.executeNodeWithContext(ctx, executor, inputDataForNode, finalNodeParams)
 		if err != nil {
 			return &ExecutionResult{
 				Data:  nil,
@@ -221,6 +236,38 @@ func (e *workflowEngineImpl) ExecuteWorkflow(workflow *model.Workflow, inputData
 	return &ExecutionResult{
 		Data: finalResult,
 	}, nil
+}
+
+func (e *workflowEngineImpl) executeNodeWithContext(
+	ctx context.Context,
+	executor base.NodeExecutor,
+	inputData []model.DataItem,
+	nodeParams map[string]interface{},
+) ([]model.DataItem, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+
+	if contextExecutor, ok := executor.(base.ContextAwareNodeExecutor); ok {
+		return contextExecutor.ExecuteWithContext(ctx, inputData, nodeParams)
+	}
+
+	type nodeExecutionResult struct {
+		output []model.DataItem
+		err    error
+	}
+	resultChan := make(chan nodeExecutionResult, 1)
+	go func() {
+		outputData, err := executor.Execute(inputData, nodeParams)
+		resultChan <- nodeExecutionResult{output: outputData, err: err}
+	}()
+
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	case result := <-resultChan:
+		return result.output, result.err
+	}
 }
 
 // ExecuteWorkflowParallel executes multiple workflows in parallel

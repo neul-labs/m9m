@@ -4,21 +4,29 @@ Package base provides the base interfaces and types for node implementations.
 package base
 
 import (
+	"context"
 	"fmt"
-	"github.com/neul-labs/m9m/internal/model"
 	"github.com/neul-labs/m9m/internal/expressions"
+	"github.com/neul-labs/m9m/internal/model"
 )
 
 // NodeExecutor is the interface that all node types must implement
 type NodeExecutor interface {
 	// Execute processes the node with given input data and node parameters
 	Execute(inputData []model.DataItem, nodeParams map[string]interface{}) ([]model.DataItem, error)
-	
+
 	// Description returns metadata about the node
 	Description() NodeDescription
-	
+
 	// ValidateParameters validates node parameters
 	ValidateParameters(params map[string]interface{}) error
+}
+
+// ContextAwareNodeExecutor optionally supports context-aware node execution.
+// Engines should prefer this interface when available to support cancellation.
+type ContextAwareNodeExecutor interface {
+	NodeExecutor
+	ExecuteWithContext(ctx context.Context, inputData []model.DataItem, nodeParams map[string]interface{}) ([]model.DataItem, error)
 }
 
 // NodeDescription provides metadata about a node type
@@ -55,7 +63,7 @@ func (b *BaseNode) ValidateParameters(params map[string]interface{}) error {
 	if params == nil {
 		return nil
 	}
-	
+
 	// Just ensure params is a valid map
 	// In a real implementation, we would validate against a schema
 	return nil
@@ -74,11 +82,11 @@ func (b *BaseNode) GetParameter(params map[string]interface{}, name string, defa
 	if params == nil {
 		return defaultValue
 	}
-	
+
 	if value, exists := params[name]; exists {
 		return value
 	}
-	
+
 	return defaultValue
 }
 
@@ -87,13 +95,13 @@ func (b *BaseNode) GetStringParameter(params map[string]interface{}, name string
 	if params == nil {
 		return defaultValue
 	}
-	
+
 	if value, exists := params[name]; exists {
 		if str, ok := value.(string); ok {
 			return str
 		}
 	}
-	
+
 	return defaultValue
 }
 
@@ -102,7 +110,7 @@ func (b *BaseNode) GetIntParameter(params map[string]interface{}, name string, d
 	if params == nil {
 		return defaultValue
 	}
-	
+
 	if value, exists := params[name]; exists {
 		if num, ok := value.(int); ok {
 			return num
@@ -111,7 +119,7 @@ func (b *BaseNode) GetIntParameter(params map[string]interface{}, name string, d
 			return int(floatVal)
 		}
 	}
-	
+
 	return defaultValue
 }
 
@@ -120,13 +128,13 @@ func (b *BaseNode) GetBoolParameter(params map[string]interface{}, name string, 
 	if params == nil {
 		return defaultValue
 	}
-	
+
 	if value, exists := params[name]; exists {
 		if b, ok := value.(bool); ok {
 			return b
 		}
 	}
-	
+
 	return defaultValue
 }
 
@@ -138,9 +146,9 @@ func (b *BaseNode) CreateError(message string, data map[string]interface{}) erro
 // EvaluateExpressions evaluates expressions in parameters using the given context
 func (b *BaseNode) EvaluateExpressions(params map[string]interface{}, context *expressions.ExecutionContext) (map[string]interface{}, error) {
 	evaluator := expressions.NewExpressionEvaluator()
-	
+
 	evaluatedParams := make(map[string]interface{})
-	
+
 	for key, value := range params {
 		switch v := value.(type) {
 		case string:
@@ -165,9 +173,10 @@ func (b *BaseNode) EvaluateExpressions(params map[string]interface{}, context *e
 			evaluatedParams[key] = v
 		}
 	}
-	
+
 	return evaluatedParams, nil
 }
+
 // Additional type definitions for compatibility with some node implementations
 
 // Node is a compatibility type for older node implementations
@@ -189,13 +198,13 @@ type NodeMetadata struct {
 
 // NodeProperty describes a node parameter/property
 type NodeProperty struct {
-	DisplayName  string      `json:"displayName"`
-	Name         string      `json:"name"`
-	Type         string      `json:"type"`
-	Default      interface{} `json:"default"`
-	Description  string      `json:"description"`
-	Required     bool        `json:"required"`
-	Options      []Option    `json:"options,omitempty"`
+	DisplayName string      `json:"displayName"`
+	Name        string      `json:"name"`
+	Type        string      `json:"type"`
+	Default     interface{} `json:"default"`
+	Description string      `json:"description"`
+	Required    bool        `json:"required"`
+	Options     []Option    `json:"options,omitempty"`
 }
 
 // Option represents a selection option for a property

@@ -18,6 +18,7 @@ m9m is a high-performance workflow automation platform built in Go. It provides 
 - **n8n Compatible** - Run existing n8n workflows without modification
 - **CLI Agent Orchestration** - Run AI coding agents (Claude Code, Codex, Aider) in secure sandboxes
 - **35+ Node Types** - HTTP, databases, AI/LLM, cloud storage, messaging, CLI execution, and more
+- **Agent Integration Guide** - Step-by-step MCP and REST orchestration patterns: [Getting Started > Agent Usage](getting-started/agent-usage.md)
 - **Linux Sandboxing** - Bubblewrap-based isolation for secure command execution
 - **Expression Engine** - Full n8n expression syntax support
 - **Multiple Storage Backends** - SQLite, PostgreSQL, or in-memory
