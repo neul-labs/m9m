@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"encoding/base64"
 	"fmt"
+	"log"
 	"mime"
 	"net/smtp"
 	"path/filepath"
@@ -215,12 +216,15 @@ func (n *SMTPNode) getSMTPConfig(nodeParams map[string]interface{}) (*SMTPConfig
 	}
 	config.Password = password
 
-	// TLS (optional, default true for ports 465, 587)
-	config.TLS = true // Default to true
+	// SECURITY: TLS enabled by default for all ports
+	// Plaintext SMTP is insecure and should be explicitly disabled if required
+	config.TLS = true
 	if tls, ok := nodeParams["tls"].(bool); ok {
 		config.TLS = tls
-	} else if config.Port == 25 {
-		config.TLS = false // Default to false for port 25
+		if !tls {
+			// Log a warning when TLS is explicitly disabled
+			log.Printf("SECURITY WARNING: TLS disabled for SMTP connection to %s:%d - credentials will be sent in plaintext", config.Host, config.Port)
+		}
 	}
 
 	// Auth method (optional, default plain)

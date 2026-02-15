@@ -1,0 +1,17 @@
+{
+  "name": "HTTP Request Example",
+  "nodes": [
+    {
+      "name": "Fetch Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "parameters": {
+        "url": "https://httpbin.org/json",
+        "method": "GET",
+        "allowInternalRequests": false
+      }
+    }
+  ],
+  "connections": {}
+}

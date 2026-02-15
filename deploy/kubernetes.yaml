@@ -1,10 +1,21 @@
 # Kubernetes deployment configuration for m9m
 # Deploy with: kubectl apply -f deploy/kubernetes.yaml
+#
+# SECURITY: Before deploying to production:
+# 1. Replace all placeholder secrets below with actual values
+# 2. Consider using external-secrets or sealed-secrets for secret management
+# 3. Review and adjust NetworkPolicy for your environment
+# 4. Enable Pod Security Standards (restricted or baseline)
 
 apiVersion: v1
 kind: Namespace
 metadata:
   name: m9m
+  labels:
+    # Enable Pod Security Standards - restricted mode for production
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
 
 ---
 apiVersion: v1
@@ -17,17 +28,93 @@ data:
   M9M_HOST: "0.0.0.0"
   M9M_LOG_LEVEL: "info"
   M9M_DB_TYPE: "postgres"
+  # SECURITY: Disable dev mode in production
+  M9M_DEV_MODE: "false"
 
 ---
+# SECURITY WARNING: This secret contains placeholder values.
+# In production, use ExternalSecrets, SealedSecrets, or another secret management solution.
+# NEVER commit real secrets to version control.
 apiVersion: v1
 kind: Secret
 metadata:
   name: m9m-secrets
   namespace: m9m
+  annotations:
+    # Reminder annotation for operators
+    security.m9m.io/warning: "Replace placeholder values before deployment!"
 type: Opaque
 stringData:
-  M9M_DB_POSTGRES_URL: "postgres://m9m:password@m9m-postgres:5432/m9m?sslmode=disable"
+  # SECURITY: Use sslmode=require for encrypted connections
+  # Replace <PASSWORD> with actual database password
+  M9M_DB_POSTGRES_URL: "postgres://m9m:<REPLACE_WITH_ACTUAL_PASSWORD>@m9m-postgres:5432/m9m?sslmode=require"
+  # SECURITY: Generate with: openssl rand -hex 32
+  N8N_ENCRYPTION_KEY: "<REPLACE_WITH_32_CHAR_RANDOM_KEY>"
   M9M_COPILOT_API_KEY: ""
+
+---
+# Network Policy - restrict pod communication
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: m9m-network-policy
+  namespace: m9m
+spec:
+  podSelector:
+    matchLabels:
+      app: m9m
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Allow ingress from ingress controller
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 8080
+    # Allow internal communication within namespace
+    - from:
+        - podSelector:
+            matchLabels:
+              app: m9m
+      ports:
+        - protocol: TCP
+          port: 8080
+        - protocol: TCP
+          port: 9090
+  egress:
+    # Allow DNS
+    - to:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+    # Allow database access
+    - to:
+        - podSelector:
+            matchLabels:
+              app: m9m-postgres
+      ports:
+        - protocol: TCP
+          port: 5432
+    # Allow external HTTPS (for webhooks, API calls)
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+              - 169.254.0.0/16
+      ports:
+        - protocol: TCP
+          port: 443
 
 ---
 apiVersion: apps/v1
@@ -50,6 +137,17 @@ spec:
         app: m9m
         component: control-plane
     spec:
+      # SECURITY: Pod-level security context
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      # SECURITY: Service account with minimal permissions
+      serviceAccountName: m9m-sa
+      automountServiceAccountToken: false
       containers:
         - name: m9m
           image: ghcr.io/neul-labs/m9m:latest
@@ -71,6 +169,21 @@ spec:
             limits:
               memory: "512Mi"
               cpu: "500m"
+          # SECURITY: Container-level security context
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000
+            capabilities:
+              drop:
+                - ALL
+          # SECURITY: Mount writable directories as emptyDir
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: data
+              mountPath: /app/data
           livenessProbe:
             httpGet:
               path: /health
@@ -83,6 +196,20 @@ spec:
               port: 8080
             initialDelaySeconds: 5
             periodSeconds: 5
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: data
+          emptyDir: {}
+
+---
+# SECURITY: Service account with minimal permissions
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: m9m-sa
+  namespace: m9m
+automountServiceAccountToken: false
 
 ---
 apiVersion: apps/v1
@@ -105,6 +232,16 @@ spec:
         app: m9m
         component: worker
     spec:
+      # SECURITY: Pod-level security context
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: m9m-sa
+      automountServiceAccountToken: false
       containers:
         - name: m9m-worker
           image: ghcr.io/neul-labs/m9m:latest
@@ -121,6 +258,25 @@ spec:
             limits:
               memory: "256Mi"
               cpu: "250m"
+          # SECURITY: Container-level security context
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: data
+              mountPath: /app/data
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: data
+          emptyDir: {}
 
 ---
 apiVersion: v1

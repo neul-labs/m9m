@@ -119,6 +119,7 @@ func (cs *CredentialStore) loadOrGenerateSalt() ([]byte, error) {
 }
 
 // getSaltFilePath returns the path for the salt file
+// SECURITY: Never use /tmp as it is world-readable
 func getSaltFilePath() string {
 	// Check for custom data directory
 	dataDir := os.Getenv("M9M_DATA_DIR")
@@ -126,19 +127,56 @@ func getSaltFilePath() string {
 		// Default to home directory
 		home, err := os.UserHomeDir()
 		if err != nil {
-			dataDir = "/tmp"
+			// SECURITY: Log error and fail rather than using /tmp
+			log.Printf("ERROR: Cannot determine home directory for salt file storage")
+			log.Printf("ERROR: Set M9M_DATA_DIR environment variable to specify data directory")
+			// Use a directory under /var that requires elevated permissions
+			dataDir = "/var/lib/m9m"
 		} else {
 			dataDir = filepath.Join(home, ".m9m")
 		}
 	}
+
+	// SECURITY: Ensure the data directory has proper permissions (owner only)
+	if err := os.MkdirAll(dataDir, 0700); err != nil {
+		log.Printf("WARNING: Could not create data directory %s: %v", dataDir, err)
+	}
+
 	return filepath.Join(dataDir, ".encryption-salt")
 }
 
+// MinEncryptionKeyLength is the minimum length for the encryption key
+// SECURITY: 32 characters provides good entropy for key derivation
+const MinEncryptionKeyLength = 32
+
 // generateEncryptionKey generates an encryption key from environment or defaults
+// SECURITY: In production mode, this REQUIRES the N8N_ENCRYPTION_KEY environment variable
 func (cs *CredentialStore) generateEncryptionKey() ([]byte, error) {
 	// Try to get key from environment variable
 	envKey := os.Getenv("N8N_ENCRYPTION_KEY")
 	if envKey != "" {
+		// SECURITY: Enforce minimum key length
+		if len(envKey) < MinEncryptionKeyLength {
+			return nil, fmt.Errorf("N8N_ENCRYPTION_KEY is too short (minimum %d characters, got %d). "+
+				"Please use a longer, randomly generated key for security", MinEncryptionKeyLength, len(envKey))
+		}
+
+		// SECURITY: Check for obviously weak keys
+		weakKeys := []string{
+			"change-this-to-a-random-secret",
+			"change-this-to-a-random-key-min-32-chars",
+			"changeme",
+			"password",
+			"secret",
+		}
+		lowerKey := strings.ToLower(envKey)
+		for _, weak := range weakKeys {
+			if strings.Contains(lowerKey, weak) {
+				return nil, fmt.Errorf("N8N_ENCRYPTION_KEY appears to be a default/weak key. "+
+					"Please use a properly random key (e.g., `openssl rand -hex 32`)")
+			}
+		}
+
 		// Use scrypt to derive a proper key from the environment key with secure salt
 		key, err := scrypt.Key([]byte(envKey), cs.salt, 32768, 8, 1, 32)
 		if err != nil {
@@ -147,13 +185,20 @@ func (cs *CredentialStore) generateEncryptionKey() ([]byte, error) {
 		return key, nil
 	}
 
-	// In production mode, require explicit encryption key
+	// SECURITY: In production mode, REQUIRE explicit encryption key
+	// This prevents credential loss on restart and ensures proper security
 	if !cs.devMode {
-		log.Printf("WARNING: N8N_ENCRYPTION_KEY not set. Using auto-generated key.")
-		log.Printf("WARNING: Set N8N_ENCRYPTION_KEY for production use to ensure credential persistence across restarts.")
+		return nil, fmt.Errorf("SECURITY ERROR: N8N_ENCRYPTION_KEY environment variable is required in production mode. " +
+			"Without this key, credentials cannot be encrypted/decrypted consistently across restarts. " +
+			"Generate a secure key using: openssl rand -hex 32")
 	}
 
-	// Generate a random key as fallback (development mode)
+	// DEVELOPMENT MODE ONLY: Generate a random key
+	// WARNING: This key is lost on restart, and all credentials become unrecoverable
+	log.Printf("WARNING: [DEV MODE ONLY] Using auto-generated encryption key.")
+	log.Printf("WARNING: Credentials will be lost on restart. This is acceptable only in development.")
+	log.Printf("WARNING: For production, set N8N_ENCRYPTION_KEY environment variable.")
+
 	key := make([]byte, 32)
 	if _, err := rand.Read(key); err != nil {
 		return nil, fmt.Errorf("failed to generate random key: %v", err)

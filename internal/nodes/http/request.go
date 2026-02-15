@@ -9,14 +9,120 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
+	"net"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
-	
+
+	"github.com/neul-labs/m9m/internal/expressions"
 	"github.com/neul-labs/m9m/internal/model"
 	"github.com/neul-labs/m9m/internal/nodes/base"
-	"github.com/neul-labs/m9m/internal/expressions"
 )
+
+// SSRF protection: blocked IP ranges and hosts
+var (
+	// blockedIPRanges contains private and special-use IP ranges that should not be accessed
+	blockedIPRanges = []struct {
+		network *net.IPNet
+		name    string
+	}{
+		{mustParseCIDR("10.0.0.0/8"), "Private (10.x.x.x)"},
+		{mustParseCIDR("172.16.0.0/12"), "Private (172.16-31.x.x)"},
+		{mustParseCIDR("192.168.0.0/16"), "Private (192.168.x.x)"},
+		{mustParseCIDR("127.0.0.0/8"), "Loopback"},
+		{mustParseCIDR("169.254.0.0/16"), "Link-local / Cloud Metadata"},
+		{mustParseCIDR("0.0.0.0/8"), "Current network"},
+		{mustParseCIDR("100.64.0.0/10"), "Shared address space"},
+		{mustParseCIDR("192.0.0.0/24"), "IETF Protocol"},
+		{mustParseCIDR("192.0.2.0/24"), "TEST-NET-1"},
+		{mustParseCIDR("198.51.100.0/24"), "TEST-NET-2"},
+		{mustParseCIDR("203.0.113.0/24"), "TEST-NET-3"},
+		{mustParseCIDR("224.0.0.0/4"), "Multicast"},
+		{mustParseCIDR("240.0.0.0/4"), "Reserved"},
+		{mustParseCIDR("255.255.255.255/32"), "Broadcast"},
+		// IPv6 blocked ranges
+		{mustParseCIDR("::1/128"), "IPv6 Loopback"},
+		{mustParseCIDR("fc00::/7"), "IPv6 Unique local"},
+		{mustParseCIDR("fe80::/10"), "IPv6 Link-local"},
+		{mustParseCIDR("ff00::/8"), "IPv6 Multicast"},
+	}
+
+	// blockedHosts contains specific hostnames that should not be accessed
+	blockedHosts = map[string]bool{
+		"localhost":                          true,
+		"metadata.google.internal":           true, // GCP metadata
+		"metadata.goog":                      true, // GCP metadata
+		"169.254.169.254":                    true, // AWS/Azure/GCP metadata
+		"169.254.170.2":                      true, // AWS ECS metadata
+		"fd00:ec2::254":                      true, // AWS EC2 IPv6 metadata
+		"[fd00:ec2::254]":                    true,
+		"instance-data":                      true, // OpenStack metadata
+		"metadata":                           true,
+		"kubernetes.default":                 true, // Kubernetes API
+		"kubernetes.default.svc":             true,
+		"kubernetes.default.svc.cluster.local": true,
+	}
+)
+
+func mustParseCIDR(s string) *net.IPNet {
+	_, network, err := net.ParseCIDR(s)
+	if err != nil {
+		panic(fmt.Sprintf("invalid CIDR: %s", s))
+	}
+	return network
+}
+
+// isBlockedIP checks if an IP address is in a blocked range
+func isBlockedIP(ip net.IP) (bool, string) {
+	for _, blocked := range blockedIPRanges {
+		if blocked.network.Contains(ip) {
+			return true, blocked.name
+		}
+	}
+	return false, ""
+}
+
+// validateURLForSSRF checks if a URL is safe to request (not internal/metadata)
+// SECURITY: Prevents Server-Side Request Forgery attacks
+func validateURLForSSRF(urlStr string) error {
+	parsedURL, err := url.Parse(urlStr)
+	if err != nil {
+		return fmt.Errorf("invalid URL: %w", err)
+	}
+
+	// Only allow http and https schemes
+	if parsedURL.Scheme != "http" && parsedURL.Scheme != "https" {
+		return fmt.Errorf("only http and https schemes are allowed, got: %s", parsedURL.Scheme)
+	}
+
+	// Extract hostname (without port)
+	hostname := parsedURL.Hostname()
+
+	// Check if hostname is in blocked list
+	if blockedHosts[strings.ToLower(hostname)] {
+		return fmt.Errorf("access to host '%s' is blocked for security reasons", hostname)
+	}
+
+	// Resolve hostname to IP addresses
+	ips, err := net.LookupIP(hostname)
+	if err != nil {
+		// Allow the request to proceed - DNS resolution will fail at request time
+		// This handles cases where the hostname is valid but DNS is temporarily unavailable
+		log.Printf("SECURITY WARNING: Could not resolve hostname '%s' for SSRF check: %v", hostname, err)
+		return nil
+	}
+
+	// Check each resolved IP against blocked ranges
+	for _, ip := range ips {
+		if blocked, reason := isBlockedIP(ip); blocked {
+			return fmt.Errorf("access to IP %s (%s) is blocked for security reasons: %s", ip.String(), hostname, reason)
+		}
+	}
+
+	return nil
+}
 
 // HTTPRequestNode implements the HTTP Request node functionality
 type HTTPRequestNode struct {
@@ -113,11 +219,22 @@ func (h *HTTPRequestNode) Execute(inputData []model.DataItem, nodeParams map[str
 		}
 		
 		// Get required parameters from evaluated parameters
-		url := h.GetStringParameter(evaluatedParams, "url", "")
-		if url == "" {
+		requestURL := h.GetStringParameter(evaluatedParams, "url", "")
+		if requestURL == "" {
 			return nil, h.CreateError("url parameter cannot be empty", nil)
 		}
-		
+
+		// SECURITY: Validate URL against SSRF attacks
+		// Check if allowInternalRequests is explicitly enabled (disabled by default)
+		allowInternal := h.GetBoolParameter(evaluatedParams, "allowInternalRequests", false)
+		if !allowInternal {
+			if err := validateURLForSSRF(requestURL); err != nil {
+				return nil, h.CreateError(fmt.Sprintf("SSRF protection: %v", err), nil)
+			}
+		} else {
+			log.Printf("SECURITY WARNING: SSRF protection disabled for request to %s", requestURL)
+		}
+
 		method := h.GetStringParameter(evaluatedParams, "method", "GET")
 		
 		// Validate method after evaluation
@@ -136,7 +253,7 @@ func (h *HTTPRequestNode) Execute(inputData []model.DataItem, nodeParams map[str
 		}
 		
 		// Create HTTP request
-		req, err := http.NewRequest(strings.ToUpper(method), url, nil)
+		req, err := http.NewRequest(strings.ToUpper(method), requestURL, nil)
 		if err != nil {
 			return nil, h.CreateError(fmt.Sprintf("failed to create request: %v", err), nil)
 		}

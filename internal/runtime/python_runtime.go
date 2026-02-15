@@ -3,6 +3,7 @@ package runtime
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -149,15 +150,35 @@ func (pr *PythonRuntime) prepareScript(code string, inputData interface{}, optio
 }
 
 // generateWrapper creates the Python wrapper with n8n context
+// SECURITY: User code is passed as base64-encoded data to prevent code injection
 func (pr *PythonRuntime) generateWrapper(code string, inputData interface{}, options map[string]interface{}) string {
 	inputJSON, _ := json.Marshal(inputData)
 	optionsJSON, _ := json.Marshal(options)
+
+	// SECURITY: Base64 encode the user code to prevent triple-quote escape attacks
+	// This ensures the user code cannot break out of the string boundary
+	encodedCode := base64.StdEncoding.EncodeToString([]byte(code))
+
+	// SECURITY: Also base64 encode JSON data to prevent injection through data
+	encodedInput := base64.StdEncoding.EncodeToString(inputJSON)
+	encodedOptions := base64.StdEncoding.EncodeToString(optionsJSON)
 
 	wrapper := fmt.Sprintf(`
 import json
 import sys
 import traceback
+import base64
 from typing import Any, Dict, List, Optional
+
+# SECURITY: Decode base64-encoded data to prevent injection attacks
+_encoded_input = "%s"
+_encoded_options = "%s"
+_encoded_code = "%s"
+
+# Decode the data
+_input_json = base64.b64decode(_encoded_input).decode('utf-8')
+_options_json = base64.b64decode(_encoded_options).decode('utf-8')
+_user_code = base64.b64decode(_encoded_code).decode('utf-8')
 
 # n8n compatibility helpers
 class N8nHelpers:
@@ -165,18 +186,18 @@ class N8nHelpers:
         self.input_data = input_data
         self.options = options or {}
         self.logs = []
-    
+
     def log(self, *args):
         """Log messages for debugging"""
         message = " ".join(str(arg) for arg in args)
         self.logs.append(message)
         print(f"[LOG] {message}", file=sys.stderr)
-    
+
     def get_input(self, path: str = None):
         """Get input data, optionally at a specific path"""
         if not path:
             return self.input_data
-        
+
         parts = path.split('.')
         data = self.input_data
         for part in parts:
@@ -188,7 +209,7 @@ class N8nHelpers:
             else:
                 return None
         return data
-    
+
     def set_output(self, data: Any) -> Dict:
         """Format output for n8n"""
         return {
@@ -197,9 +218,9 @@ class N8nHelpers:
             "type": "success"
         }
 
-# Initialize helpers
-$input = json.loads('%s')
-$options = json.loads('%s')
+# Initialize helpers using decoded data
+$input = json.loads(_input_json)
+$options = json.loads(_options_json)
 $helpers = N8nHelpers($input, $options)
 
 # Make helpers available globally
@@ -209,9 +230,79 @@ $workflow = {"name": "CurrentWorkflow", "active": True}
 
 # User code execution
 try:
-    # Execute user code
+    # SECURITY: Create restricted execution globals
+    # Remove dangerous builtins that could be used for sandbox escape
+    _safe_builtins = {
+        'True': True,
+        'False': False,
+        'None': None,
+        'abs': abs,
+        'all': all,
+        'any': any,
+        'ascii': ascii,
+        'bin': bin,
+        'bool': bool,
+        'bytearray': bytearray,
+        'bytes': bytes,
+        'callable': callable,
+        'chr': chr,
+        'complex': complex,
+        'dict': dict,
+        'dir': dir,
+        'divmod': divmod,
+        'enumerate': enumerate,
+        'filter': filter,
+        'float': float,
+        'format': format,
+        'frozenset': frozenset,
+        'getattr': getattr,
+        'hasattr': hasattr,
+        'hash': hash,
+        'hex': hex,
+        'id': id,
+        'int': int,
+        'isinstance': isinstance,
+        'issubclass': issubclass,
+        'iter': iter,
+        'len': len,
+        'list': list,
+        'map': map,
+        'max': max,
+        'min': min,
+        'next': next,
+        'object': object,
+        'oct': oct,
+        'ord': ord,
+        'pow': pow,
+        'print': print,
+        'range': range,
+        'repr': repr,
+        'reversed': reversed,
+        'round': round,
+        'set': set,
+        'slice': slice,
+        'sorted': sorted,
+        'str': str,
+        'sum': sum,
+        'tuple': tuple,
+        'type': type,
+        'zip': zip,
+        # SECURITY: Explicitly excluded dangerous builtins:
+        # - __import__: Can import any module
+        # - eval: Can evaluate arbitrary code
+        # - exec: Can execute arbitrary code (we control this)
+        # - compile: Can compile arbitrary code
+        # - open: Can access filesystem
+        # - input: Can hang waiting for input
+        # - globals: Can access global namespace
+        # - locals: Can access local namespace
+        # - vars: Can access object namespace
+        # - breakpoint: Can enter debugger
+        # - memoryview: Low-level memory access
+    }
+
     exec_globals = {
-        '__builtins__': __builtins__,
+        '__builtins__': _safe_builtins,
         '$input': $input,
         '$json': $json,
         '$node': $node,
@@ -220,16 +311,15 @@ try:
         '$options': $options,
         'json': json,
     }
-    
+
     # Add safe imports
     import datetime
     import re
     import math
     import random
     import hashlib
-    import base64
     import urllib.parse
-    
+
     exec_globals.update({
         'datetime': datetime,
         're': re,
@@ -239,10 +329,11 @@ try:
         'base64': base64,
         'urllib': urllib,
     })
-    
-    # Execute user code
-    exec('''%s''', exec_globals)
-    
+
+    # SECURITY: Execute user code (decoded from base64)
+    # The code is executed with restricted builtins
+    exec(_user_code, exec_globals)
+
     # Get return value if specified
     if 'return_value' in exec_globals:
         result = $helpers.set_output(exec_globals['return_value'])
@@ -251,9 +342,9 @@ try:
     else:
         # Try to find the last expression value
         result = $helpers.set_output($input)
-    
+
     print(json.dumps(result))
-    
+
 except Exception as e:
     error_result = {
         "error": str(e),
@@ -263,7 +354,7 @@ except Exception as e:
     }
     print(json.dumps(error_result))
     sys.exit(1)
-`, string(inputJSON), string(optionsJSON), code)
+`, encodedInput, encodedOptions, encodedCode)
 
 	return wrapper
 }

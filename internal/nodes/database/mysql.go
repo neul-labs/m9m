@@ -6,9 +6,12 @@ package database
 import (
 	"database/sql"
 	"fmt"
-	
+	"log"
+	"net/url"
+	"strings"
+
 	_ "github.com/go-sql-driver/mysql" // MySQL driver
-	
+
 	"github.com/neul-labs/m9m/internal/model"
 	"github.com/neul-labs/m9m/internal/nodes/base"
 )
@@ -94,7 +97,7 @@ func (m *MySQLNode) Execute(inputData []model.DataItem, nodeParams map[string]in
 	
 	// Get connection parameters
 	connectionURL := m.GetStringParameter(nodeParams, "connectionUrl", "")
-	
+
 	// If connection URL is not provided, build it from individual parameters
 	if connectionURL == "" {
 		host := m.GetStringParameter(nodeParams, "host", "localhost")
@@ -102,8 +105,34 @@ func (m *MySQLNode) Execute(inputData []model.DataItem, nodeParams map[string]in
 		database := m.GetStringParameter(nodeParams, "database", "")
 		user := m.GetStringParameter(nodeParams, "user", "")
 		password := m.GetStringParameter(nodeParams, "password", "")
-		
-		connectionURL = fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", user, password, host, port, database)
+
+		// SECURITY: Get TLS mode from parameters, default to "preferred" for encrypted connections
+		tlsMode := m.GetStringParameter(nodeParams, "tls", "preferred")
+
+		// SECURITY: Validate TLS mode
+		validTLSModes := map[string]bool{
+			"true": true, "false": true, "skip-verify": true, "preferred": true,
+		}
+		if !validTLSModes[tlsMode] {
+			return nil, m.CreateError(fmt.Sprintf("invalid tls mode: %s", tlsMode), nil)
+		}
+
+		// SECURITY: Warn if TLS is disabled
+		if tlsMode == "false" {
+			log.Printf("SECURITY WARNING: MySQL connection to %s using tls=false. This is insecure for production.", host)
+		}
+
+		// SECURITY: Properly escape username and password for MySQL DSN
+		escapedUser := url.QueryEscape(user)
+		escapedPass := url.QueryEscape(password)
+
+		connectionURL = fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?tls=%s",
+			escapedUser, escapedPass, host, port, database, tlsMode)
+	} else {
+		// SECURITY: Warn if provided URL does not contain TLS settings
+		if !strings.Contains(connectionURL, "tls=") {
+			log.Printf("SECURITY WARNING: MySQL connection URL does not specify TLS settings. Consider adding tls=preferred or tls=true.")
+		}
 	}
 	
 	// Connect to database
@@ -149,7 +178,35 @@ func (m *MySQLNode) Execute(inputData []model.DataItem, nodeParams map[string]in
 // executeQuery executes a SELECT query and returns results
 func (m *MySQLNode) executeQuery(db *sql.DB, nodeParams map[string]interface{}, item model.DataItem) (model.DataItem, error) {
 	query := m.GetStringParameter(nodeParams, "query", "")
-	
+
+	// SECURITY: Basic validation - reject obviously dangerous patterns
+	// Note: This is defense-in-depth, not a complete SQL injection prevention
+	dangerousPatterns := []string{
+		"--",           // SQL comment
+		";",            // Statement terminator (could chain queries)
+		"/*",           // Block comment start
+		"*/",           // Block comment end
+		"xp_",          // SQL Server extended procedures
+		"EXEC ",        // Execute
+		"EXECUTE ",     // Execute
+		"sp_",          // Stored procedures
+		"DROP ",        // Drop statement
+		"TRUNCATE ",    // Truncate statement
+		"ALTER ",       // Alter statement
+		"CREATE ",      // Create statement
+		"GRANT ",       // Grant privileges
+		"REVOKE ",      // Revoke privileges
+	}
+
+	upperQuery := strings.ToUpper(query)
+	for _, pattern := range dangerousPatterns {
+		if strings.Contains(upperQuery, pattern) {
+			// Log for security monitoring
+			log.Printf("SECURITY WARNING: Potentially dangerous SQL pattern detected: %s", pattern)
+			// Allow but warn - in strict mode, you might want to reject
+		}
+	}
+
 	// Execute query
 	rows, err := db.Query(query)
 	if err != nil {

@@ -5,7 +5,18 @@ import (
 	"testing"
 )
 
+// setupTestEnv sets up the test environment for credentials tests
+// SECURITY: These tests run in dev mode to allow auto-generated encryption keys
+func setupTestEnv(t *testing.T) {
+	t.Helper()
+	os.Setenv("M9M_DEV_MODE", "true")
+	t.Cleanup(func() {
+		os.Unsetenv("M9M_DEV_MODE")
+	})
+}
+
 func TestCredentialStoreCreation(t *testing.T) {
+	setupTestEnv(t)
 	store, err := NewCredentialStore()
 	if err != nil {
 		t.Fatalf("Failed to create credential store: %v", err)
@@ -17,6 +28,7 @@ func TestCredentialStoreCreation(t *testing.T) {
 }
 
 func TestCredentialStorageAndRetrieval(t *testing.T) {
+	setupTestEnv(t)
 	store, err := NewCredentialStore()
 	if err != nil {
 		t.Fatalf("Failed to create credential store: %v", err)
@@ -65,6 +77,7 @@ func TestCredentialStorageAndRetrieval(t *testing.T) {
 }
 
 func TestCredentialDeletion(t *testing.T) {
+	setupTestEnv(t)
 	store, err := NewCredentialStore()
 	if err != nil {
 		t.Fatalf("Failed to create credential store: %v", err)
@@ -106,6 +119,7 @@ func TestCredentialDeletion(t *testing.T) {
 }
 
 func TestCredentialListing(t *testing.T) {
+	setupTestEnv(t)
 	store, err := NewCredentialStore()
 	if err != nil {
 		t.Fatalf("Failed to create credential store: %v", err)
@@ -151,6 +165,7 @@ func TestCredentialListing(t *testing.T) {
 }
 
 func TestEnvironmentVariableResolution(t *testing.T) {
+	setupTestEnv(t)
 	store, err := NewCredentialStore()
 	if err != nil {
 		t.Fatalf("Failed to create credential store: %v", err)
@@ -192,6 +207,7 @@ func TestEnvironmentVariableResolution(t *testing.T) {
 }
 
 func TestCredentialEncryption(t *testing.T) {
+	setupTestEnv(t)
 	store, err := NewCredentialStore()
 	if err != nil {
 		t.Fatalf("Failed to create credential store: %v", err)

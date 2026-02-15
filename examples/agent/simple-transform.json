@@ -1,0 +1,27 @@
+{
+  "name": "Simple Transform",
+  "nodes": [
+    {
+      "name": "Set Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "parameters": {
+        "mode": "manual",
+        "assignments": [
+          {
+            "name": "greeting",
+            "value": "Hello from m9m!",
+            "type": "string"
+          },
+          {
+            "name": "processed",
+            "value": "true",
+            "type": "boolean"
+          }
+        ]
+      }
+    }
+  ],
+  "connections": {}
+}

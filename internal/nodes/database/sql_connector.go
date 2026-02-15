@@ -3,6 +3,8 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -12,10 +14,54 @@ import (
 	"github.com/neul-labs/m9m/internal/nodes/base"
 
 	// Import SQL drivers
-	_ "github.com/lib/pq"           // PostgreSQL
+	_ "github.com/lib/pq"              // PostgreSQL
 	_ "github.com/go-sql-driver/mysql" // MySQL
 	_ "github.com/mattn/go-sqlite3"    // SQLite
 )
+
+// validIdentifierRegex validates SQL identifiers (table/column names)
+// Only allows alphanumeric characters, underscores, and must start with letter or underscore
+var validIdentifierRegex = regexp.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_]*$`)
+
+// maxIdentifierLength prevents excessively long identifiers
+const maxIdentifierLength = 128
+
+// validateSQLIdentifier validates a SQL identifier (table/column name) to prevent SQL injection
+func validateSQLIdentifier(identifier string) error {
+	if identifier == "" {
+		return fmt.Errorf("identifier cannot be empty")
+	}
+	if len(identifier) > maxIdentifierLength {
+		return fmt.Errorf("identifier exceeds maximum length of %d characters", maxIdentifierLength)
+	}
+	if !validIdentifierRegex.MatchString(identifier) {
+		return fmt.Errorf("invalid identifier '%s': must contain only alphanumeric characters and underscores, and start with a letter or underscore", identifier)
+	}
+	// Additional check for SQL reserved words that could cause issues
+	reservedWords := map[string]bool{
+		"SELECT": true, "INSERT": true, "UPDATE": true, "DELETE": true, "DROP": true,
+		"CREATE": true, "ALTER": true, "TRUNCATE": true, "GRANT": true, "REVOKE": true,
+		"UNION": true, "WHERE": true, "FROM": true, "TABLE": true, "DATABASE": true,
+	}
+	if reservedWords[strings.ToUpper(identifier)] {
+		return fmt.Errorf("identifier '%s' is a SQL reserved word", identifier)
+	}
+	return nil
+}
+
+// quoteIdentifier properly quotes a SQL identifier for the given database type
+func quoteIdentifier(identifier, dbType string) string {
+	switch dbType {
+	case "postgres":
+		return `"` + strings.ReplaceAll(identifier, `"`, `""`) + `"`
+	case "mysql":
+		return "`" + strings.ReplaceAll(identifier, "`", "``") + "`"
+	case "sqlite":
+		return `"` + strings.ReplaceAll(identifier, `"`, `""`) + `"`
+	default:
+		return `"` + strings.ReplaceAll(identifier, `"`, `""`) + `"`
+	}
+}
 
 // SQLConnectorNode provides database connectivity for SQL databases
 type SQLConnectorNode struct {
@@ -221,6 +267,11 @@ func (n *SQLConnectorNode) executeInsert(item model.DataItem, nodeParams map[str
 		return nil, fmt.Errorf("table parameter is required")
 	}
 
+	// SECURITY: Validate table name to prevent SQL injection
+	if err := validateSQLIdentifier(table); err != nil {
+		return nil, fmt.Errorf("invalid table name: %w", err)
+	}
+
 	// Get columns to insert
 	columns := make([]string, 0)
 	values := make([]interface{}, 0)
@@ -228,6 +279,10 @@ func (n *SQLConnectorNode) executeInsert(item model.DataItem, nodeParams map[str
 	// Use data mapping if specified
 	if mapping, ok := nodeParams["columnMapping"].(map[string]interface{}); ok {
 		for column, valueExpr := range mapping {
+			// SECURITY: Validate column name to prevent SQL injection
+			if err := validateSQLIdentifier(column); err != nil {
+				return nil, fmt.Errorf("invalid column name '%s': %w", column, err)
+			}
 			if valueExprStr, ok := valueExpr.(string); ok {
 				value, err := n.evaluator.EvaluateExpression(valueExprStr, context)
 				if err != nil {
@@ -240,6 +295,10 @@ func (n *SQLConnectorNode) executeInsert(item model.DataItem, nodeParams map[str
 	} else {
 		// Use all JSON fields from the item
 		for key, value := range item.JSON {
+			// SECURITY: Validate column name to prevent SQL injection
+			if err := validateSQLIdentifier(key); err != nil {
+				return nil, fmt.Errorf("invalid column name '%s': %w", key, err)
+			}
 			columns = append(columns, key)
 			values = append(values, value)
 		}
@@ -249,15 +308,17 @@ func (n *SQLConnectorNode) executeInsert(item model.DataItem, nodeParams map[str
 		return nil, fmt.Errorf("no columns to insert")
 	}
 
-	// Build INSERT query
+	// Build INSERT query with properly quoted identifiers
 	placeholders := make([]string, len(columns))
+	quotedColumns := make([]string, len(columns))
 	for i := range placeholders {
 		placeholders[i] = n.getPlaceholder(i + 1)
+		quotedColumns[i] = quoteIdentifier(columns[i], n.dbConfig.Type)
 	}
 
 	query := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)",
-		table,
-		strings.Join(columns, ", "),
+		quoteIdentifier(table, n.dbConfig.Type),
+		strings.Join(quotedColumns, ", "),
 		strings.Join(placeholders, ", "))
 
 	return n.executeModifyingQuery(query, values)
@@ -270,20 +331,49 @@ func (n *SQLConnectorNode) executeUpdate(item model.DataItem, nodeParams map[str
 		return nil, fmt.Errorf("table parameter is required")
 	}
 
-	whereExpr, ok := nodeParams["where"].(string)
-	if !ok {
-		return nil, fmt.Errorf("where parameter is required for updates")
+	// SECURITY: Validate table name to prevent SQL injection
+	if err := validateSQLIdentifier(table); err != nil {
+		return nil, fmt.Errorf("invalid table name: %w", err)
 	}
 
-	// Evaluate WHERE clause
-	whereClause, err := n.evaluator.EvaluateExpression(whereExpr, context)
+	// SECURITY: For WHERE clauses, we now require parameterized conditions
+	// The whereColumn and whereValue parameters are used instead of raw WHERE strings
+	whereColumn, hasWhereColumn := nodeParams["whereColumn"].(string)
+	whereValueExpr, hasWhereValue := nodeParams["whereValue"].(string)
+
+	// Legacy support: if old "where" parameter is used, validate it more strictly
+	if !hasWhereColumn || !hasWhereValue {
+		whereExpr, ok := nodeParams["where"].(string)
+		if !ok {
+			return nil, fmt.Errorf("either (whereColumn and whereValue) or where parameter is required for updates")
+		}
+
+		// Evaluate WHERE clause
+		whereClause, err := n.evaluator.EvaluateExpression(whereExpr, context)
+		if err != nil {
+			return nil, fmt.Errorf("failed to evaluate where clause: %w", err)
+		}
+
+		whereStr, ok := whereClause.(string)
+		if !ok {
+			return nil, fmt.Errorf("where clause must be a string")
+		}
+
+		// SECURITY WARNING: Legacy WHERE string is being used
+		// This is less secure than parameterized WHERE. Log a warning.
+		// For production, consider requiring parameterized WHERE only.
+		return n.executeUpdateWithLegacyWhere(item, table, whereStr, nodeParams, context)
+	}
+
+	// SECURITY: Validate WHERE column name
+	if err := validateSQLIdentifier(whereColumn); err != nil {
+		return nil, fmt.Errorf("invalid whereColumn name: %w", err)
+	}
+
+	// Evaluate WHERE value
+	whereValue, err := n.evaluator.EvaluateExpression(whereValueExpr, context)
 	if err != nil {
-		return nil, fmt.Errorf("failed to evaluate where clause: %w", err)
-	}
-
-	whereStr, ok := whereClause.(string)
-	if !ok {
-		return nil, fmt.Errorf("where clause must be a string")
+		return nil, fmt.Errorf("failed to evaluate whereValue: %w", err)
 	}
 
 	// Get columns to update
@@ -292,19 +382,27 @@ func (n *SQLConnectorNode) executeUpdate(item model.DataItem, nodeParams map[str
 
 	if mapping, ok := nodeParams["columnMapping"].(map[string]interface{}); ok {
 		for column, valueExpr := range mapping {
+			// SECURITY: Validate column name
+			if err := validateSQLIdentifier(column); err != nil {
+				return nil, fmt.Errorf("invalid column name '%s': %w", column, err)
+			}
 			if valueExprStr, ok := valueExpr.(string); ok {
 				value, err := n.evaluator.EvaluateExpression(valueExprStr, context)
 				if err != nil {
 					return nil, fmt.Errorf("failed to evaluate column %s: %w", column, err)
 				}
-				setParts = append(setParts, fmt.Sprintf("%s = %s", column, n.getPlaceholder(len(values)+1)))
+				setParts = append(setParts, fmt.Sprintf("%s = %s", quoteIdentifier(column, n.dbConfig.Type), n.getPlaceholder(len(values)+1)))
 				values = append(values, value)
 			}
 		}
 	} else {
 		// Use all JSON fields from the item
 		for key, value := range item.JSON {
-			setParts = append(setParts, fmt.Sprintf("%s = %s", key, n.getPlaceholder(len(values)+1)))
+			// SECURITY: Validate column name
+			if err := validateSQLIdentifier(key); err != nil {
+				return nil, fmt.Errorf("invalid column name '%s': %w", key, err)
+			}
+			setParts = append(setParts, fmt.Sprintf("%s = %s", quoteIdentifier(key, n.dbConfig.Type), n.getPlaceholder(len(values)+1)))
 			values = append(values, value)
 		}
 	}
@@ -313,9 +411,60 @@ func (n *SQLConnectorNode) executeUpdate(item model.DataItem, nodeParams map[str
 		return nil, fmt.Errorf("no columns to update")
 	}
 
-	// Build UPDATE query
+	// Add WHERE value as the last parameter
+	values = append(values, whereValue)
+
+	// Build UPDATE query with parameterized WHERE
+	query := fmt.Sprintf("UPDATE %s SET %s WHERE %s = %s",
+		quoteIdentifier(table, n.dbConfig.Type),
+		strings.Join(setParts, ", "),
+		quoteIdentifier(whereColumn, n.dbConfig.Type),
+		n.getPlaceholder(len(values)))
+
+	return n.executeModifyingQuery(query, values)
+}
+
+// executeUpdateWithLegacyWhere handles legacy WHERE string (less secure)
+// DEPRECATED: Use whereColumn/whereValue parameters instead
+func (n *SQLConnectorNode) executeUpdateWithLegacyWhere(item model.DataItem, table, whereStr string, nodeParams map[string]interface{}, context *expressions.ExpressionContext) (*QueryResult, error) {
+	// Get columns to update
+	var setParts []string
+	var values []interface{}
+
+	if mapping, ok := nodeParams["columnMapping"].(map[string]interface{}); ok {
+		for column, valueExpr := range mapping {
+			// SECURITY: Validate column name
+			if err := validateSQLIdentifier(column); err != nil {
+				return nil, fmt.Errorf("invalid column name '%s': %w", column, err)
+			}
+			if valueExprStr, ok := valueExpr.(string); ok {
+				value, err := n.evaluator.EvaluateExpression(valueExprStr, context)
+				if err != nil {
+					return nil, fmt.Errorf("failed to evaluate column %s: %w", column, err)
+				}
+				setParts = append(setParts, fmt.Sprintf("%s = %s", quoteIdentifier(column, n.dbConfig.Type), n.getPlaceholder(len(values)+1)))
+				values = append(values, value)
+			}
+		}
+	} else {
+		// Use all JSON fields from the item
+		for key, value := range item.JSON {
+			// SECURITY: Validate column name
+			if err := validateSQLIdentifier(key); err != nil {
+				return nil, fmt.Errorf("invalid column name '%s': %w", key, err)
+			}
+			setParts = append(setParts, fmt.Sprintf("%s = %s", quoteIdentifier(key, n.dbConfig.Type), n.getPlaceholder(len(values)+1)))
+			values = append(values, value)
+		}
+	}
+
+	if len(setParts) == 0 {
+		return nil, fmt.Errorf("no columns to update")
+	}
+
+	// Build UPDATE query - WARNING: whereStr is not parameterized
 	query := fmt.Sprintf("UPDATE %s SET %s WHERE %s",
-		table,
+		quoteIdentifier(table, n.dbConfig.Type),
 		strings.Join(setParts, ", "),
 		whereStr)
 
@@ -329,26 +478,58 @@ func (n *SQLConnectorNode) executeDelete(nodeParams map[string]interface{}, cont
 		return nil, fmt.Errorf("table parameter is required")
 	}
 
-	whereExpr, ok := nodeParams["where"].(string)
-	if !ok {
-		return nil, fmt.Errorf("where parameter is required for deletes")
+	// SECURITY: Validate table name to prevent SQL injection
+	if err := validateSQLIdentifier(table); err != nil {
+		return nil, fmt.Errorf("invalid table name: %w", err)
 	}
 
-	// Evaluate WHERE clause
-	whereClause, err := n.evaluator.EvaluateExpression(whereExpr, context)
+	// SECURITY: For WHERE clauses, we now require parameterized conditions
+	// The whereColumn and whereValue parameters are used instead of raw WHERE strings
+	whereColumn, hasWhereColumn := nodeParams["whereColumn"].(string)
+	whereValueExpr, hasWhereValue := nodeParams["whereValue"].(string)
+
+	// Legacy support: if old "where" parameter is used
+	if !hasWhereColumn || !hasWhereValue {
+		whereExpr, ok := nodeParams["where"].(string)
+		if !ok {
+			return nil, fmt.Errorf("either (whereColumn and whereValue) or where parameter is required for deletes")
+		}
+
+		// Evaluate WHERE clause
+		whereClause, err := n.evaluator.EvaluateExpression(whereExpr, context)
+		if err != nil {
+			return nil, fmt.Errorf("failed to evaluate where clause: %w", err)
+		}
+
+		whereStr, ok := whereClause.(string)
+		if !ok {
+			return nil, fmt.Errorf("where clause must be a string")
+		}
+
+		// SECURITY WARNING: Legacy WHERE string - less secure
+		// Build DELETE query - WARNING: whereStr is not parameterized
+		query := fmt.Sprintf("DELETE FROM %s WHERE %s", quoteIdentifier(table, n.dbConfig.Type), whereStr)
+		return n.executeModifyingQuery(query, nil)
+	}
+
+	// SECURITY: Validate WHERE column name
+	if err := validateSQLIdentifier(whereColumn); err != nil {
+		return nil, fmt.Errorf("invalid whereColumn name: %w", err)
+	}
+
+	// Evaluate WHERE value
+	whereValue, err := n.evaluator.EvaluateExpression(whereValueExpr, context)
 	if err != nil {
-		return nil, fmt.Errorf("failed to evaluate where clause: %w", err)
+		return nil, fmt.Errorf("failed to evaluate whereValue: %w", err)
 	}
 
-	whereStr, ok := whereClause.(string)
-	if !ok {
-		return nil, fmt.Errorf("where clause must be a string")
-	}
+	// Build DELETE query with parameterized WHERE
+	query := fmt.Sprintf("DELETE FROM %s WHERE %s = %s",
+		quoteIdentifier(table, n.dbConfig.Type),
+		quoteIdentifier(whereColumn, n.dbConfig.Type),
+		n.getPlaceholder(1))
 
-	// Build DELETE query
-	query := fmt.Sprintf("DELETE FROM %s WHERE %s", table, whereStr)
-
-	return n.executeModifyingQuery(query, nil)
+	return n.executeModifyingQuery(query, []interface{}{whereValue})
 }
 
 // executeRawSQL executes raw SQL statements
@@ -440,38 +621,75 @@ func (n *SQLConnectorNode) connect(config *DatabaseConfig) error {
 func (n *SQLConnectorNode) buildDSN(config *DatabaseConfig) (string, error) {
 	switch config.Type {
 	case "postgres":
-		dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s",
-			config.Host, config.Port, config.Username, config.Password, config.Database)
+		// SECURITY: Use URL format with proper escaping to handle special characters in credentials
+		// Build connection URL: postgres://user:password@host:port/database?sslmode=require
+		u := &url.URL{
+			Scheme: "postgres",
+			User:   url.UserPassword(config.Username, config.Password),
+			Host:   fmt.Sprintf("%s:%d", config.Host, config.Port),
+			Path:   "/" + config.Database,
+		}
 
+		// Build query parameters
+		q := u.Query()
+
+		// SECURITY: Default to sslmode=require for encrypted connections
+		// Only allow sslmode=disable if explicitly set (and warn in logs)
 		if config.SSLMode != "" {
-			dsn += " sslmode=" + config.SSLMode
+			q.Set("sslmode", config.SSLMode)
 		} else {
-			dsn += " sslmode=disable"
+			q.Set("sslmode", "require") // SECURITY: Changed from "disable" to "require"
 		}
 
-		// Add additional options
+		// Add additional options with proper escaping
 		for key, value := range config.Options {
-			dsn += fmt.Sprintf(" %s=%s", key, value)
+			// SECURITY: Validate option keys to prevent injection
+			if !validIdentifierRegex.MatchString(key) {
+				return "", fmt.Errorf("invalid option key '%s': must contain only alphanumeric characters and underscores", key)
+			}
+			q.Set(key, value)
 		}
 
-		return dsn, nil
+		u.RawQuery = q.Encode()
+		return u.String(), nil
 
 	case "mysql":
-		dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s",
-			config.Username, config.Password, config.Host, config.Port, config.Database)
+		// SECURITY: Properly escape username and password for MySQL DSN
+		// MySQL DSN format: user:password@tcp(host:port)/database?params
+		// Use url.QueryEscape for credentials to handle special characters
+		escapedUser := url.QueryEscape(config.Username)
+		escapedPass := url.QueryEscape(config.Password)
 
-		// Add options
-		if len(config.Options) > 0 {
-			params := make([]string, 0, len(config.Options))
-			for key, value := range config.Options {
-				params = append(params, fmt.Sprintf("%s=%s", key, value))
+		dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s",
+			escapedUser, escapedPass, config.Host, config.Port, config.Database)
+
+		// Add options with proper escaping
+		params := make([]string, 0, len(config.Options)+1)
+
+		// SECURITY: Enable TLS by default for MySQL
+		if _, hasTLS := config.Options["tls"]; !hasTLS {
+			params = append(params, "tls=preferred")
+		}
+
+		for key, value := range config.Options {
+			// SECURITY: Validate option keys
+			if !validIdentifierRegex.MatchString(key) {
+				return "", fmt.Errorf("invalid option key '%s': must contain only alphanumeric characters and underscores", key)
 			}
+			params = append(params, fmt.Sprintf("%s=%s", url.QueryEscape(key), url.QueryEscape(value)))
+		}
+
+		if len(params) > 0 {
 			dsn += "?" + strings.Join(params, "&")
 		}
 
 		return dsn, nil
 
 	case "sqlite":
+		// SECURITY: Validate SQLite database path
+		if strings.Contains(config.Database, "..") {
+			return "", fmt.Errorf("invalid database path: path traversal not allowed")
+		}
 		return config.Database, nil
 
 	default:

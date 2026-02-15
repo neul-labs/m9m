@@ -1,13 +1,20 @@
 # m9m Configuration File
 # This is a template - copy to config/config.yaml and customize
+#
+# SECURITY WARNING: Before deploying to production:
+# 1. Change ALL passwords and secrets below (marked with <CHANGE_ME>)
+# 2. Enable TLS for encrypted connections
+# 3. Use ssl_mode: "require" for PostgreSQL
+# 4. Set N8N_ENCRYPTION_KEY environment variable (min 32 chars)
+# 5. Review CORS allowed_origins for your deployment
 
 # Server Configuration
 server:
   host: "0.0.0.0"
   port: 8080
-  # Enable HTTPS
+  # Enable HTTPS - SECURITY: Enable this in production!
   tls:
-    enabled: false
+    enabled: false  # SECURITY: Set to true for production
     cert_file: "/app/config/tls/cert.pem"
     key_file: "/app/config/tls/key.pem"
 
@@ -22,8 +29,10 @@ database:
     port: 5432
     database: "m9m"
     user: "m9m"
-    password: "changeme"
-    ssl_mode: "disable"
+    # SECURITY: Change this password before deployment!
+    password: "<CHANGE_ME_POSTGRES_PASSWORD>"
+    # SECURITY: Use "require" for encrypted connections in production
+    ssl_mode: "require"
     max_connections: 25
     max_idle_connections: 5
     connection_lifetime: "5m"
@@ -33,9 +42,12 @@ database:
     port: 3306
     database: "m9m"
     user: "m9m"
-    password: "changeme"
+    # SECURITY: Change this password before deployment!
+    password: "<CHANGE_ME_MYSQL_PASSWORD>"
     charset: "utf8mb4"
     max_connections: 25
+    # SECURITY: Enable TLS for MySQL connections
+    tls: "preferred"
 
   sqlite:
     path: "./data/m9m.db"
@@ -68,7 +80,8 @@ queue:
 
   # RabbitMQ settings (used when type: rabbitmq)
   rabbitmq:
-    url: "amqp://guest:guest@localhost:5672/"
+    # SECURITY: Change default guest credentials before deployment!
+    url: "amqp://<CHANGE_ME_RABBITMQ_USER>:<CHANGE_ME_RABBITMQ_PASSWORD>@localhost:5672/"
     exchange: "m9m"
     queue: "workflows"
     durable: true
@@ -113,12 +126,15 @@ security:
   basic_auth:
     enabled: false
     username: "admin"
-    password: "changeme"
+    # SECURITY: Change this password before enabling basic auth!
+    password: "<CHANGE_ME_BASIC_AUTH_PASSWORD>"
 
   # JWT authentication
   jwt:
     enabled: true
-    secret: "change-this-to-a-random-secret"
+    # SECURITY: Generate a secure random secret (min 32 chars)!
+    # Use: openssl rand -hex 32
+    secret: "<CHANGE_ME_JWT_SECRET_MIN_32_CHARS>"
     expiration: "24h"
 
   # API keys
@@ -166,8 +182,10 @@ execution:
 
 # Credentials Management
 credentials:
-  # Encryption key for storing credentials
-  encryption_key: "change-this-to-a-random-key-min-32-chars"
+  # SECURITY: Encryption key for storing credentials (min 32 chars)
+  # Generate with: openssl rand -hex 32
+  # Or set via N8N_ENCRYPTION_KEY environment variable (recommended)
+  encryption_key: "<CHANGE_ME_ENCRYPTION_KEY_MIN_32_CHARS>"
 
   # Storage backend
   storage: "database"  # database, vault

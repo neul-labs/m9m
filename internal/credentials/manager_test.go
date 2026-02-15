@@ -1,12 +1,24 @@
 package credentials
 
 import (
+	"os"
 	"testing"
 
 	"github.com/neul-labs/m9m/internal/model"
 )
 
+// setupManagerTestEnv sets up the test environment for credentials tests
+// SECURITY: These tests run in dev mode to allow auto-generated encryption keys
+func setupManagerTestEnv(t *testing.T) {
+	t.Helper()
+	os.Setenv("M9M_DEV_MODE", "true")
+	t.Cleanup(func() {
+		os.Unsetenv("M9M_DEV_MODE")
+	})
+}
+
 func TestCredentialManagerCreation(t *testing.T) {
+	setupManagerTestEnv(t)
 	manager, err := NewCredentialManager()
 	if err != nil {
 		t.Fatalf("Failed to create credential manager: %v", err)
@@ -18,6 +30,7 @@ func TestCredentialManagerCreation(t *testing.T) {
 }
 
 func TestNodeCredentialRegistration(t *testing.T) {
+	setupManagerTestEnv(t)
 	manager, err := NewCredentialManager()
 	if err != nil {
 		t.Fatalf("Failed to create credential manager: %v", err)
@@ -55,6 +68,7 @@ func TestNodeCredentialRegistration(t *testing.T) {
 }
 
 func TestCredentialStorageAndRetrievalManager(t *testing.T) {
+	setupManagerTestEnv(t)
 	manager, err := NewCredentialManager()
 	if err != nil {
 		t.Fatalf("Failed to create credential manager: %v", err)
@@ -93,6 +107,7 @@ func TestCredentialStorageAndRetrievalManager(t *testing.T) {
 }
 
 func TestWorkflowCredentialResolution(t *testing.T) {
+	setupManagerTestEnv(t)
 	manager, err := NewCredentialManager()
 	if err != nil {
 		t.Fatalf("Failed to create credential manager: %v", err)
@@ -154,6 +169,7 @@ func TestWorkflowCredentialResolution(t *testing.T) {
 }
 
 func TestParameterInjection(t *testing.T) {
+	setupManagerTestEnv(t)
 	manager, err := NewCredentialManager()
 	if err != nil {
 		t.Fatalf("Failed to create credential manager: %v", err)
@@ -200,6 +216,7 @@ func TestParameterInjection(t *testing.T) {
 }
 
 func TestCredentialManagerIntegration(t *testing.T) {
+	setupManagerTestEnv(t)
 	manager, err := NewCredentialManager()
 	if err != nil {
 		t.Fatalf("Failed to create credential manager: %v", err)

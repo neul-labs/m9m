@@ -1,0 +1,22 @@
+{
+  "name": "Filter Data Example",
+  "nodes": [
+    {
+      "name": "Filter Items",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.active }}",
+              "value2": true
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "connections": {}
+}

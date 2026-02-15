@@ -106,6 +106,79 @@ func NewJavaScriptRuntime(nodeModulesPath string) *JavaScriptRuntime {
 	return js
 }
 
+// allowedEnvVars is a whitelist of environment variables safe to expose to JavaScript code
+// SECURITY: Only expose non-sensitive environment variables
+var allowedEnvVars = map[string]bool{
+	"NODE_ENV":   true,
+	"TZ":         true,
+	"LANG":       true,
+	"LC_ALL":     true,
+	"LC_CTYPE":   true,
+	"HOME":       true,
+	"USER":       true,
+	"SHELL":      true,
+	"PATH":       false, // Explicitly blocked
+	"PWD":        true,
+	"TERM":       true,
+	"HOSTNAME":   true,
+	"LOGNAME":    true,
+	"TMPDIR":     true,
+	"TEMP":       true,
+	"TMP":        true,
+}
+
+// sensitiveEnvPatterns contains patterns of environment variable names that should never be exposed
+var sensitiveEnvPatterns = []string{
+	"KEY",
+	"SECRET",
+	"TOKEN",
+	"PASSWORD",
+	"PASSWD",
+	"CREDENTIAL",
+	"AUTH",
+	"API_KEY",
+	"APIKEY",
+	"PRIVATE",
+	"AWS_",
+	"AZURE_",
+	"GCP_",
+	"GOOGLE_",
+	"DATABASE",
+	"DB_",
+	"REDIS_",
+	"MONGO",
+	"POSTGRES",
+	"MYSQL",
+	"N8N_",
+	"M9M_",
+	"ENCRYPTION",
+	"CERT",
+	"SSL_",
+	"TLS_",
+	"JWT",
+	"OAUTH",
+	"SMTP",
+	"MAIL",
+}
+
+// isEnvVarSafe checks if an environment variable is safe to expose
+func isEnvVarSafe(name string) bool {
+	// Check explicit whitelist
+	if allowed, exists := allowedEnvVars[name]; exists {
+		return allowed
+	}
+
+	// Check for sensitive patterns
+	upperName := strings.ToUpper(name)
+	for _, pattern := range sensitiveEnvPatterns {
+		if strings.Contains(upperName, pattern) {
+			return false
+		}
+	}
+
+	return false // Default to blocking unknown env vars
+}
+
 func (js *JavaScriptRuntime) initializeNodeJSGlobals() {
 	// Add console support
 	registry := new(require.Registry)
@@ -122,11 +195,14 @@ func (js *JavaScriptRuntime) initializeNodeJSGlobals() {
 		Pid:      1234,
 	}
 
-	// Copy environment variables
+	// SECURITY: Only copy safe environment variables (whitelist approach)
 	for _, env := range os.Environ() {
 		parts := strings.SplitN(env, "=", 2)
 		if len(parts) == 2 {
-			process.Env[parts[0]] = parts[1]
+			name := parts[0]
+			if isEnvVarSafe(name) {
+				process.Env[name] = parts[1]
+			}
 		}
 	}
 
@@ -309,7 +385,54 @@ func (js *JavaScriptRuntime) downloadNpmPackage(name, version string) (*NpmPacka
 	return pkg, nil
 }
 
+// escapeJSString escapes a string for safe embedding in JavaScript code
+// SECURITY: Prevents code injection through string interpolation
+func escapeJSString(s string) string {
+	// Replace backslash first, then other characters
+	s = strings.ReplaceAll(s, `\`, `\\`)
+	s = strings.ReplaceAll(s, `'`, `\'`)
+	s = strings.ReplaceAll(s, `"`, `\"`)
+	s = strings.ReplaceAll(s, "\n", `\n`)
+	s = strings.ReplaceAll(s, "\r", `\r`)
+	s = strings.ReplaceAll(s, "\t", `\t`)
+	s = strings.ReplaceAll(s, "\u2028", `\u2028`) // Line separator
+	s = strings.ReplaceAll(s, "\u2029", `\u2029`) // Paragraph separator
+	return s
+}
+
+// validatePackageName validates that a package name is safe
+// SECURITY: Prevents malicious package names from causing issues
+func validatePackageName(name string) error {
+	// npm package name validation
+	// Must be lowercase, can contain letters, numbers, hyphens, underscores, dots
+	// Cannot start with a dot or underscore
+	if len(name) == 0 {
+		return fmt.Errorf("package name cannot be empty")
+	}
+	if len(name) > 214 {
+		return fmt.Errorf("package name too long")
+	}
+	if name[0] == '.' || name[0] == '_' {
+		return fmt.Errorf("package name cannot start with . or _")
+	}
+
+	// Check for valid characters
+	for _, c := range name {
+		if !((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') ||
+			c == '-' || c == '_' || c == '.' || c == '@' || c == '/') {
+			return fmt.Errorf("package name contains invalid character: %c", c)
+		}
+	}
+
+	return nil
+}
+
 func (js *JavaScriptRuntime) createMockPackage(pkg *NpmPackage) error {
+	// SECURITY: Validate package name before processing
+	if err := validatePackageName(pkg.Name); err != nil {
+		return fmt.Errorf("invalid package name: %w", err)
+	}
+
 	var mockCode string
 
 	switch pkg.Name {
@@ -324,14 +447,18 @@ func (js *JavaScriptRuntime) createMockPackage(pkg *NpmPackage) error {
 	case "crypto-js":
 		mockCode = js.createCryptoJsMock()
 	default:
-		// Generic mock
+		// SECURITY: Use JSON encoding instead of string interpolation
+		// This prevents code injection through package name/version
+		nameJSON, _ := json.Marshal(pkg.Name)
+		versionJSON, _ := json.Marshal(pkg.Version)
+
 		mockCode = fmt.Sprintf(`
 			module.exports = {
-				name: '%s',
-				version: '%s',
+				name: %s,
+				version: %s,
 				mock: true
 			};
-		`, pkg.Name, pkg.Version)
+		`, string(nameJSON), string(versionJSON))
 	}
 
 	mainFile := filepath.Join(pkg.CachePath, pkg.Main)

@@ -1,8 +1,19 @@
 package m9m
 
 import (
+	"os"
 	"testing"
 )
+
+// setupTestEnv sets up the test environment
+// SECURITY: These tests run in dev mode to allow auto-generated encryption keys
+func setupTestEnv(t *testing.T) {
+	t.Helper()
+	os.Setenv("M9M_DEV_MODE", "true")
+	t.Cleanup(func() {
+		os.Unsetenv("M9M_DEV_MODE")
+	})
+}
 
 func TestNew(t *testing.T) {
 	engine := New()
@@ -15,6 +26,7 @@ func TestNew(t *testing.T) {
 }
 
 func TestNewWithOptions(t *testing.T) {
+	setupTestEnv(t)
 	cm, err := NewCredentialManager()
 	if err != nil {
 		t.Fatalf("Failed to create credential manager: %v", err)

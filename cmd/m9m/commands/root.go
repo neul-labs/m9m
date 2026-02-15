@@ -26,13 +26,17 @@ var rootCmd = &cobra.Command{
 	Long: `m9m is a high-performance, cloud-native workflow automation platform.
 
 It provides a CLI interface for creating, managing, and executing workflows.
-Use 'm9m init' to initialize a workspace and get started.
 
-Examples:
+For agents and scripts, use 'm9m exec' for direct workflow execution:
+  m9m exec workflow.json                    Execute a workflow file directly
+  m9m exec workflow.json --input '{"x":1}'  Execute with input data
+  echo '{"data":"..."}' | m9m exec wf.json --stdin  Pipe input from stdin
+
+For interactive use, initialize a workspace:
   m9m init                    Initialize workspace in current directory
   m9m node list               List available node types
   m9m create --from wf.json   Create a workflow from JSON
-  m9m run my-workflow         Execute a workflow
+  m9m run my-workflow         Execute a workflow (requires daemon)
   m9m serve --port 8080       Start full server mode`,
 }
 
@@ -67,6 +71,7 @@ func init() {
 	rootCmd.AddCommand(runCmd)
 	rootCmd.AddCommand(createCmd)
 	rootCmd.AddCommand(getCmd)
+	rootCmd.AddCommand(execCmd) // Agent-friendly direct execution
 
 	// Execution commands
 	rootCmd.AddCommand(executionCmd)

@@ -1,6 +1,7 @@
 package webhooks
 
 import (
+	"crypto/subtle"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -219,19 +220,31 @@ func (h *Handler) authenticateRequest(r *http.Request, webhook *Webhook) error {
 		expectedUsername := getAuthData(webhook.AuthData, "username", "")
 		expectedPassword := getAuthData(webhook.AuthData, "password", "")
 
-		if username != expectedUsername || password != expectedPassword {
+		// SECURITY: Use constant-time comparison to prevent timing attacks
+		usernameMatch := subtle.ConstantTimeCompare([]byte(username), []byte(expectedUsername)) == 1
+		passwordMatch := subtle.ConstantTimeCompare([]byte(password), []byte(expectedPassword)) == 1
+
+		if !usernameMatch || !passwordMatch {
 			return fmt.Errorf("invalid credentials")
 		}
 
 	case "apiKey":
 		// API key authentication
+		// SECURITY: Only accept API key from header, NOT from query parameters
+		// Query parameters are logged in server logs, browser history, proxy caches, and referrer headers
 		apiKey := r.Header.Get("X-API-Key")
 		if apiKey == "" {
-			apiKey = r.URL.Query().Get("apiKey")
+			// SECURITY: Log warning but don't accept query parameter API keys
+			if r.URL.Query().Get("apiKey") != "" {
+				log.Printf("SECURITY WARNING: API key provided in query parameter (rejected). Use X-API-Key header instead.")
+			}
+			return fmt.Errorf("API key required in X-API-Key header")
 		}
 
 		expectedKey := getAuthData(webhook.AuthData, "apiKey", "")
-		if apiKey != expectedKey {
+
+		// SECURITY: Use constant-time comparison to prevent timing attacks
+		if subtle.ConstantTimeCompare([]byte(apiKey), []byte(expectedKey)) != 1 {
 			return fmt.Errorf("invalid API key")
 		}
 
@@ -240,7 +253,10 @@ func (h *Handler) authenticateRequest(r *http.Request, webhook *Webhook) error {
 		headerName := getAuthData(webhook.AuthData, "headerName", "Authorization")
 		headerValue := getAuthData(webhook.AuthData, "headerValue", "")
 
-		if r.Header.Get(headerName) != headerValue {
+		actualValue := r.Header.Get(headerName)
+
+		// SECURITY: Use constant-time comparison to prevent timing attacks
+		if subtle.ConstantTimeCompare([]byte(actualValue), []byte(headerValue)) != 1 {
 			return fmt.Errorf("invalid header authentication")
 		}
 

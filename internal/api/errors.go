@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"runtime"
 	"strings"
+	"time"
 )
 
 // ErrorCode represents a specific error type
@@ -361,7 +362,7 @@ func (h *ErrorHandler) sendErrorResponse(w http.ResponseWriter, apiErr *APIError
 // Helper functions
 
 func nowUTC() string {
-	return "2025-12-26T00:00:00Z" // Would use time.Now().UTC().Format(time.RFC3339) in production
+	return time.Now().UTC().Format(time.RFC3339)
 }
 
 func getStackTrace(skip int) []string {

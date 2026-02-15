@@ -105,19 +105,21 @@ func TestHTTPRequestNodeExecuteWithValidRequest(t *testing.T) {
 	nodeParams := map[string]interface{}{
 		"url":    server.URL,
 		"method": "GET",
+		// SECURITY: Allow internal requests for testing only
+		"allowInternalRequests": true,
 	}
-	
+
 	result, err := node.Execute(inputData, nodeParams)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
-	
+
 	if len(result) != 1 {
 		t.Fatalf("Expected 1 result item, got %d", len(result))
 	}
-	
+
 	responseData := result[0]
-	
+
 	// Check status code
 	statusCode, ok := responseData.JSON["statusCode"]
 	if !ok {
@@ -188,6 +190,8 @@ func TestHTTPRequestNodeExecutePostRequest(t *testing.T) {
 			"name": "test",
 			"age":  30,
 		},
+		// SECURITY: Allow internal requests for testing only
+		"allowInternalRequests": true,
 	}
 	
 	result, err := node.Execute(inputData, nodeParams)

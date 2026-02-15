@@ -317,10 +317,20 @@ func (r *SecureGojaRuntime) Execute(jsCode string) (interface{}, error) {
 }
 
 // SetContextVariable sets a variable in the JavaScript context
+// SECURITY: Sanitizes objects to prevent prototype pollution attacks
 func (r *SecureGojaRuntime) SetContextVariable(name string, value interface{}) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
-	r.vm.Set(name, value)
+
+	// Convert value to goja value
+	gojaValue := r.vm.ToValue(value)
+
+	// SECURITY: If the value is an object, sanitize it to prevent prototype pollution
+	if obj, ok := gojaValue.(*goja.Object); ok {
+		r.sanitizeObject(obj)
+	}
+
+	r.vm.Set(name, gojaValue)
 }
 
 // GetContextVariable gets a variable from the JavaScript context

@@ -1,11 +1,23 @@
 package engine
 
 import (
+	"os"
+	"testing"
+
 	"github.com/neul-labs/m9m/internal/credentials"
 	"github.com/neul-labs/m9m/internal/model"
 	"github.com/neul-labs/m9m/internal/nodes/base"
-	"testing"
 )
+
+// setupTestEnv sets up the test environment for engine tests
+// SECURITY: These tests run in dev mode to allow auto-generated encryption keys
+func setupTestEnv(t *testing.T) {
+	t.Helper()
+	os.Setenv("M9M_DEV_MODE", "true")
+	t.Cleanup(func() {
+		os.Unsetenv("M9M_DEV_MODE")
+	})
+}
 
 // mockNodeExecutor is a mock implementation of NodeExecutor for testing
 type mockNodeExecutor struct {
@@ -169,6 +181,7 @@ func TestExecuteWorkflowWithoutNodes(t *testing.T) {
 }
 
 func TestWorkflowEngineWithCredentialManager(t *testing.T) {
+	setupTestEnv(t)
 	engine := NewWorkflowEngine().(*workflowEngineImpl)
 
 	// Test setting credential manager

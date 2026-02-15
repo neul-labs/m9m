@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 
@@ -18,6 +19,58 @@ import (
 	// Import bwrap to register it with the sandbox factory
 	_ "github.com/neul-labs/m9m/internal/sandbox/bwrap"
 )
+
+// shellMetacharRegex matches shell metacharacters that need escaping
+var shellMetacharRegex = regexp.MustCompile(`[|&;<>()$\x60\\\"'\n\r\t *?#~=%!\[\]{}]`)
+
+// shellEscapeString escapes a string for safe use in shell commands
+// SECURITY: Prevents command injection through shell metacharacters
+func shellEscapeString(s string) string {
+	// If string contains no special characters, return as-is
+	if !shellMetacharRegex.MatchString(s) {
+		return s
+	}
+
+	// Use single quotes and escape any existing single quotes
+	// In shell: 'foo'\''bar' produces foo'bar
+	escaped := strings.ReplaceAll(s, "'", `'\''`)
+	return "'" + escaped + "'"
+}
+
+// dangerousCommandPatterns contains patterns that indicate potentially dangerous commands
+var dangerousCommandPatterns = []string{
+	"rm -rf /",
+	"rm -fr /",
+	"mkfs",
+	"dd if=",
+	":(){:|:&};:",  // Fork bomb
+	"> /dev/sd",
+	"chmod -R 777 /",
+	"chown -R ",
+	"wget -O- | sh",
+	"curl | sh",
+	"curl | bash",
+	"|sh",
+	"|bash",
+	"$(curl",
+	"$(wget",
+	"`curl",
+	"`wget",
+}
+
+// validateCommandSafety checks if a command contains obviously dangerous patterns
+// SECURITY: This is defense-in-depth, not a complete security solution
+func validateCommandSafety(command string) error {
+	lowerCmd := strings.ToLower(command)
+
+	for _, pattern := range dangerousCommandPatterns {
+		if strings.Contains(lowerCmd, strings.ToLower(pattern)) {
+			return fmt.Errorf("command contains potentially dangerous pattern: %s", pattern)
+		}
+	}
+
+	return nil
+}
 
 // ExecuteNode executes CLI commands with optional sandboxing
 type ExecuteNode struct {
@@ -46,6 +99,22 @@ func (n *ExecuteNode) ValidateParameters(params map[string]interface{}) error {
 	command, ok := params["command"].(string)
 	if !ok || command == "" {
 		return fmt.Errorf("command parameter is required")
+	}
+
+	// SECURITY: Validate command safety
+	if err := validateCommandSafety(command); err != nil {
+		return fmt.Errorf("command validation failed: %w", err)
+	}
+
+	// SECURITY: Also validate args if present
+	if args, ok := params["args"].([]interface{}); ok {
+		for _, arg := range args {
+			if strArg, ok := arg.(string); ok {
+				if err := validateCommandSafety(strArg); err != nil {
+					return fmt.Errorf("argument validation failed: %w", err)
+				}
+			}
+		}
 	}
 
 	// Validate isolation level if provided
@@ -112,9 +181,30 @@ func (n *ExecuteNode) executeWithContext(ctx context.Context, inputData []model.
 	outputFormat := n.GetStringParameter(nodeParams, "outputFormat", "text")
 	additionalMounts := n.getMountsParameter(nodeParams, "additionalMounts")
 
-	// If shell mode, wrap command
+	// SECURITY: Validate command safety before execution
+	if err := validateCommandSafety(command); err != nil {
+		return nil, fmt.Errorf("command validation failed: %w", err)
+	}
+
+	// If shell mode, wrap command for shell execution
 	if useShell {
-		args = []string{"-c", command + " " + strings.Join(args, " ")}
+		// SECURITY: In shell mode, the command is intentionally a shell command
+		// with metacharacters (&&, |, etc.). We already validated it for dangerous
+		// patterns above. Only escape additional args which might be untrusted input.
+		escapedArgs := make([]string, len(args))
+		for i, arg := range args {
+			escapedArgs[i] = shellEscapeString(arg)
+		}
+
+		// Build the full command string
+		// NOTE: The command itself is NOT escaped to allow shell operators (&&, |, etc.)
+		// Security is provided by validateCommandSafety() above
+		fullCommand := command
+		if len(escapedArgs) > 0 {
+			fullCommand = fullCommand + " " + strings.Join(escapedArgs, " ")
+		}
+
+		args = []string{"-c", fullCommand}
 		command = "/bin/sh"
 	}
 

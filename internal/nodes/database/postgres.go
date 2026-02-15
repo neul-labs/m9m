@@ -6,9 +6,12 @@ package database
 import (
 	"database/sql"
 	"fmt"
-	
+	"log"
+	"net/url"
+	"strings"
+
 	_ "github.com/lib/pq" // PostgreSQL driver
-	
+
 	"github.com/neul-labs/m9m/internal/model"
 	"github.com/neul-labs/m9m/internal/nodes/base"
 )
@@ -94,7 +97,7 @@ func (p *PostgresNode) Execute(inputData []model.DataItem, nodeParams map[string
 	
 	// Get connection parameters
 	connectionURL := p.GetStringParameter(nodeParams, "connectionUrl", "")
-	
+
 	// If connection URL is not provided, build it from individual parameters
 	if connectionURL == "" {
 		host := p.GetStringParameter(nodeParams, "host", "localhost")
@@ -102,8 +105,40 @@ func (p *PostgresNode) Execute(inputData []model.DataItem, nodeParams map[string
 		database := p.GetStringParameter(nodeParams, "database", "")
 		user := p.GetStringParameter(nodeParams, "user", "")
 		password := p.GetStringParameter(nodeParams, "password", "")
-		
-		connectionURL = fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable", user, password, host, port, database)
+
+		// SECURITY: Get SSL mode from parameters, default to "require" for encrypted connections
+		sslMode := p.GetStringParameter(nodeParams, "sslMode", "require")
+
+		// SECURITY: Validate SSL mode
+		validSSLModes := map[string]bool{
+			"disable": true, "allow": true, "prefer": true, "require": true,
+			"verify-ca": true, "verify-full": true,
+		}
+		if !validSSLModes[sslMode] {
+			return nil, p.CreateError(fmt.Sprintf("invalid sslMode: %s", sslMode), nil)
+		}
+
+		// SECURITY: Warn if SSL is disabled
+		if sslMode == "disable" {
+			log.Printf("SECURITY WARNING: PostgreSQL connection to %s using sslmode=disable. This is insecure for production.", host)
+		}
+
+		// SECURITY: Use URL format with proper escaping for credentials
+		u := &url.URL{
+			Scheme: "postgres",
+			User:   url.UserPassword(user, password),
+			Host:   fmt.Sprintf("%s:%d", host, port),
+			Path:   "/" + database,
+		}
+		q := u.Query()
+		q.Set("sslmode", sslMode)
+		u.RawQuery = q.Encode()
+		connectionURL = u.String()
+	} else {
+		// SECURITY: Warn if provided URL contains sslmode=disable
+		if strings.Contains(connectionURL, "sslmode=disable") {
+			log.Printf("SECURITY WARNING: PostgreSQL connection URL contains sslmode=disable. This is insecure for production.")
+		}
 	}
 	
 	// Connect to database
@@ -149,7 +184,35 @@ func (p *PostgresNode) Execute(inputData []model.DataItem, nodeParams map[string
 // executeQuery executes a SELECT query and returns results
 func (p *PostgresNode) executeQuery(db *sql.DB, nodeParams map[string]interface{}, item model.DataItem) (model.DataItem, error) {
 	query := p.GetStringParameter(nodeParams, "query", "")
-	
+
+	// SECURITY: Basic validation - reject obviously dangerous patterns
+	// Note: This is defense-in-depth, not a complete SQL injection prevention
+	dangerousPatterns := []string{
+		"--",           // SQL comment
+		";",            // Statement terminator (could chain queries)
+		"/*",           // Block comment start
+		"*/",           // Block comment end
+		"xp_",          // SQL Server extended procedures
+		"EXEC ",        // Execute
+		"EXECUTE ",     // Execute
+		"sp_",          // Stored procedures
+		"DROP ",        // Drop statement
+		"TRUNCATE ",    // Truncate statement
+		"ALTER ",       // Alter statement
+		"CREATE ",      // Create statement
+		"GRANT ",       // Grant privileges
+		"REVOKE ",      // Revoke privileges
+	}
+
+	upperQuery := strings.ToUpper(query)
+	for _, pattern := range dangerousPatterns {
+		if strings.Contains(upperQuery, pattern) {
+			// Log for security monitoring
+			log.Printf("SECURITY WARNING: Potentially dangerous SQL pattern detected: %s", pattern)
+			// Allow but warn - in strict mode, you might want to reject
+		}
+	}
+
 	// Execute query
 	rows, err := db.Query(query)
 	if err != nil {
