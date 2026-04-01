@@ -48,9 +48,9 @@
     },
     {
       "parameters": {
-        "conditions": [
+        "rules": [
           {
-            "field": "{{ $json.data.priority }}",
+            "field": "$json.priority",
             "operation": "equal",
             "value": "urgent"
           }
@@ -64,19 +64,18 @@
     },
     {
       "parameters": {
-        "conditions": [
+        "rules": [
           {
-            "field": "{{ $json.data.amount }}",
-            "operation": "largerEqual",
+            "field": "$json.amount",
+            "operation": "greaterEqual",
             "value": 1000
           },
           {
-            "field": "{{ $json.data.customer.tier }}",
+            "field": "$json.customer.tier",
             "operation": "equal",
             "value": "platinum"
           }
-        ],
-        "mode": "any"
+        ]
       },
       "id": "vip-check",
       "name": "VIP Check",
@@ -86,19 +85,18 @@
     },
     {
       "parameters": {
-        "conditions": [
+        "rules": [
           {
-            "field": "{{ $json.data.customer.country }}",
+            "field": "$json.customer.country",
             "operation": "equal",
             "value": "US"
           },
           {
-            "field": "{{ $json.data.amount }}",
-            "operation": "largerEqual",
+            "field": "$json.amount",
+            "operation": "greaterEqual",
             "value": 100
           }
-        ],
-        "mode": "all"
+        ]
       },
       "id": "domestic-standard-check",
       "name": "Domestic Standard Check",

@@ -59,6 +59,11 @@ vet:
 lint:
 	golint ./...
 
+# Run smoke tests (no external dependencies required)
+.PHONY: smoke-test
+smoke-test: build
+	go run ./cmd/smoke-test/
+
 # Clean build artifacts
 .PHONY: clean
 clean:
@@ -119,6 +124,7 @@ help:
 	@echo "  fmt                 - Format code"
 	@echo "  vet                 - Vet code"
 	@echo "  lint                - Check code with lint"
+	@echo "  smoke-test          - Run smoke tests (build + unit tests + workflow tests)"
 	@echo "  clean               - Clean build artifacts"
 	@echo "  install-lint        - Install golint"
 	@echo ""

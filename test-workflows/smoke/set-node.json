@@ -1,0 +1,36 @@
+{
+  "name": "Smoke Test - Set Node",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "start",
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [100, 300]
+    },
+    {
+      "parameters": {
+        "assignments": [
+          { "name": "name", "value": "hello" },
+          { "name": "value", "value": 42 },
+          { "name": "active", "value": true }
+        ]
+      },
+      "id": "set1",
+      "name": "Set Values",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [300, 300]
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          { "node": "Set Values", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  }
+}

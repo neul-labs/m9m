@@ -2,21 +2,48 @@
   "name": "Filter Data Example",
   "nodes": [
     {
-      "name": "Filter Items",
-      "type": "n8n-nodes-base.filter",
+      "parameters": {},
+      "id": "start",
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [50, 300]
+    },
+    {
+      "name": "Set Data",
+      "type": "n8n-nodes-base.set",
       "typeVersion": 1,
       "position": [250, 300],
       "parameters": {
-        "conditions": {
-          "boolean": [
-            {
-              "value1": "={{ $json.active }}",
-              "value2": true
-            }
-          ]
-        }
+        "assignments": [
+          { "name": "name", "value": "Alice" },
+          { "name": "active", "value": true },
+          { "name": "score", "value": 85 }
+        ]
+      }
+    },
+    {
+      "name": "Filter Items",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 1,
+      "position": [450, 300],
+      "parameters": {
+        "conditions": [
+          {
+            "leftValue": "active",
+            "operator": "equals",
+            "rightValue": true
+          }
+        ]
       }
     }
   ],
-  "connections": {}
+  "connections": {
+    "Start": {
+      "main": [[{ "node": "Set Data", "type": "main", "index": 0 }]]
+    },
+    "Set Data": {
+      "main": [[{ "node": "Filter Items", "type": "main", "index": 0 }]]
+    }
+  }
 }

@@ -1,0 +1,58 @@
+{
+  "name": "Smoke Test - Filter Node",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "start",
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [100, 300]
+    },
+    {
+      "parameters": {
+        "assignments": [
+          { "name": "score", "value": 85 },
+          { "name": "active", "value": true }
+        ]
+      },
+      "id": "set1",
+      "name": "Set Score",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [300, 300]
+    },
+    {
+      "parameters": {
+        "conditions": [
+          {
+            "leftValue": "score",
+            "operator": "greaterThan",
+            "rightValue": 50
+          }
+        ]
+      },
+      "id": "filter1",
+      "name": "Filter High Scores",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 1,
+      "position": [500, 300]
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          { "node": "Set Score", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Set Score": {
+      "main": [
+        [
+          { "node": "Filter High Scores", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  }
+}

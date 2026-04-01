@@ -15,14 +15,21 @@ import (
 	"github.com/neul-labs/m9m/internal/model"
 	"github.com/neul-labs/m9m/internal/nodes/ai"
 	"github.com/neul-labs/m9m/internal/nodes/cli"
+	"github.com/neul-labs/m9m/internal/nodes/cloud/aws"
+	"github.com/neul-labs/m9m/internal/nodes/cloud/azure"
+	"github.com/neul-labs/m9m/internal/nodes/cloud/gcp"
 	"github.com/neul-labs/m9m/internal/nodes/code"
+	"github.com/neul-labs/m9m/internal/nodes/core"
 	"github.com/neul-labs/m9m/internal/nodes/database"
+	"github.com/neul-labs/m9m/internal/nodes/email"
 	"github.com/neul-labs/m9m/internal/nodes/file"
 	httpnode "github.com/neul-labs/m9m/internal/nodes/http"
 	"github.com/neul-labs/m9m/internal/nodes/messaging"
+	"github.com/neul-labs/m9m/internal/nodes/productivity"
 	"github.com/neul-labs/m9m/internal/nodes/timer"
 	"github.com/neul-labs/m9m/internal/nodes/transform"
 	"github.com/neul-labs/m9m/internal/nodes/trigger"
+	"github.com/neul-labs/m9m/internal/nodes/vcs"
 )
 
 var (
@@ -270,4 +277,23 @@ func registerExecNodes(eng engine.WorkflowEngine) {
 	// AI nodes
 	eng.RegisterNodeExecutor("@n8n/n8n-nodes-langchain.openAi", ai.NewOpenAINode())
 	eng.RegisterNodeExecutor("@n8n/n8n-nodes-langchain.anthropic", ai.NewAnthropicNode())
+
+	// Core nodes
+	eng.RegisterNodeExecutor("n8n-nodes-base.start", core.NewStartNode())
+
+	// Cloud nodes
+	eng.RegisterNodeExecutor("n8n-nodes-base.awsLambda", aws.NewLambdaOperationsNode())
+	eng.RegisterNodeExecutor("n8n-nodes-base.s3", aws.NewS3OperationsNode())
+	eng.RegisterNodeExecutor("n8n-nodes-base.azureBlobStorage", azure.NewBlobStorageNode())
+	eng.RegisterNodeExecutor("n8n-nodes-base.gcpCloudStorage", gcp.NewCloudStorageNode())
+
+	// VCS nodes
+	eng.RegisterNodeExecutor("n8n-nodes-base.github", vcs.NewGitHubNode())
+	eng.RegisterNodeExecutor("n8n-nodes-base.gitlab", vcs.NewGitLabNode())
+
+	// Productivity nodes
+	eng.RegisterNodeExecutor("n8n-nodes-base.googleSheets", productivity.NewGoogleSheetsNode())
+
+	// Email nodes
+	eng.RegisterNodeExecutor("n8n-nodes-base.sendEmail", email.NewSendEmailNode())
 }

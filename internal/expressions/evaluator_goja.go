@@ -227,12 +227,19 @@ func (e *GojaExpressionEvaluator) executeWithRuntime(runtime *SecureGojaRuntime,
 
 // getCacheKey generates a cache key for expression results
 func (e *GojaExpressionEvaluator) getCacheKey(jsCode string, context *ExpressionContext) string {
-	return fmt.Sprintf("%s:%s:%d:%d:%s",
+	// Include a pointer to the input data item to avoid returning cached results
+	// when the same expression is evaluated against different data items
+	var dataPtr string
+	if len(context.ConnectionInputData) > 0 {
+		dataPtr = fmt.Sprintf("%p", &context.ConnectionInputData[0])
+	}
+	return fmt.Sprintf("%s:%s:%d:%d:%s:%s",
 		jsCode,
 		context.ActiveNodeName,
 		context.RunIndex,
 		context.ItemIndex,
 		string(context.Mode),
+		dataPtr,
 	)
 }
 

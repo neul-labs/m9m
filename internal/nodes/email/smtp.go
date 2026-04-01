@@ -73,12 +73,12 @@ func (n *SMTPNode) Execute(inputData []model.DataItem, nodeParams map[string]int
 		})
 	}
 
-	for index, item := range inputData {
+	for _, item := range inputData {
 		// Create expression context
 		context := &expressions.ExpressionContext{
 			ActiveNodeName:      "Send Email",
 			RunIndex:           0,
-			ItemIndex:          index,
+			ItemIndex:          0,
 			Mode:               expressions.ModeManual,
 			ConnectionInputData: []model.DataItem{item},
 			AdditionalKeys: &expressions.AdditionalKeys{},

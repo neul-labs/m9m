@@ -75,18 +75,7 @@
           {
             "name": "minPrice",
             "value": "{{ min($json.data.map(product => product.price)) }}"
-          }
-        ]
-      },
-      "id": "calculate-aggregates",
-      "name": "Calculate Aggregates",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 1,
-      "position": [900, 200]
-    },
-    {
-      "parameters": {
-        "assignments": [
+          },
           {
             "name": "productsByPrice",
             "value": "{{ $json.data.sort((a, b) => b.price - a.price) }}"
@@ -106,35 +95,25 @@
           {
             "name": "allTags",
             "value": "{{ unique($json.data.flatMap(product => product.tags)) }}"
+          },
+          {
+            "name": "productCount",
+            "value": "{{ length($json.data) }}"
           }
         ]
       },
-      "id": "sort-and-filter",
-      "name": "Sort and Filter",
+      "id": "analyze-products",
+      "name": "Analyze Products",
       "type": "n8n-nodes-base.set",
       "typeVersion": 1,
-      "position": [900, 400]
-    },
-    {
-      "parameters": {
-        "operation": "merge",
-        "mergeSources": [
-          "$node('Calculate Aggregates').json",
-          "$node('Sort and Filter').json"
-        ]
-      },
-      "id": "merge-analysis",
-      "name": "Merge Analysis",
-      "type": "n8n-nodes-base.json",
-      "typeVersion": 1,
-      "position": [1120, 300]
+      "position": [900, 300]
     },
     {
       "parameters": {
         "assignments": [
           {
             "name": "summary",
-            "value": "{{ 'Analyzed ' + length($node('Parse Products').json.data) + ' products across ' + length($json.categories) + ' categories with average price $' + $json.averagePrice }}"
+            "value": "{{ 'Analyzed ' + $json.productCount + ' products across ' + length($json.categories) + ' categories with average price $' + $json.averagePrice }}"
           },
           {
             "name": "insights",
@@ -150,7 +129,7 @@
       "name": "Generate Report",
       "type": "n8n-nodes-base.set",
       "typeVersion": 1,
-      "position": [1340, 300]
+      "position": [1120, 300]
     }
   ],
   "connections": {
@@ -180,41 +159,14 @@
       "main": [
         [
           {
-            "node": "Calculate Aggregates",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Sort and Filter",
+            "node": "Analyze Products",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Calculate Aggregates": {
-      "main": [
-        [
-          {
-            "node": "Merge Analysis",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Sort and Filter": {
-      "main": [
-        [
-          {
-            "node": "Merge Analysis",
-            "type": "main",
-            "index": 1
-          }
-        ]
-      ]
-    },
-    "Merge Analysis": {
+    "Analyze Products": {
       "main": [
         [
           {

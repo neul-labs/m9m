@@ -128,12 +128,12 @@ func (n *SQLConnectorNode) Execute(inputData []model.DataItem, nodeParams map[st
 		operation = "select" // Default operation
 	}
 
-	for index, item := range inputData {
+	for _, item := range inputData {
 		// Create expression context
 		context := &expressions.ExpressionContext{
 			ActiveNodeName:      "SQL Database",
 			RunIndex:           0,
-			ItemIndex:          index,
+			ItemIndex:          0,
 			Mode:               expressions.ModeManual,
 			ConnectionInputData: []model.DataItem{item},
 			AdditionalKeys: &expressions.AdditionalKeys{},

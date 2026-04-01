@@ -99,13 +99,16 @@ func TestWriteBinaryFileNodeWriteFile(t *testing.T) {
 
 func TestWriteBinaryFileNodeExecute(t *testing.T) {
 	node := NewWriteBinaryFileNode()
-	
+
 	// Create a temporary directory for testing
 	tmpDir, err := os.MkdirTemp("", "test-write-file-*")
 	if err != nil {
 		t.Fatalf("Failed to create temp directory: %v", err)
 	}
 	defer os.RemoveAll(tmpDir)
+
+	// Allow the temp directory for security validation
+	node.SetAllowedDirectories([]string{tmpDir})
 	
 	inputData := []model.DataItem{
 		{

@@ -230,12 +230,12 @@ func (n *CloudStorageNode) Execute(inputData []model.DataItem, nodeParams map[st
 		})
 	}
 
-	for index, item := range inputData {
+	for _, item := range inputData {
 		// Create expression context
 		exprContext := &expressions.ExpressionContext{
 			ActiveNodeName:      "Google Cloud Storage",
 			RunIndex:           0,
-			ItemIndex:          index,
+			ItemIndex:          0,
 			Mode:               expressions.ModeManual,
 			ConnectionInputData: []model.DataItem{item},
 			AdditionalKeys:     &expressions.AdditionalKeys{},

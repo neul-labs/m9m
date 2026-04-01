@@ -403,7 +403,7 @@ func (po *PerformanceOptimizer) UpdateTuning(tuning PerformanceTuning) error {
 		po.memoryThreshold = tuning.MemoryLimit
 	}
 
-	po.logOptimization("tuning_update", "Performance tuning parameters updated",
+	po.logOptimizationLocked("tuning_update", "Performance tuning parameters updated",
 		map[string]interface{}{"tuning": tuning}, nil, true, "", "medium")
 
 	return nil
@@ -428,11 +428,15 @@ func (po *PerformanceOptimizer) GetOptimizationHistory(limit int) []Optimization
 	return result
 }
 
-// logOptimization logs an optimization action
+// logOptimization logs an optimization action (acquires lock internally)
 func (po *PerformanceOptimizer) logOptimization(action, reason string, metricsBefore, metricsAfter map[string]interface{}, success bool, errorMsg, impact string) {
 	po.mu.Lock()
 	defer po.mu.Unlock()
+	po.logOptimizationLocked(action, reason, metricsBefore, metricsAfter, success, errorMsg, impact)
+}
 
+// logOptimizationLocked is the same as logOptimization but assumes the caller already holds po.mu.
+func (po *PerformanceOptimizer) logOptimizationLocked(action, reason string, metricsBefore, metricsAfter map[string]interface{}, success bool, errorMsg, impact string) {
 	optimization := OptimizationAction{
 		Timestamp:     time.Now(),
 		Action:        action,

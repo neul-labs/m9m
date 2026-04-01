@@ -43,11 +43,11 @@ func (j *JSONNode) Execute(inputData []model.DataItem, nodeParams map[string]int
 
 	var outputData []model.DataItem
 
-	for index, item := range inputData {
+	for _, item := range inputData {
 		context := &expressions.ExpressionContext{
 			ActiveNodeName:      "JSON",
 			RunIndex:           0,
-			ItemIndex:          index,
+			ItemIndex:          0,
 			Mode:               expressions.ModeManual,
 			ConnectionInputData: []model.DataItem{item},
 			Workflow: &model.Workflow{

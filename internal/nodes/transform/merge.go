@@ -140,11 +140,11 @@ func (m *MergeNode) chooseBranchMerge(inputData []model.DataItem, nodeParams map
 
 	var result []model.DataItem
 
-	for index, item := range inputData {
+	for _, item := range inputData {
 		context := &expressions.ExpressionContext{
 			ActiveNodeName:      "Merge",
 			RunIndex:           0,
-			ItemIndex:          index,
+			ItemIndex:          0,
 			Mode:               expressions.ModeManual,
 			ConnectionInputData: []model.DataItem{item},
 			Workflow: &model.Workflow{

@@ -12,17 +12,12 @@
   ],
   "nodes": [
     {
-      "parameters": {
-        "path": "/webhook/lead-capture",
-        "httpMethod": "POST",
-        "authentication": "none"
-      },
-      "id": "lead-webhook",
-      "name": "Lead Capture Webhook",
-      "type": "n8n-nodes-base.webhook",
+      "parameters": {},
+      "id": "start",
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
       "typeVersion": 1,
-      "position": [240, 300],
-      "webhookId": "lead-capture"
+      "position": [240, 300]
     },
     {
       "parameters": {
@@ -33,47 +28,47 @@
           },
           {
             "name": "email",
-            "value": "{{ lower(trim($json.body.email || '')) }}"
+            "value": "jane.smith@techcorp.com"
           },
           {
             "name": "firstName",
-            "value": "{{ trim($json.body.first_name || '') }}"
+            "value": "Jane"
           },
           {
             "name": "lastName",
-            "value": "{{ trim($json.body.last_name || '') }}"
+            "value": "Smith"
           },
           {
             "name": "company",
-            "value": "{{ trim($json.body.company || '') }}"
+            "value": "TechCorp Inc."
           },
           {
             "name": "jobTitle",
-            "value": "{{ trim($json.body.job_title || '') }}"
+            "value": "VP of Engineering"
           },
           {
             "name": "phone",
-            "value": "{{ trim($json.body.phone || '') }}"
+            "value": "+1-555-0123"
           },
           {
             "name": "website",
-            "value": "{{ trim($json.body.website || '') }}"
+            "value": "https://techcorp.com"
           },
           {
             "name": "industry",
-            "value": "{{ trim($json.body.industry || '') }}"
+            "value": "Technology"
           },
           {
             "name": "companySize",
-            "value": "{{ $json.body.company_size || '' }}"
+            "value": "500+"
           },
           {
             "name": "budget",
-            "value": "{{ $json.body.budget || '' }}"
+            "value": "$50k+"
           },
           {
             "name": "source",
-            "value": "{{ $json.body.source || 'website' }}"
+            "value": "referral"
           },
           {
             "name": "capturedAt",
@@ -92,7 +87,7 @@
         "assignments": [
           {
             "name": "isValidEmail",
-            "value": "{{ regex($json.email, '^[^@]+@[^@]+\\\\.[^@]+$') }}"
+            "value": "{{ isEmail($json.email) }}"
           },
           {
             "name": "hasCompanyInfo",
@@ -178,9 +173,9 @@
     },
     {
       "parameters": {
-        "conditions": [
+        "rules": [
           {
-            "field": "leadGrade",
+            "field": "$json.leadGrade",
             "operation": "equal",
             "value": "A"
           }
@@ -248,7 +243,7 @@
     }
   ],
   "connections": {
-    "Lead Capture Webhook": {
+    "Start": {
       "main": [
         [
           {

@@ -58,10 +58,6 @@
             "value": "{{ $json.data.age >= 18 }}"
           },
           {
-            "name": "emailDomain",
-            "value": "{{ split($json.data.email, '@')[1] }}"
-          },
-          {
             "name": "ageCategory",
             "value": "{{ if($json.data.age < 30, 'young', if($json.data.age < 40, 'middle', 'senior')) }}"
           },

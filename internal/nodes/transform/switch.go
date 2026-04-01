@@ -45,11 +45,11 @@ func (s *SwitchNode) Execute(inputData []model.DataItem, nodeParams map[string]i
 
 	var outputData []model.DataItem
 
-	for index, item := range inputData {
+	for _, item := range inputData {
 		context := &expressions.ExpressionContext{
 			ActiveNodeName:      "Switch",
 			RunIndex:           0,
-			ItemIndex:          index,
+			ItemIndex:          0,
 			Mode:               expressions.ModeManual,
 			ConnectionInputData: []model.DataItem{item},
 			Workflow: &model.Workflow{

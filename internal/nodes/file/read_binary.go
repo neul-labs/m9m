@@ -40,12 +40,12 @@ func NewReadBinaryFileNode() *ReadBinaryFileNode {
 func (n *ReadBinaryFileNode) Execute(inputData []model.DataItem, nodeParams map[string]interface{}) ([]model.DataItem, error) {
 	var results []model.DataItem
 
-	for index, item := range inputData {
+	for _, item := range inputData {
 		// Create expression context
 		context := &expressions.ExpressionContext{
 			ActiveNodeName:      "Read Binary File",
 			RunIndex:           0,
-			ItemIndex:          index,
+			ItemIndex:          0,
 			Mode:               expressions.ModeManual,
 			ConnectionInputData: []model.DataItem{item},
 			AdditionalKeys: &expressions.AdditionalKeys{},

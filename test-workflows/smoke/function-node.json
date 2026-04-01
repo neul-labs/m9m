@@ -1,0 +1,52 @@
+{
+  "name": "Smoke Test - Function Node",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "start",
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [100, 300]
+    },
+    {
+      "parameters": {
+        "assignments": [
+          { "name": "x", "value": 5 },
+          { "name": "y", "value": 10 }
+        ]
+      },
+      "id": "set1",
+      "name": "Set Numbers",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [300, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "var result = { sum: $json.x + $json.y, product: $json.x * $json.y }; result;"
+      },
+      "id": "function1",
+      "name": "Calculate Sum",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [500, 300]
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          { "node": "Set Numbers", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Set Numbers": {
+      "main": [
+        [
+          { "node": "Calculate Sum", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  }
+}

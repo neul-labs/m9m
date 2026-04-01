@@ -208,8 +208,10 @@ func (s *MemoryVariableStorage) SaveEnvironment(environment *Environment) error 
 
 	// If this environment is active, deactivate others
 	if environment.Active {
-		for _, env := range s.environments {
-			env.Active = false
+		for id, env := range s.environments {
+			if id != environment.ID {
+				env.Active = false
+			}
 		}
 	}
 

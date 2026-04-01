@@ -1,0 +1,51 @@
+{
+  "name": "Smoke Test - Code Node",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "start",
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [100, 300]
+    },
+    {
+      "parameters": {
+        "assignments": [
+          { "name": "items", "value": "[{\"x\":1},{\"x\":2}]" }
+        ]
+      },
+      "id": "set1",
+      "name": "Set Items",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [300, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "var result = { original: $json.items, processed: true }; result;"
+      },
+      "id": "function1",
+      "name": "Double Values",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [500, 300]
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          { "node": "Set Items", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Set Items": {
+      "main": [
+        [
+          { "node": "Double Values", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  }
+}

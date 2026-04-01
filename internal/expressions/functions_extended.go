@@ -12,6 +12,32 @@ import (
 	"github.com/dop251/goja"
 )
 
+// flattenArgs extracts float64 values from arguments, unpacking arrays when a single
+// array argument is passed (e.g. sum([1,2,3]) instead of sum(1,2,3)).
+func flattenArgs(vm *goja.Runtime, args []goja.Value) []float64 {
+	if len(args) == 1 {
+		// Check if the single argument is an array
+		if obj := args[0].ToObject(vm); obj != nil {
+			if arrLen := obj.Get("length"); arrLen != nil && !goja.IsUndefined(arrLen) {
+				n := int(arrLen.ToInteger())
+				values := make([]float64, 0, n)
+				for i := 0; i < n; i++ {
+					v := obj.Get(fmt.Sprintf("%d", i))
+					if v != nil {
+						values = append(values, v.ToFloat())
+					}
+				}
+				return values
+			}
+		}
+	}
+	values := make([]float64, 0, len(args))
+	for _, arg := range args {
+		values = append(values, arg.ToFloat())
+	}
+	return values
+}
+
 // MathExtensions provides mathematical functions
 type MathExtensions struct{}
 
@@ -60,33 +86,32 @@ func (m *MathExtensions) RegisterFunctions(vm *goja.Runtime) error {
 
 func (m *MathExtensions) min(vm *goja.Runtime) func(call goja.FunctionCall) goja.Value {
 	return func(call goja.FunctionCall) goja.Value {
-		if len(call.Arguments) == 0 {
+		values := flattenArgs(vm, call.Arguments)
+		if len(values) == 0 {
 			return vm.ToValue(math.Inf(1))
 		}
 
-		min := call.Arguments[0].ToFloat()
-		for i := 1; i < len(call.Arguments); i++ {
-			val := call.Arguments[i].ToFloat()
-			if val < min {
-				min = val
+		min := values[0]
+		for i := 1; i < len(values); i++ {
+			if values[i] < min {
+				min = values[i]
 			}
 		}
-		// Ensure result is always float64 for math operations
 		return vm.ToValue(float64(min))
 	}
 }
 
 func (m *MathExtensions) max(vm *goja.Runtime) func(call goja.FunctionCall) goja.Value {
 	return func(call goja.FunctionCall) goja.Value {
-		if len(call.Arguments) == 0 {
+		values := flattenArgs(vm, call.Arguments)
+		if len(values) == 0 {
 			return vm.ToValue(math.Inf(-1))
 		}
 
-		max := call.Arguments[0].ToFloat()
-		for i := 1; i < len(call.Arguments); i++ {
-			val := call.Arguments[i].ToFloat()
-			if val > max {
-				max = val
+		max := values[0]
+		for i := 1; i < len(values); i++ {
+			if values[i] > max {
+				max = values[i]
 			}
 		}
 		return vm.ToValue(max)
@@ -95,28 +120,25 @@ func (m *MathExtensions) max(vm *goja.Runtime) func(call goja.FunctionCall) goja
 
 func (m *MathExtensions) average(vm *goja.Runtime) func(call goja.FunctionCall) goja.Value {
 	return func(call goja.FunctionCall) goja.Value {
-		if len(call.Arguments) == 0 {
+		values := flattenArgs(vm, call.Arguments)
+		if len(values) == 0 {
 			return vm.ToValue(0)
 		}
 
 		sum := 0.0
-		for _, arg := range call.Arguments {
-			sum += arg.ToFloat()
+		for _, v := range values {
+			sum += v
 		}
-		return vm.ToValue(sum / float64(len(call.Arguments)))
+		return vm.ToValue(sum / float64(len(values)))
 	}
 }
 
 func (m *MathExtensions) sum(vm *goja.Runtime) func(call goja.FunctionCall) goja.Value {
 	return func(call goja.FunctionCall) goja.Value {
+		values := flattenArgs(vm, call.Arguments)
 		sum := 0.0
-		for _, arg := range call.Arguments {
-			sum += arg.ToFloat()
-		}
-		// Force the result to be a true float by adding 0.0 explicitly
-		if sum == float64(int64(sum)) {
-			// Integer result, add tiny decimal to force float64
-			sum += 0.0
+		for _, v := range values {
+			sum += v
 		}
 		// Use RunString to create a proper JavaScript number
 		val, _ := vm.RunString(fmt.Sprintf("%.10g", sum))
@@ -824,8 +846,11 @@ func (d *DateExtensions) formatDate(vm *goja.Runtime) func(call goja.FunctionCal
 		var t time.Time
 		switch v := dateVal.Export().(type) {
 		case float64:
-			// JavaScript timestamp
+			// JavaScript timestamp (milliseconds)
 			t = time.Unix(int64(v)/1000, 0)
+		case int64:
+			// JavaScript timestamp (milliseconds) as int64
+			t = time.Unix(v/1000, 0)
 		case string:
 			var err error
 			t, err = time.Parse(time.RFC3339, v)
@@ -876,6 +901,9 @@ func (d *DateExtensions) toDate(vm *goja.Runtime) func(call goja.FunctionCall) g
 		case float64:
 			// Already a timestamp
 			return vm.ToValue(v)
+		case int64:
+			// Already a timestamp as int64
+			return vm.ToValue(float64(v))
 		default:
 			panic(vm.ToValue("Argument must be a string or number"))
 		}
@@ -1442,16 +1470,17 @@ func (u *UtilityExtensions) GetCategory() string {
 
 func (u *UtilityExtensions) GetFunctionNames() []string {
 	return []string{
-		"toJson", "fromJson", "uuid", "sleep", "typeOf",
+		"toJson", "fromJson", "uuid", "sleep", "typeOf", "randomString",
 	}
 }
 
 func (u *UtilityExtensions) RegisterFunctions(vm *goja.Runtime) error {
 	functions := map[string]func(call goja.FunctionCall) goja.Value{
-		"toJson":   u.toJson(vm),
-		"fromJson": u.fromJson(vm),
-		"uuid":     u.uuid(vm),
-		"typeOf":   u.typeOf(vm),
+		"toJson":       u.toJson(vm),
+		"fromJson":     u.fromJson(vm),
+		"uuid":         u.uuid(vm),
+		"typeOf":       u.typeOf(vm),
+		"randomString": u.randomString(vm),
 	}
 
 	for name, fn := range functions {
@@ -1544,6 +1573,25 @@ func (u *UtilityExtensions) typeOf(vm *goja.Runtime) func(call goja.FunctionCall
 		default:
 			return vm.ToValue("object")
 		}
+	}
+}
+
+func (u *UtilityExtensions) randomString(vm *goja.Runtime) func(call goja.FunctionCall) goja.Value {
+	return func(call goja.FunctionCall) goja.Value {
+		length := 8
+		if len(call.Arguments) > 0 {
+			length = int(call.Arguments[0].ToInteger())
+		}
+		if length <= 0 {
+			length = 8
+		}
+
+		const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+		result := make([]byte, length)
+		for i := range result {
+			result[i] = charset[rand.Intn(len(charset))]
+		}
+		return vm.ToValue(string(result))
 	}
 }
 

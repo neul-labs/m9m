@@ -95,7 +95,7 @@ func (s *SetNode) Execute(inputData []model.DataItem, nodeParams map[string]inte
 		context := &expressions.ExpressionContext{
 			ActiveNodeName:      "Set",
 			RunIndex:           0,
-			ItemIndex:          i,
+			ItemIndex:          0,
 			Mode:               expressions.ModeManual,
 			ConnectionInputData: []model.DataItem{item},
 			Workflow: &model.Workflow{

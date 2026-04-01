@@ -1,0 +1,71 @@
+{
+  "name": "Smoke Test - Merge Node",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "start",
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [100, 300]
+    },
+    {
+      "parameters": {
+        "assignments": [
+          { "name": "name", "value": "alice" }
+        ]
+      },
+      "id": "set_alice",
+      "name": "Set Alice",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [300, 200]
+    },
+    {
+      "parameters": {
+        "assignments": [
+          { "name": "name", "value": "bob" }
+        ]
+      },
+      "id": "set_bob",
+      "name": "Set Bob",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [300, 400]
+    },
+    {
+      "parameters": {
+        "mode": "combine"
+      },
+      "id": "merge1",
+      "name": "Merge Names",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 1,
+      "position": [500, 300]
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          { "node": "Set Alice", "type": "main", "index": 0 },
+          { "node": "Set Bob", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Set Alice": {
+      "main": [
+        [
+          { "node": "Merge Names", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Set Bob": {
+      "main": [
+        [
+          { "node": "Merge Names", "type": "main", "index": 1 }
+        ]
+      ]
+    }
+  }
+}

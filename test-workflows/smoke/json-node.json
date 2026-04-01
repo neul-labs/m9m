@@ -1,0 +1,52 @@
+{
+  "name": "Smoke Test - JSON Node",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "start",
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [100, 300]
+    },
+    {
+      "parameters": {
+        "assignments": [
+          { "name": "rawData", "value": "{\"user\":\"alice\",\"age\":30,\"roles\":[\"admin\",\"editor\"]}" }
+        ]
+      },
+      "id": "set1",
+      "name": "Set JSON String",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [300, 300]
+    },
+    {
+      "parameters": {
+        "operation": "parse",
+        "jsonPath": "$json.rawData"
+      },
+      "id": "json1",
+      "name": "Parse JSON",
+      "type": "n8n-nodes-base.json",
+      "typeVersion": 1,
+      "position": [500, 300]
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          { "node": "Set JSON String", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Set JSON String": {
+      "main": [
+        [
+          { "node": "Parse JSON", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  }
+}

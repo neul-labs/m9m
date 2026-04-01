@@ -1,0 +1,96 @@
+{
+  "name": "Smoke Test - Multi-Step Pipeline",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "start",
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [100, 300]
+    },
+    {
+      "parameters": {
+        "assignments": [
+          { "name": "productData", "value": "{\"name\":\"Widget\",\"price\":25.50,\"quantity\":4,\"category\":\"electronics\"}" }
+        ]
+      },
+      "id": "set1",
+      "name": "Create Product Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [300, 300]
+    },
+    {
+      "parameters": {
+        "operation": "parse",
+        "jsonPath": "$json.productData"
+      },
+      "id": "json1",
+      "name": "Parse Product JSON",
+      "type": "n8n-nodes-base.json",
+      "typeVersion": 1,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "assignments": [
+          { "name": "total", "value": "{{ $json.price * $json.quantity }}" },
+          { "name": "product", "value": "{{ $json.name }}" },
+          { "name": "category", "value": "{{ $json.category }}" }
+        ]
+      },
+      "id": "set2",
+      "name": "Calculate Total",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [700, 300]
+    },
+    {
+      "parameters": {
+        "conditions": [
+          {
+            "leftValue": "total",
+            "operator": "greaterThan",
+            "rightValue": 50
+          }
+        ]
+      },
+      "id": "filter1",
+      "name": "Filter High Value Orders",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 1,
+      "position": [900, 300]
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          { "node": "Create Product Data", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Create Product Data": {
+      "main": [
+        [
+          { "node": "Parse Product JSON", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Parse Product JSON": {
+      "main": [
+        [
+          { "node": "Calculate Total", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Calculate Total": {
+      "main": [
+        [
+          { "node": "Filter High Value Orders", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  }
+}

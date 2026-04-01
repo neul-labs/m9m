@@ -1,0 +1,91 @@
+{
+  "name": "Smoke Test - Switch Node",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "start",
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [100, 300]
+    },
+    {
+      "parameters": {
+        "assignments": [
+          { "name": "grade", "value": "A" }
+        ]
+      },
+      "id": "set1",
+      "name": "Set Grade",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [300, 300]
+    },
+    {
+      "parameters": {
+        "rules": [
+          {
+            "field": "$json.grade",
+            "operation": "equal",
+            "value": "A"
+          }
+        ]
+      },
+      "id": "switch1",
+      "name": "Switch on Grade",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "assignments": [
+          { "name": "result", "value": "Honor Roll" }
+        ]
+      },
+      "id": "set_honor",
+      "name": "Set Honor Roll",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [700, 200]
+    },
+    {
+      "parameters": {
+        "assignments": [
+          { "name": "result", "value": "Standard" }
+        ]
+      },
+      "id": "set_standard",
+      "name": "Set Standard",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [700, 400]
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          { "node": "Set Grade", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Set Grade": {
+      "main": [
+        [
+          { "node": "Switch on Grade", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Switch on Grade": {
+      "main": [
+        [
+          { "node": "Set Honor Roll", "type": "main", "index": 0 }
+        ],
+        [
+          { "node": "Set Standard", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  }
+}
