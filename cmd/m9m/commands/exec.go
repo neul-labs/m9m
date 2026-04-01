@@ -115,7 +115,7 @@ func runExec(cmd *cobra.Command, args []string) {
 
 	// Create engine and register nodes
 	eng := engine.NewWorkflowEngine()
-	registerExecNodes(eng)
+	RegisterAllNodes(eng)
 
 	// Convert input to DataItems
 	var dataItems []model.DataItem
@@ -235,8 +235,9 @@ func outputJSON(v interface{}) {
 	fmt.Println(string(output))
 }
 
-// registerExecNodes registers all available node types for direct execution
-func registerExecNodes(eng engine.WorkflowEngine) {
+// RegisterAllNodes registers all available node types on an engine.
+// This is the shared registration function used by exec, benchmark, and demo.
+func RegisterAllNodes(eng engine.WorkflowEngine) {
 	// Transform nodes
 	eng.RegisterNodeExecutor("n8n-nodes-base.set", transform.NewSetNode())
 	eng.RegisterNodeExecutor("n8n-nodes-base.filter", transform.NewFilterNode())

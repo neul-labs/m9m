@@ -64,6 +64,13 @@ lint:
 smoke-test: build
 	go run ./cmd/smoke-test/
 
+# Run showcase (benchmark + demo + compare)
+.PHONY: showcase
+showcase: build
+	./$(BINARY_NAME) benchmark --quick
+	./$(BINARY_NAME) demo
+	./$(BINARY_NAME) compare
+
 # Clean build artifacts
 .PHONY: clean
 clean:
@@ -125,6 +132,7 @@ help:
 	@echo "  vet                 - Vet code"
 	@echo "  lint                - Check code with lint"
 	@echo "  smoke-test          - Run smoke tests (build + unit tests + workflow tests)"
+	@echo "  showcase            - Run showcase (benchmark + demo + compare)"
 	@echo "  clean               - Clean build artifacts"
 	@echo "  install-lint        - Install golint"
 	@echo ""

@@ -81,6 +81,11 @@ func init() {
 
 	// Server command
 	rootCmd.AddCommand(serveCmd)
+
+	// Showcase commands
+	rootCmd.AddCommand(benchmarkCmd)
+	rootCmd.AddCommand(demoCmd)
+	rootCmd.AddCommand(compareCmd)
 }
 
 // GetWorkspace returns the workspace to use
