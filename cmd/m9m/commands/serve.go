@@ -22,19 +22,6 @@ import (
 	"github.com/neul-labs/m9m/internal/storage"
 	"github.com/neul-labs/m9m/internal/web"
 	"github.com/neul-labs/m9m/internal/workspace"
-
-	// Node imports
-	"github.com/neul-labs/m9m/internal/nodes/ai"
-	"github.com/neul-labs/m9m/internal/nodes/cli"
-	"github.com/neul-labs/m9m/internal/nodes/core"
-	"github.com/neul-labs/m9m/internal/nodes/database"
-	"github.com/neul-labs/m9m/internal/nodes/email"
-	nodehttp "github.com/neul-labs/m9m/internal/nodes/http"
-	"github.com/neul-labs/m9m/internal/nodes/messaging"
-	"github.com/neul-labs/m9m/internal/nodes/timer"
-	"github.com/neul-labs/m9m/internal/nodes/transform"
-	"github.com/neul-labs/m9m/internal/nodes/trigger"
-	"github.com/neul-labs/m9m/internal/nodes/vcs"
 )
 
 var (
@@ -122,7 +109,7 @@ func runServe(cmd *cobra.Command, args []string) {
 
 	// Initialize engine
 	eng := engine.NewWorkflowEngine()
-	registerServerNodes(eng)
+	RegisterAllNodes(eng)
 
 	// Initialize credential manager
 	credMgr, err := credentials.NewCredentialManager()
@@ -240,7 +227,10 @@ func runServe(cmd *cobra.Command, args []string) {
 	}()
 
 	// Start server
+	nodeTypes := eng.GetRegisteredNodeTypes()
 	logger.Printf("Server listening on http://%s", addr)
+	logger.Printf("Registered nodes: %d", len(nodeTypes))
+	logger.Printf("Queue: %s | Workers: %d", serveQueueType, serveWorkers)
 	logger.Printf("Web UI: http://%s", addr)
 	logger.Printf("API: http://%s/api/v1", addr)
 	logger.Printf("Health: http://%s/health", addr)
@@ -269,46 +259,3 @@ func startMetricsServer(port int, logger *log.Logger) {
 	}
 }
 
-func registerServerNodes(eng engine.WorkflowEngine) {
-	// Core nodes
-	eng.RegisterNodeExecutor("n8n-nodes-base.start", core.NewStartNode())
-
-	// Transform nodes
-	eng.RegisterNodeExecutor("n8n-nodes-base.set", transform.NewSetNode())
-	eng.RegisterNodeExecutor("n8n-nodes-base.filter", transform.NewFilterNode())
-	eng.RegisterNodeExecutor("n8n-nodes-base.code", transform.NewCodeNode())
-	eng.RegisterNodeExecutor("n8n-nodes-base.function", transform.NewFunctionNode())
-	eng.RegisterNodeExecutor("n8n-nodes-base.merge", transform.NewMergeNode())
-	eng.RegisterNodeExecutor("n8n-nodes-base.json", transform.NewJSONNode())
-
-	// HTTP nodes
-	eng.RegisterNodeExecutor("n8n-nodes-base.httpRequest", nodehttp.NewHTTPRequestNode())
-
-	// Trigger nodes
-	eng.RegisterNodeExecutor("n8n-nodes-base.webhook", trigger.NewWebhookNode())
-
-	// Timer nodes
-	eng.RegisterNodeExecutor("n8n-nodes-base.cron", timer.NewCronNode())
-
-	// Messaging nodes
-	eng.RegisterNodeExecutor("n8n-nodes-base.slack", messaging.NewSlackNode())
-	eng.RegisterNodeExecutor("n8n-nodes-base.discord", messaging.NewDiscordNode())
-
-	// Database nodes
-	eng.RegisterNodeExecutor("n8n-nodes-base.postgres", database.NewPostgresNode())
-	eng.RegisterNodeExecutor("n8n-nodes-base.mysql", database.NewMySQLNode())
-
-	// Email nodes
-	eng.RegisterNodeExecutor("n8n-nodes-base.emailSend", email.NewSendEmailNode())
-
-	// AI nodes
-	eng.RegisterNodeExecutor("n8n-nodes-base.openAi", ai.NewOpenAINode())
-	eng.RegisterNodeExecutor("n8n-nodes-base.anthropic", ai.NewAnthropicNode())
-
-	// VCS nodes
-	eng.RegisterNodeExecutor("n8n-nodes-base.github", vcs.NewGitHubNode())
-	eng.RegisterNodeExecutor("n8n-nodes-base.gitlab", vcs.NewGitLabNode())
-
-	// CLI nodes
-	eng.RegisterNodeExecutor("n8n-nodes-base.cliExecute", cli.NewExecuteNode())
-}

@@ -261,15 +261,16 @@ func validateConnectionTargets(main interface{}, nodeNames map[string]bool, sour
 }
 
 func isValidNodeType(nodeType string) bool {
-	// Check against our catalog
-	for _, node := range nodeTypeCatalog {
-		if node.Name == nodeType {
-			return true
-		}
-	}
 	// Also accept custom node types (starting with custom.)
 	if strings.HasPrefix(nodeType, "custom.") {
 		return true
+	}
+	// Check against live engine catalog
+	catalog := getNodeCatalog()
+	for _, node := range catalog {
+		if node.Name == nodeType {
+			return true
+		}
 	}
 	return false
 }

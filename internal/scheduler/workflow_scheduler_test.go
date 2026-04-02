@@ -49,6 +49,10 @@ func (m *MockWorkflowEngine) SetCredentialManager(credentialManager *credentials
 
 func (m *MockWorkflowEngine) SetConnectionRouter(connectionRouter connections.ConnectionRouter) {}
 
+func (m *MockWorkflowEngine) GetRegisteredNodeTypes() []engine.NodeTypeInfo {
+	return nil
+}
+
 // Test NewWorkflowScheduler
 
 func TestNewWorkflowScheduler(t *testing.T) {

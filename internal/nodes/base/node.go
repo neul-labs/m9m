@@ -31,9 +31,12 @@ type ContextAwareNodeExecutor interface {
 
 // NodeDescription provides metadata about a node type
 type NodeDescription struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Category    string `json:"category"`
+	Name        string         `json:"name"`
+	Description string         `json:"description"`
+	Category    string         `json:"category"`
+	Properties  []NodeProperty `json:"properties,omitempty"`
+	Inputs      []string       `json:"inputs,omitempty"`
+	Outputs     []string       `json:"outputs,omitempty"`
 }
 
 // NodeFactory is a function that creates a new node executor

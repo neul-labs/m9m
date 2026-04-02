@@ -37,6 +37,8 @@ var (
 	execStdin  bool
 	execQuiet  bool
 	execPretty bool
+	execDryRun bool
+	execDebug  bool
 )
 
 var execCmd = &cobra.Command{
@@ -77,6 +79,8 @@ func init() {
 	execCmd.Flags().BoolVar(&execStdin, "stdin", false, "Read input data from stdin")
 	execCmd.Flags().BoolVarP(&execQuiet, "quiet", "q", false, "Output only the result data (no metadata)")
 	execCmd.Flags().BoolVarP(&execPretty, "pretty", "p", false, "Pretty-print JSON output")
+	execCmd.Flags().BoolVar(&execDryRun, "dry-run", false, "Validate and show execution plan without running")
+	execCmd.Flags().BoolVar(&execDebug, "debug", false, "Show step-by-step execution output")
 }
 
 // ExecResult is the structured output for exec command
@@ -117,12 +121,34 @@ func runExec(cmd *cobra.Command, args []string) {
 	eng := engine.NewWorkflowEngine()
 	RegisterAllNodes(eng)
 
+	// Dry-run mode: validate and show plan
+	if execDryRun {
+		nodeNames := make([]string, 0, len(workflow.Nodes))
+		for _, n := range workflow.Nodes {
+			nodeNames = append(nodeNames, n.Name)
+		}
+		connCount := 0
+		for _, conns := range workflow.Connections {
+			for _, outputs := range conns.Main {
+				connCount += len(outputs)
+			}
+		}
+		fmt.Printf("Would execute: %s (%d nodes, %d connections)\n",
+			strings.Join(nodeNames, " -> "), len(workflow.Nodes), connCount)
+		return
+	}
+
 	// Convert input to DataItems
 	var dataItems []model.DataItem
 	if inputData != nil {
 		dataItems = []model.DataItem{{JSON: inputData}}
 	} else {
 		dataItems = []model.DataItem{{JSON: make(map[string]interface{})}}
+	}
+
+	// Debug mode: show step-by-step output
+	if execDebug {
+		fmt.Fprintf(os.Stderr, "[debug] Starting workflow: %s (%d nodes)\n", workflow.Name, len(workflow.Nodes))
 	}
 
 	// Execute workflow
@@ -297,4 +323,45 @@ func RegisterAllNodes(eng engine.WorkflowEngine) {
 
 	// Email nodes
 	eng.RegisterNodeExecutor("n8n-nodes-base.sendEmail", email.NewSendEmailNode())
+
+	// Additional database nodes
+	eng.RegisterNodeExecutor("n8n-nodes-base.elasticsearch", database.NewElasticsearchNode())
+	eng.RegisterNodeExecutor("n8n-nodes-base.redis", database.NewRedisNode())
+	eng.RegisterNodeExecutor("n8n-nodes-base.mongoDb", database.NewMongoDBNode())
+
+	// Additional core nodes
+	eng.RegisterNodeExecutor("n8n-nodes-base.noOp", core.NewNoOpNode())
+	eng.RegisterNodeExecutor("n8n-nodes-base.wait", core.NewWaitNode())
+	eng.RegisterNodeExecutor("n8n-nodes-base.executeWorkflow", core.NewExecuteWorkflowNode(
+		&core.EngineAdapter{
+			ExecuteFn: func(wf *model.Workflow, input []model.DataItem) ([]model.DataItem, error) {
+				result, err := eng.ExecuteWorkflow(wf, input)
+				if err != nil {
+					return nil, err
+				}
+				if result.Error != nil {
+					return nil, result.Error
+				}
+				return result.Data, nil
+			},
+		},
+	))
+
+	// Additional transform nodes
+	eng.RegisterNodeExecutor("n8n-nodes-base.if", transform.NewIfNode())
+	eng.RegisterNodeExecutor("n8n-nodes-base.loop", transform.NewLoopNode())
+
+	// Additional trigger nodes
+	eng.RegisterNodeExecutor("n8n-nodes-base.errorTrigger", trigger.NewErrorTriggerNode())
+
+	// Additional messaging nodes
+	eng.RegisterNodeExecutor("n8n-nodes-base.twilio", messaging.NewTwilioNode())
+	eng.RegisterNodeExecutor("n8n-nodes-base.microsoftTeams", messaging.NewTeamsNode())
+
+	// Additional email nodes
+	eng.RegisterNodeExecutor("n8n-nodes-base.sendGrid", email.NewSendGridNode())
+
+	// Productivity nodes (additional)
+	eng.RegisterNodeExecutor("n8n-nodes-base.notion", productivity.NewNotionNode())
+	eng.RegisterNodeExecutor("n8n-nodes-base.stripe", productivity.NewStripeNode())
 }

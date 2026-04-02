@@ -44,6 +44,21 @@ type WorkflowEngine interface {
 
 	// SetConnectionRouter sets the connection router for the engine
 	SetConnectionRouter(connectionRouter connections.ConnectionRouter)
+
+	// GetRegisteredNodeTypes returns metadata for all registered node executors.
+	GetRegisteredNodeTypes() []NodeTypeInfo
+}
+
+// NodeTypeInfo describes a registered node type for catalogs and APIs.
+type NodeTypeInfo struct {
+	TypeID      string              `json:"name"`
+	DisplayName string              `json:"displayName"`
+	Description string              `json:"description"`
+	Category    string              `json:"category"`
+	Version     int                 `json:"version"`
+	Inputs      []string            `json:"inputs"`
+	Outputs     []string            `json:"outputs"`
+	Properties  []base.NodeProperty `json:"properties,omitempty"`
 }
 
 // workflowEngineImpl is the concrete implementation of WorkflowEngine
@@ -83,6 +98,33 @@ func (e *workflowEngineImpl) SetCredentialManager(credentialManager *credentials
 // SetConnectionRouter sets the connection router for the engine
 func (e *workflowEngineImpl) SetConnectionRouter(connectionRouter connections.ConnectionRouter) {
 	e.connectionRouter = connectionRouter
+}
+
+// GetRegisteredNodeTypes returns metadata for all registered node executors.
+func (e *workflowEngineImpl) GetRegisteredNodeTypes() []NodeTypeInfo {
+	var result []NodeTypeInfo
+	for typeID, executor := range e.nodeRegistry {
+		desc := executor.Description()
+		inputs := desc.Inputs
+		if len(inputs) == 0 {
+			inputs = []string{"main"}
+		}
+		outputs := desc.Outputs
+		if len(outputs) == 0 {
+			outputs = []string{"main"}
+		}
+		result = append(result, NodeTypeInfo{
+			TypeID:      typeID,
+			DisplayName: desc.Name,
+			Description: desc.Description,
+			Category:    desc.Category,
+			Version:     1,
+			Inputs:      inputs,
+			Outputs:     outputs,
+			Properties:  desc.Properties,
+		})
+	}
+	return result
 }
 
 // ExecuteWorkflow executes a complete workflow

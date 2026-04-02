@@ -366,6 +366,15 @@ func (c *RemoteClient) SetConnectionRouter(connectionRouter connections.Connecti
 	// Connections are managed on the remote server
 }
 
+func (c *RemoteClient) GetRegisteredNodeTypes() []engine.NodeTypeInfo {
+	// In remote mode, query the API for node types
+	var nodeTypes []engine.NodeTypeInfo
+	if err := c.get("/api/v1/node-types", &nodeTypes); err != nil {
+		return nil
+	}
+	return nodeTypes
+}
+
 // ============================================================================
 // HTTP Helper Methods
 // ============================================================================

@@ -353,99 +353,71 @@ func (s *APIServer) GetLDAP(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// ListNodeTypes returns available node types
+// ListNodeTypes returns available node types from the engine registry.
 func (s *APIServer) ListNodeTypes(w http.ResponseWriter, r *http.Request) {
-	// Return registered node types
-	nodeTypes := []map[string]interface{}{
-		{
-			"name":        "n8n-nodes-base.httpRequest",
-			"displayName": "HTTP Request",
-			"description": "Makes HTTP requests",
-			"version":     1,
+	if s.engine == nil {
+		s.sendJSON(w, http.StatusOK, []map[string]interface{}{})
+		return
+	}
+	registered := s.engine.GetRegisteredNodeTypes()
+
+	nodeTypes := make([]map[string]interface{}, 0, len(registered))
+	for _, nt := range registered {
+		entry := map[string]interface{}{
+			"name":        nt.TypeID,
+			"displayName": nt.DisplayName,
+			"description": nt.Description,
+			"category":    nt.Category,
+			"version":     nt.Version,
 			"defaults": map[string]interface{}{
-				"name": "HTTP Request",
+				"name": nt.DisplayName,
 			},
-			"inputs":  []string{"main"},
-			"outputs": []string{"main"},
-			"properties": []map[string]interface{}{
-				{
-					"displayName": "Method",
-					"name":        "method",
-					"type":        "options",
-					"options": []map[string]string{
-						{"name": "GET", "value": "GET"},
-						{"name": "POST", "value": "POST"},
-						{"name": "PUT", "value": "PUT"},
-						{"name": "DELETE", "value": "DELETE"},
-					},
-					"default": "GET",
-				},
-				{
-					"displayName": "URL",
-					"name":        "url",
-					"type":        "string",
-					"default":     "",
-					"required":    true,
-				},
-			},
-		},
-		{
-			"name":        "n8n-nodes-base.set",
-			"displayName": "Set",
-			"description": "Sets values in items",
-			"version":     1,
-			"defaults": map[string]interface{}{
-				"name": "Set",
-			},
-			"inputs":  []string{"main"},
-			"outputs": []string{"main"},
-		},
-		{
-			"name":        "n8n-nodes-base.function",
-			"displayName": "Function",
-			"description": "Execute custom JavaScript code",
-			"version":     1,
-			"defaults": map[string]interface{}{
-				"name": "Function",
-			},
-			"inputs":  []string{"main"},
-			"outputs": []string{"main"},
-		},
-		{
-			"name":        "n8n-nodes-base.code",
-			"displayName": "Code",
-			"description": "Execute custom code",
-			"version":     1,
-			"defaults": map[string]interface{}{
-				"name": "Code",
-			},
-			"inputs":  []string{"main"},
-			"outputs": []string{"main"},
-		},
+			"inputs":  nt.Inputs,
+			"outputs": nt.Outputs,
+		}
+		if len(nt.Properties) > 0 {
+			entry["properties"] = nt.Properties
+		}
+		nodeTypes = append(nodeTypes, entry)
 	}
 
 	s.sendJSON(w, http.StatusOK, nodeTypes)
 }
 
-// GetNodeType returns a specific node type
+// GetNodeType returns a specific node type from the engine registry.
 func (s *APIServer) GetNodeType(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	name := vars["name"]
 
-	// For now, return a basic node type structure
-	nodeType := map[string]interface{}{
-		"name":        name,
-		"displayName": name,
-		"description": fmt.Sprintf("Node type: %s", name),
-		"version":     1,
-		"defaults": map[string]interface{}{
-			"name": name,
-		},
-		"inputs":  []string{"main"},
-		"outputs": []string{"main"},
+	if s.engine == nil {
+		s.sendJSON(w, http.StatusNotFound, map[string]interface{}{
+			"error": fmt.Sprintf("node type not found: %s", name),
+		})
+		return
+	}
+	registered := s.engine.GetRegisteredNodeTypes()
+	for _, nt := range registered {
+		if nt.TypeID == name {
+			s.sendJSON(w, http.StatusOK, map[string]interface{}{
+				"name":        nt.TypeID,
+				"displayName": nt.DisplayName,
+				"description": nt.Description,
+				"category":    nt.Category,
+				"version":     nt.Version,
+				"defaults": map[string]interface{}{
+					"name": nt.DisplayName,
+				},
+				"inputs":     nt.Inputs,
+				"outputs":    nt.Outputs,
+				"properties": nt.Properties,
+			})
+			return
+		}
 	}
 
-	s.sendJSON(w, http.StatusOK, nodeType)
+	s.sendJSON(w, http.StatusNotFound, map[string]interface{}{
+		"error": fmt.Sprintf("node type not found: %s", name),
+	})
 }
 
 // HandleWebSocket handles WebSocket connections for real-time updates

@@ -106,14 +106,33 @@ export const NODE_CATEGORIES: NodeCategoryInfo[] = [
 ]
 
 export function getNodeCategory(nodeType: string): NodeCategory {
-  if (nodeType.includes('trigger') || nodeType.includes('webhook') || nodeType.includes('cron')) {
+  // Triggers
+  if (nodeType.includes('trigger') || nodeType.includes('webhook') || nodeType.includes('cron') || nodeType.includes('errorTrigger')) {
     return 'trigger'
   }
+  // Transform
   if (nodeType.includes('function') || nodeType.includes('code') || nodeType.includes('set') || nodeType.includes('filter')) {
     return 'transform'
   }
-  if (nodeType.includes('if') || nodeType.includes('switch') || nodeType.includes('merge') || nodeType.includes('split')) {
+  // Flow control
+  if (nodeType.includes('if') || nodeType.includes('switch') || nodeType.includes('merge') || nodeType.includes('split') || nodeType.includes('wait') || nodeType.includes('loop') || nodeType.includes('noOp')) {
     return 'flow'
+  }
+  // Core
+  if (nodeType.includes('start') || nodeType.includes('executeWorkflow')) {
+    return 'core'
+  }
+  // Data / Database
+  if (nodeType.includes('postgres') || nodeType.includes('mysql') || nodeType.includes('sqlite') || nodeType.includes('mongo') || nodeType.includes('redis') || nodeType.includes('elastic')) {
+    return 'data'
+  }
+  // Communication
+  if (nodeType.includes('slack') || nodeType.includes('discord') || nodeType.includes('twilio') || nodeType.includes('sendGrid') || nodeType.includes('teams') || nodeType.includes('email')) {
+    return 'communication'
+  }
+  // Productivity
+  if (nodeType.includes('notion') || nodeType.includes('stripe') || nodeType.includes('googleSheets')) {
+    return 'productivity'
   }
   return 'action'
 }
