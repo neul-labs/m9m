@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { XMarkIcon, TrashIcon } from '@heroicons/vue/24/outline'
-import { useWorkflowStore, useNodesStore } from '@/stores'
+import { useWorkflowEditorStore, useNodesStore } from '@/stores'
 import { getNodeCategory } from '@/types/node'
 
-const workflowStore = useWorkflowStore()
+const workflowEditorStore = useWorkflowEditorStore()
 const nodesStore = useNodesStore()
 
-const node = computed(() => workflowStore.selectedNode)
+const node = computed(() => workflowEditorStore.selectedNode)
 const nodeType = computed(() => {
   if (!node.value) return null
   return nodesStore.getNodeType(node.value.type)
@@ -29,18 +29,18 @@ watch(node, (newNode) => {
 }, { immediate: true })
 
 const close = () => {
-  workflowStore.clearSelection()
+  workflowEditorStore.clearSelection()
 }
 
 const deleteNode = () => {
   if (node.value && confirm('Are you sure you want to delete this node?')) {
-    workflowStore.removeNode(node.value.id)
+    workflowEditorStore.removeNode(node.value.id)
   }
 }
 
 const updateName = () => {
   if (node.value && localName.value.trim()) {
-    workflowStore.updateNode(node.value.id, { name: localName.value.trim() })
+    workflowEditorStore.updateNode(node.value.id, { name: localName.value.trim() })
   }
 }
 
@@ -48,7 +48,7 @@ const updateParameter = (key: string, value: unknown) => {
   if (node.value) {
     const newParams = { ...localParameters.value, [key]: value }
     localParameters.value = newParams
-    workflowStore.updateNode(node.value.id, { parameters: newParams })
+    workflowEditorStore.updateNode(node.value.id, { parameters: newParams })
   }
 }
 
@@ -198,7 +198,7 @@ const getCategoryColor = () => {
               <textarea
                 :value="JSON.stringify(localParameters, null, 2)"
                 @input="localParameters = JSON.parse(($event.target as HTMLTextAreaElement).value || '{}')"
-                @blur="node && workflowStore.updateNode(node.id, { parameters: localParameters })"
+                @blur="node && workflowEditorStore.updateNode(node.id, { parameters: localParameters })"
                 rows="6"
                 class="input font-mono text-xs"
               />

@@ -28,6 +28,9 @@ jobs:
           version: latest
           args: --timeout=5m
 
+      - name: Check for backup artifacts
+        run: make check-no-backups
+
   frontend:
     name: Frontend Build
     runs-on: ubuntu-latest

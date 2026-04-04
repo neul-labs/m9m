@@ -1,5 +1,6 @@
 export { useThemeStore } from './theme'
 export { useWorkflowStore } from './workflow'
+export { useWorkflowEditorStore } from './workflowEditor'
 export { useExecutionStore } from './execution'
 export { useNodesStore } from './nodes'
 export { useCredentialsStore } from './credentials'

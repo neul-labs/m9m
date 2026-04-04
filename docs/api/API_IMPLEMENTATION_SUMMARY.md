@@ -359,7 +359,7 @@ $ curl http://localhost:8080/api/v1/node-types
 
 ### Disabled Files (1)
 
-- **internal/api/workflow_api.go** → **workflow_api.go.old**
+- `internal/api/workflow_api.go` was retired during API consolidation.
   - Old implementation replaced by server.go
 
 ---

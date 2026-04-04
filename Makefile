@@ -59,6 +59,10 @@ vet:
 lint:
 	golint ./...
 
+.PHONY: check-no-backups
+check-no-backups:
+	./scripts/check-no-backups.sh
+
 # Run smoke tests (no external dependencies required)
 .PHONY: smoke-test
 smoke-test: build
@@ -131,6 +135,7 @@ help:
 	@echo "  fmt                 - Format code"
 	@echo "  vet                 - Vet code"
 	@echo "  lint                - Check code with lint"
+	@echo "  check-no-backups    - Fail if backup or disabled source files exist"
 	@echo "  smoke-test          - Run smoke tests (build + unit tests + workflow tests)"
 	@echo "  showcase            - Run showcase (benchmark + demo + compare)"
 	@echo "  clean               - Clean build artifacts"

@@ -12,11 +12,12 @@ import {
   EllipsisVerticalIcon,
 } from '@heroicons/vue/24/outline'
 import { Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue'
-import { useWorkflowStore } from '@/stores'
+import { useWorkflowEditorStore, useWorkflowStore } from '@/stores'
 import type { Workflow } from '@/types'
 
 const router = useRouter()
 const workflowStore = useWorkflowStore()
+const workflowEditorStore = useWorkflowEditorStore()
 
 const searchQuery = ref('')
 const activeFilter = ref<'all' | 'active' | 'inactive'>('all')
@@ -63,13 +64,11 @@ const toggleActive = async (workflow: Workflow, event: Event) => {
 
 const duplicateWorkflow = async (workflow: Workflow) => {
   try {
-    await workflowStore.fetchWorkflow(workflow.id)
-    workflowStore.createNewWorkflow()
-    if (workflowStore.currentWorkflow) {
-      workflowStore.currentWorkflow.name = `${workflow.name} (copy)`
-      workflowStore.currentWorkflow.nodes = [...workflow.nodes]
-      workflowStore.currentWorkflow.connections = { ...workflow.connections }
-    }
+    workflowEditorStore.createNewWorkflow(workflow, {
+      id: '',
+      name: `${workflow.name} (copy)`,
+      active: false,
+    })
     router.push('/workflows/new')
   } catch (e) {
     console.error('Failed to duplicate workflow:', e)

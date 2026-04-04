@@ -56,6 +56,7 @@ Official launch path: single binary distribution via package managers and releas
 
 ### Reference
 - [n8n Feature Comparison](N8N_FEATURE_COMPARISON.md) - Feature parity matrix
+- [Refactor Plan](REFRACTOR_PLAN.md) - Modularization roadmap and todo list
 - [Roadmap](roadmap.md) - Future development plans
 - [Contributing](CONTRIBUTING.md) - How to contribute
 

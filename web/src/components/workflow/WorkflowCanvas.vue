@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, markRaw } from 'vue'
-import { VueFlow, useVueFlow, Position } from '@vue-flow/core'
+import { VueFlow, useVueFlow } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
 import { Controls } from '@vue-flow/controls'
 import { MiniMap } from '@vue-flow/minimap'
@@ -11,128 +11,66 @@ import '@vue-flow/controls/dist/style.css'
 import '@vue-flow/minimap/dist/style.css'
 
 import BaseNode from '@/components/nodes/BaseNode.vue'
-import { useWorkflowStore, useNodesStore } from '@/stores'
-import { getNodeCategory } from '@/types/node'
+import { useWorkflowEditorStore, useWorkflowStore, useNodesStore } from '@/stores'
+import { buildFlowEdges, buildFlowNodes, parseEdgeId } from '@/lib/workflowGraph'
 import type { WorkflowNode } from '@/types'
 
 const workflowStore = useWorkflowStore()
+const workflowEditorStore = useWorkflowEditorStore()
 const nodesStore = useNodesStore()
 
 const { onNodesChange, onEdgesChange, onConnect, project } = useVueFlow()
 
-// Convert workflow nodes to Vue Flow nodes
-const flowNodes = computed<Node[]>(() => {
-  if (!workflowStore.currentWorkflow) return []
+const flowNodes = computed<Node[]>(() => buildFlowNodes(workflowStore.currentWorkflow))
+const flowEdges = computed<Edge[]>(() => buildFlowEdges(workflowStore.currentWorkflow))
 
-  return workflowStore.currentWorkflow.nodes.map((node) => ({
-    id: node.id,
-    type: 'custom',
-    position: { x: node.position[0], y: node.position[1] },
-    data: {
-      label: node.name,
-      nodeType: node.type,
-      parameters: node.parameters,
-      category: getNodeCategory(node.type),
-    },
-    sourcePosition: Position.Right,
-    targetPosition: Position.Left,
-  }))
-})
-
-// Convert workflow connections to Vue Flow edges
-const flowEdges = computed<Edge[]>(() => {
-  if (!workflowStore.currentWorkflow) return []
-
-  const edges: Edge[] = []
-  const connections = workflowStore.currentWorkflow.connections
-  const nodesByName = new Map(
-    workflowStore.currentWorkflow.nodes.map((n) => [n.name, n])
-  )
-
-  Object.entries(connections).forEach(([sourceName, conn]) => {
-    const sourceNode = nodesByName.get(sourceName)
-    if (!sourceNode || !conn.main) return
-
-    conn.main.forEach((outputs, outputIndex) => {
-      outputs.forEach((connection) => {
-        const targetNode = nodesByName.get(connection.node)
-        if (!targetNode) return
-
-        edges.push({
-          id: `${sourceNode.id}-${outputIndex}-${targetNode.id}-${connection.index}`,
-          source: sourceNode.id,
-          target: targetNode.id,
-          sourceHandle: `output-${outputIndex}`,
-          targetHandle: `input-${connection.index}`,
-          animated: false,
-          style: { stroke: 'var(--color-connection)' },
-        })
-      })
-    })
-  })
-
-  return edges
-})
-
-// Handle node position changes
 onNodesChange((changes) => {
   changes.forEach((change) => {
     if (change.type === 'position' && change.position) {
       const node = workflowStore.currentWorkflow?.nodes.find((n) => n.id === change.id)
       if (node) {
-        workflowStore.updateNode(change.id, {
+        workflowEditorStore.updateNode(change.id, {
           position: [change.position.x, change.position.y],
         })
       }
     }
     if (change.type === 'select') {
       if (change.selected) {
-        workflowStore.selectNode(change.id)
+        workflowEditorStore.selectNode(change.id)
       } else {
-        workflowStore.clearSelection()
+        workflowEditorStore.clearSelection()
       }
     }
     if (change.type === 'remove') {
-      workflowStore.removeNode(change.id)
+      workflowEditorStore.removeNode(change.id)
     }
   })
 })
 
-// Handle edge changes
 onEdgesChange((changes) => {
   changes.forEach((change) => {
     if (change.type === 'remove') {
-      // Parse the edge id to get connection info
-      const parts = change.id.split('-')
-      if (parts.length >= 4) {
-        const sourceNode = workflowStore.currentWorkflow?.nodes.find((n) => n.id === parts[0])
-        const targetNode = workflowStore.currentWorkflow?.nodes.find((n) => n.id === parts[2])
-        if (sourceNode && targetNode) {
-          workflowStore.removeConnection(
-            sourceNode.name,
-            targetNode.name,
-            parseInt(parts[1]),
-            parseInt(parts[3])
-          )
-        }
+      const edge = parseEdgeId(change.id)
+      if (edge) {
+        workflowEditorStore.removeConnection(
+          edge.sourceNodeId,
+          edge.targetNodeId,
+          edge.sourceOutput,
+          edge.targetInput
+        )
       }
     }
   })
 })
 
-// Handle new connections
 onConnect((params: Connection) => {
-  const sourceNode = workflowStore.currentWorkflow?.nodes.find((n) => n.id === params.source)
-  const targetNode = workflowStore.currentWorkflow?.nodes.find((n) => n.id === params.target)
-
-  if (sourceNode && targetNode) {
+  if (params.source && params.target) {
     const sourceOutput = parseInt(params.sourceHandle?.replace('output-', '') || '0')
     const targetInput = parseInt(params.targetHandle?.replace('input-', '') || '0')
-    workflowStore.addConnection(sourceNode.name, targetNode.name, sourceOutput, targetInput)
+    workflowEditorStore.addConnection(params.source, params.target, sourceOutput, targetInput)
   }
 })
 
-// Handle drop from node palette
 const onDrop = (event: DragEvent) => {
   const nodeType = event.dataTransfer?.getData('application/vueflow')
   if (!nodeType) return
@@ -155,7 +93,7 @@ const onDrop = (event: DragEvent) => {
     parameters: {},
   }
 
-  workflowStore.addNode(newNode)
+  workflowEditorStore.addNode(newNode)
 }
 
 const onDragOver = (event: DragEvent) => {
@@ -165,13 +103,11 @@ const onDragOver = (event: DragEvent) => {
   }
 }
 
-// Node types for Vue Flow - use markRaw to prevent reactivity issues
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const nodeTypes: Record<string, any> = {
   custom: markRaw(BaseNode),
 }
 
-// MiniMap node color
 const getMinimapNodeColor = (node: Node) => {
   const category = node.data?.category
   switch (category) {
