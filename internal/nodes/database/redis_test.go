@@ -38,7 +38,7 @@ func TestRedisNode_Get(t *testing.T) {
 func TestRedisNode_Set(t *testing.T) {
 	server, node := setupRedisServer(t, func(w http.ResponseWriter, r *http.Request) {
 		var cmd []interface{}
-		json.NewDecoder(r.Body).Decode(&cmd)
+		_ = json.NewDecoder(r.Body).Decode(&cmd)
 		assert.Equal(t, "SET", cmd[0])
 		assert.Equal(t, "mykey", cmd[1])
 		assert.Equal(t, "myvalue", cmd[2])

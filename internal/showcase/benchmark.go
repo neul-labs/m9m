@@ -221,19 +221,6 @@ func benchmarkWorkflows(opts BenchmarkOptions, registerNodes func(engine.Workflo
 }
 
 func benchmarkConcurrency(opts BenchmarkOptions) BenchmarkCategory {
-	evaluator := expressions.NewGojaExpressionEvaluator(expressions.DefaultEvaluatorConfig())
-
-	ctx := &expressions.ExpressionContext{
-		ActiveNodeName: "bench",
-		Mode:           expressions.ModeManual,
-		AdditionalKeys: &expressions.AdditionalKeys{ExecutionId: "bench"},
-		ConnectionInputData: []model.DataItem{
-			{JSON: map[string]interface{}{"value": 42}},
-		},
-	}
-
-	expr := "{{ multiply($json.value, 2) + 8 }}"
-
 	levels := []int{1, 5, 10, 25, 50, 100}
 	if opts.Quick {
 		levels = []int{1, 5, 10, 25}
@@ -252,6 +239,16 @@ func benchmarkConcurrency(opts BenchmarkOptions) BenchmarkCategory {
 		for i := 0; i < conc; i++ {
 			go func() {
 				defer wg.Done()
+				evaluator := expressions.NewGojaExpressionEvaluator(expressions.DefaultEvaluatorConfig())
+				ctx := &expressions.ExpressionContext{
+					ActiveNodeName: "bench",
+					Mode:           expressions.ModeManual,
+					AdditionalKeys: &expressions.AdditionalKeys{ExecutionId: "bench"},
+					ConnectionInputData: []model.DataItem{
+						{JSON: map[string]interface{}{"value": 42}},
+					},
+				}
+				expr := "{{ multiply($json.value, 2) + 8 }}"
 				for j := 0; j < opsPerLevel; j++ {
 					evaluator.EvaluateExpression(expr, ctx)
 				}

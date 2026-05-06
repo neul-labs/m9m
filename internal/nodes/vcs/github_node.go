@@ -171,7 +171,7 @@ func (n *GitHubNode) makeAPIRequest(method, path, token string, body interface{}
 
 	if resp.StatusCode >= 400 {
 		var errorResp map[string]interface{}
-		json.NewDecoder(resp.Body).Decode(&errorResp)
+		_ = json.NewDecoder(resp.Body).Decode(&errorResp)
 		return nil, fmt.Errorf("GitHub API error (%d): %v", resp.StatusCode, errorResp)
 	}
 

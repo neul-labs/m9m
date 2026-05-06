@@ -152,21 +152,21 @@ func (p *WorkflowDataProxy) CreateJavaScriptProxy() goja.Value {
 	proxy := p.vm.NewObject()
 
 	// Core n8n variables
-	proxy.Set("$json", p.createJsonProxy())
-	proxy.Set("$input", p.createInputProxy())
-	proxy.Set("$node", p.createNodeProxy())
-	proxy.Set("$parameter", p.createParameterProxy())
-	proxy.Set("$workflow", p.createWorkflowProxy())
-	proxy.Set("$execution", p.createExecutionProxy())
-	proxy.Set("$env", p.createEnvProxy())
-	proxy.Set("$binary", p.createBinaryProxy())
-	proxy.Set("$vars", p.createVarsProxy())
+	_ = proxy.Set("$json", p.createJsonProxy())
+	_ = proxy.Set("$input", p.createInputProxy())
+	_ = proxy.Set("$node", p.createNodeProxy())
+	_ = proxy.Set("$parameter", p.createParameterProxy())
+	_ = proxy.Set("$workflow", p.createWorkflowProxy())
+	_ = proxy.Set("$execution", p.createExecutionProxy())
+	_ = proxy.Set("$env", p.createEnvProxy())
+	_ = proxy.Set("$binary", p.createBinaryProxy())
+	_ = proxy.Set("$vars", p.createVarsProxy())
 
 	// Shorthand for $node function
-	proxy.Set("$", p.createNodeProxy())
+	_ = proxy.Set("$", p.createNodeProxy())
 
 	// Legacy support
-	proxy.Set("$evaluateExpression", p.createEvaluateExpressionProxy())
+	_ = proxy.Set("$evaluateExpression", p.createEvaluateExpressionProxy())
 
 	return proxy
 }
@@ -186,7 +186,7 @@ func (p *WorkflowDataProxy) createInputProxy() goja.Value {
 	inputProxy := p.vm.NewObject()
 
 	// $input.all() - all items from all connections
-	inputProxy.Set("all", p.vm.ToValue(func(call goja.FunctionCall) goja.Value {
+	_ = inputProxy.Set("all", p.vm.ToValue(func(call goja.FunctionCall) goja.Value {
 		var connectionIndex int = 0
 		if len(call.Arguments) > 0 {
 			connectionIndex = int(call.Arguments[0].ToInteger())

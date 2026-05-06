@@ -540,7 +540,7 @@ func (l *AuditLogger) writeEvent(event *AuditEvent) {
 		output = append(output, '\n')
 	}
 
-	l.output.Write(output)
+	_, _ = l.output.Write(output)
 }
 
 // Close closes the audit logger

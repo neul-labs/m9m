@@ -223,7 +223,7 @@ func (n *ExecuteNode) executeWithContext(ctx context.Context, inputData []model.
 	} else {
 		sb = sandbox.NewNoSandbox()
 	}
-	defer sb.Cleanup()
+	defer func() { _ = sb.Cleanup() }()
 
 	// Build sandbox config
 	config := sandbox.NewSandboxConfig(sandbox.IsolationLevelFromString(isolationLevel))
@@ -240,9 +240,7 @@ func (n *ExecuteNode) executeWithContext(ctx context.Context, inputData []model.
 	}
 
 	// Add additional mounts
-	for _, m := range additionalMounts {
-		config.Mounts = append(config.Mounts, m)
-	}
+	config.Mounts = append(config.Mounts, additionalMounts...)
 
 	// Create context with timeout
 	if ctx == nil {
@@ -297,26 +295,26 @@ func (n *ExecuteNode) executeStreaming(
 	// Send input data as JSON to stdin
 	inputJSON, err := json.Marshal(inputData)
 	if err != nil {
-		execution.Kill()
+		_ = execution.Kill()
 		return nil, fmt.Errorf("failed to marshal input data: %w", err)
 	}
 
 	go func() {
 		defer execution.Stdin().Close()
-		execution.Stdin().Write(inputJSON)
+		_, _ = execution.Stdin().Write(inputJSON)
 	}()
 
 	// Read stdout
 	var stdout bytes.Buffer
 	go func() {
-		io.Copy(&stdout, execution.Stdout())
+		_, _ = io.Copy(&stdout, execution.Stdout())
 	}()
 
 	// Read stderr
 	var stderr bytes.Buffer
 	if stderrReader := execution.Stderr(); stderrReader != nil {
 		go func() {
-			io.Copy(&stderr, stderrReader)
+			_, _ = io.Copy(&stderr, stderrReader)
 		}()
 	}
 

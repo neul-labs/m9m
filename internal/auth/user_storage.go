@@ -555,7 +555,7 @@ func (s *PersistentUserStorage) UpdateUser(id string, update *UserUpdate) error 
 	if update.Email != nil && *update.Email != user.Email {
 		// Remove old email index
 		oldEmailKey := fmt.Sprintf("user_email:%s", user.Email)
-		s.workflowStorage.DeleteRaw(oldEmailKey)
+		_ = s.workflowStorage.DeleteRaw(oldEmailKey)
 
 		user.Email = *update.Email
 	}
@@ -591,7 +591,9 @@ func (s *PersistentUserStorage) DeleteUser(id string) error {
 
 	// Delete email index
 	emailKey := fmt.Sprintf("user_email:%s", user.Email)
-	s.workflowStorage.DeleteRaw(emailKey)
+	if err := s.workflowStorage.DeleteRaw(emailKey); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -652,7 +654,7 @@ func (s *PersistentUserStorage) DeleteUserSessions(userID string) error {
 		}
 
 		if session.UserID == userID {
-			s.workflowStorage.DeleteRaw(key)
+			_ = s.workflowStorage.DeleteRaw(key)
 		}
 	}
 
@@ -671,7 +673,9 @@ func (s *PersistentUserStorage) GetAPIKey(key string) (*APIKey, error) {
 		return nil, err
 	}
 	var apiKey APIKey
-	json.Unmarshal(data, &apiKey)
+	if err := json.Unmarshal(data, &apiKey); err != nil {
+		return nil, err
+	}
 	return &apiKey, nil
 }
 
@@ -698,7 +702,9 @@ func (s *PersistentUserStorage) GetInviteToken(token string) (*InviteToken, erro
 		return nil, err
 	}
 	var invite InviteToken
-	json.Unmarshal(data, &invite)
+	if err := json.Unmarshal(data, &invite); err != nil {
+		return nil, err
+	}
 	return &invite, nil
 }
 
@@ -717,7 +723,9 @@ func (s *PersistentUserStorage) GetPasswordResetToken(token string) (*PasswordRe
 		return nil, err
 	}
 	var resetToken PasswordResetToken
-	json.Unmarshal(data, &resetToken)
+	if err := json.Unmarshal(data, &resetToken); err != nil {
+		return nil, err
+	}
 	return &resetToken, nil
 }
 

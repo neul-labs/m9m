@@ -62,7 +62,7 @@ func TestGetWorkflow(t *testing.T) {
 		ID:   "workflow-1",
 		Name: "Test Workflow",
 	}
-	store.SaveWorkflow(workflow)
+	require.NoError(t, store.SaveWorkflow(workflow))
 
 	retrieved, err := store.GetWorkflow("workflow-1")
 	require.NoError(t, err)
@@ -91,7 +91,7 @@ func TestListWorkflows_Multiple(t *testing.T) {
 	store := NewMemoryStorage()
 
 	for i := 0; i < 5; i++ {
-		store.SaveWorkflow(&model.Workflow{
+		_ = store.SaveWorkflow(&model.Workflow{
 			ID:   string(rune('a' + i)),
 			Name: "Workflow " + string(rune('A'+i)),
 		})
@@ -106,8 +106,8 @@ func TestListWorkflows_Multiple(t *testing.T) {
 func TestListWorkflows_FilterByActive(t *testing.T) {
 	store := NewMemoryStorage()
 
-	store.SaveWorkflow(&model.Workflow{ID: "active-1", Name: "Active", Active: true})
-	store.SaveWorkflow(&model.Workflow{ID: "inactive-1", Name: "Inactive", Active: false})
+	_ = store.SaveWorkflow(&model.Workflow{ID: "active-1", Name: "Active", Active: true})
+	_ = store.SaveWorkflow(&model.Workflow{ID: "inactive-1", Name: "Inactive", Active: false})
 
 	active := true
 	workflows, total, err := store.ListWorkflows(WorkflowFilters{Active: &active})
@@ -292,7 +292,7 @@ func TestGetExecution(t *testing.T) {
 		WorkflowID: "workflow-1",
 		Status:     "completed",
 	}
-	store.SaveExecution(execution)
+	require.NoError(t, store.SaveExecution(execution))
 
 	retrieved, err := store.GetExecution("exec-1")
 	require.NoError(t, err)
@@ -319,9 +319,9 @@ func TestListExecutions_Empty(t *testing.T) {
 func TestListExecutions_FilterByWorkflowID(t *testing.T) {
 	store := NewMemoryStorage()
 
-	store.SaveExecution(&model.WorkflowExecution{ID: "e1", WorkflowID: "w1"})
-	store.SaveExecution(&model.WorkflowExecution{ID: "e2", WorkflowID: "w2"})
-	store.SaveExecution(&model.WorkflowExecution{ID: "e3", WorkflowID: "w1"})
+	_ = store.SaveExecution(&model.WorkflowExecution{ID: "e1", WorkflowID: "w1"})
+	_ = store.SaveExecution(&model.WorkflowExecution{ID: "e2", WorkflowID: "w2"})
+	_ = store.SaveExecution(&model.WorkflowExecution{ID: "e3", WorkflowID: "w1"})
 
 	executions, total, err := store.ListExecutions(ExecutionFilters{WorkflowID: "w1"})
 	require.NoError(t, err)
@@ -410,7 +410,7 @@ func TestSaveCredential_GeneratesID(t *testing.T) {
 func TestGetCredential(t *testing.T) {
 	store := NewMemoryStorage()
 
-	store.SaveCredential(&Credential{ID: "cred-1", Name: "Test"})
+	require.NoError(t, store.SaveCredential(&Credential{ID: "cred-1", Name: "Test"}))
 
 	credential, err := store.GetCredential("cred-1")
 	require.NoError(t, err)
@@ -427,8 +427,8 @@ func TestGetCredential_NotFound(t *testing.T) {
 func TestListCredentials(t *testing.T) {
 	store := NewMemoryStorage()
 
-	store.SaveCredential(&Credential{ID: "c1", Name: "Cred 1"})
-	store.SaveCredential(&Credential{ID: "c2", Name: "Cred 2"})
+	_ = store.SaveCredential(&Credential{ID: "c1", Name: "Cred 1"})
+	_ = store.SaveCredential(&Credential{ID: "c2", Name: "Cred 2"})
 
 	credentials, err := store.ListCredentials()
 	require.NoError(t, err)
@@ -505,7 +505,7 @@ func TestSaveTag_GeneratesID(t *testing.T) {
 func TestGetTag(t *testing.T) {
 	store := NewMemoryStorage()
 
-	store.SaveTag(&Tag{ID: "tag-1", Name: "Production"})
+	require.NoError(t, store.SaveTag(&Tag{ID: "tag-1", Name: "Production"}))
 
 	tag, err := store.GetTag("tag-1")
 	require.NoError(t, err)
@@ -523,8 +523,8 @@ func TestGetTag_NotFound(t *testing.T) {
 func TestListTags(t *testing.T) {
 	store := NewMemoryStorage()
 
-	store.SaveTag(&Tag{ID: "t1", Name: "Tag 1"})
-	store.SaveTag(&Tag{ID: "t2", Name: "Tag 2"})
+	_ = store.SaveTag(&Tag{ID: "t1", Name: "Tag 1"})
+	_ = store.SaveTag(&Tag{ID: "t2", Name: "Tag 2"})
 
 	tags, err := store.ListTags()
 	require.NoError(t, err)
@@ -583,7 +583,7 @@ func TestGetRaw(t *testing.T) {
 	store := NewMemoryStorage()
 
 	data := []byte("test data")
-	store.SaveRaw("key-1", data)
+	require.NoError(t, store.SaveRaw("key-1", data))
 
 	retrieved, err := store.GetRaw("key-1")
 	require.NoError(t, err)
@@ -601,7 +601,7 @@ func TestGetRaw_IsCopy(t *testing.T) {
 	store := NewMemoryStorage()
 
 	data := []byte("original")
-	store.SaveRaw("key-1", data)
+	require.NoError(t, store.SaveRaw("key-1", data))
 
 	retrieved, _ := store.GetRaw("key-1")
 	retrieved[0] = 'X' // Modify the retrieved data
@@ -614,9 +614,9 @@ func TestGetRaw_IsCopy(t *testing.T) {
 func TestListKeys(t *testing.T) {
 	store := NewMemoryStorage()
 
-	store.SaveRaw("webhook:1", []byte("data1"))
-	store.SaveRaw("webhook:2", []byte("data2"))
-	store.SaveRaw("settings:1", []byte("data3"))
+	_ = store.SaveRaw("webhook:1", []byte("data1"))
+	_ = store.SaveRaw("webhook:2", []byte("data2"))
+	_ = store.SaveRaw("settings:1", []byte("data3"))
 
 	keys, err := store.ListKeys("webhook:")
 	require.NoError(t, err)
@@ -697,7 +697,7 @@ func TestConcurrentReadWrite(t *testing.T) {
 	store := NewMemoryStorage()
 
 	// Pre-populate
-	store.SaveWorkflow(&model.Workflow{ID: "workflow-1", Name: "Test"})
+	require.NoError(t, store.SaveWorkflow(&model.Workflow{ID: "workflow-1", Name: "Test"}))
 
 	var wg sync.WaitGroup
 	iterations := 50
@@ -707,7 +707,7 @@ func TestConcurrentReadWrite(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			store.GetWorkflow("workflow-1")
+			_, _ = store.GetWorkflow("workflow-1")
 		}()
 	}
 
@@ -716,7 +716,7 @@ func TestConcurrentReadWrite(t *testing.T) {
 		wg.Add(1)
 		go func(id int) {
 			defer wg.Done()
-			store.UpdateWorkflow("workflow-1", &model.Workflow{Name: "Updated"})
+			_ = store.UpdateWorkflow("workflow-1", &model.Workflow{Name: "Updated"})
 		}(i)
 	}
 

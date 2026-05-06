@@ -87,7 +87,7 @@ func (cm *CredentialManager) StoreCredentialFromWorkflow(credData map[string]int
 // ResolveWorkflowCredentials resolves credentials for all nodes in a workflow
 func (cm *CredentialManager) ResolveWorkflowCredentials(workflow *model.Workflow) error {
 	for _, node := range workflow.Nodes {
-		if node.Credentials != nil && len(node.Credentials) > 0 {
+		if len(node.Credentials) > 0 {
 			for credType, credRef := range node.Credentials {
 				if credRef.ID != "" {
 					cm.RegisterNodeCredentials(node.ID, credType, credRef.ID)

@@ -1369,7 +1369,7 @@ func TestGitLabNode_Execute_UnsupportedBranchOperation(t *testing.T) {
 func TestGitLabNode_Execute_APIError(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte(`{"message": "401 Unauthorized"}`))
+		_, _ = w.Write([]byte(`{"message": "401 Unauthorized"}`))
 	}))
 	defer server.Close()
 

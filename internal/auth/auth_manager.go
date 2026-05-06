@@ -306,7 +306,9 @@ func (m *AuthManager) ValidateAPIKey(key string) (*User, error) {
 	// Update last used timestamp
 	now := time.Now()
 	apiKey.LastUsed = &now
-	m.userStorage.SaveAPIKey(apiKey)
+	if err := m.userStorage.SaveAPIKey(apiKey); err != nil {
+		log.Printf("Warning: failed to update API key last used: %v", err)
+	}
 
 	return user, nil
 }
@@ -384,7 +386,9 @@ func (m *AuthManager) AcceptInvite(token, password string) (*User, error) {
 	// Mark invite as used
 	now := time.Now()
 	invite.UsedAt = &now
-	m.userStorage.SaveInviteToken(invite)
+	if err := m.userStorage.SaveInviteToken(invite); err != nil {
+		log.Printf("Warning: failed to update invite token: %v", err)
+	}
 
 	return user, nil
 }

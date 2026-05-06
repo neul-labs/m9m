@@ -10,6 +10,11 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// contextKey is a custom type for context keys to avoid collisions.
+type contextKey string
+
+const userContextKey contextKey = "user"
+
 // AuthHandler handles authentication HTTP requests
 type AuthHandler struct {
 	authManager *AuthManager
@@ -67,7 +72,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"token": token,
 		"user":  user,
 	})
@@ -89,7 +94,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(user)
+	_ = json.NewEncoder(w).Encode(user)
 }
 
 // Logout handles user logout
@@ -110,15 +115,15 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 
 // GetCurrentUser returns the current authenticated user
 func (h *AuthHandler) GetCurrentUser(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value("user").(*User)
+	user := r.Context().Value(userContextKey).(*User)
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(user)
+	_ = json.NewEncoder(w).Encode(user)
 }
 
 // UpdateCurrentUser updates the current user's information
 func (h *AuthHandler) UpdateCurrentUser(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value("user").(*User)
+	user := r.Context().Value(userContextKey).(*User)
 
 	var update UserUpdate
 	if err := json.NewDecoder(r.Body).Decode(&update); err != nil {
@@ -144,7 +149,7 @@ func (h *AuthHandler) UpdateCurrentUser(w http.ResponseWriter, r *http.Request) 
 
 // ListUsers lists all users (admin only)
 func (h *AuthHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value("user").(*User)
+	user := r.Context().Value(userContextKey).(*User)
 
 	if user.Role != string(RoleAdmin) {
 		http.Error(w, "Insufficient permissions", http.StatusForbidden)
@@ -172,7 +177,7 @@ func (h *AuthHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 
 // CreateUser creates a new user (admin only)
 func (h *AuthHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value("user").(*User)
+	user := r.Context().Value(userContextKey).(*User)
 
 	if user.Role != string(RoleAdmin) {
 		http.Error(w, "Insufficient permissions", http.StatusForbidden)
@@ -312,7 +317,7 @@ func (h *AuthHandler) AcceptInvite(w http.ResponseWriter, r *http.Request) {
 
 // CreateAPIKey creates a new API key
 func (h *AuthHandler) CreateAPIKey(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value("user").(*User)
+	user := r.Context().Value(userContextKey).(*User)
 
 	var req struct {
 		Name      string     `json:"name"`
@@ -340,7 +345,7 @@ func (h *AuthHandler) CreateAPIKey(w http.ResponseWriter, r *http.Request) {
 
 // ListAPIKeys lists user's API keys
 func (h *AuthHandler) ListAPIKeys(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value("user").(*User)
+	user := r.Context().Value(userContextKey).(*User)
 
 	keys, err := h.authManager.userStorage.ListUserAPIKeys(user.ID)
 	if err != nil {
@@ -385,7 +390,7 @@ func (h *AuthHandler) AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 
 		// Add user to context
 		ctx := r.Context()
-		ctx = context.WithValue(ctx, "user", user)
+		ctx = context.WithValue(ctx, userContextKey, user)
 		r = r.WithContext(ctx)
 
 		next(w, r)

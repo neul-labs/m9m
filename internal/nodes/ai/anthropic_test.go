@@ -459,7 +459,7 @@ func TestAnthropicNode_Execute_MissingContentField(t *testing.T) {
 func TestAnthropicNode_Execute_MalformedJSON(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{not valid json`))
+		_, _ = w.Write([]byte(`{not valid json`))
 	}))
 	defer server.Close()
 
