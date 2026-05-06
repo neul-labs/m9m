@@ -105,14 +105,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Database Sharing**: Cannot share database with existing n8n instance
 - **Advanced Scheduling**: Basic cron support (full scheduler in next release)
 
+## [0.2.0] - 2026-05-07
+
+### Added
+- **46+ Node Types**: Complete coverage of core, transform, trigger, messaging, database, email, AI, VCS, cloud, and productivity nodes
+  - Core: Start, NoOp, Wait, ExecuteWorkflow
+  - Transform: Set, Filter, Code, Function, Merge, JSON, If, Loop
+  - Trigger: Webhook, ErrorTrigger, Cron (robfig/cron/v3)
+  - HTTP: HTTP Request
+  - Messaging: Slack, Discord, Twilio, Teams
+  - Database: PostgreSQL, MySQL, SQLite, Elasticsearch, Redis, MongoDB
+  - Email: EmailSend, SendGrid
+  - AI: OpenAI, Anthropic
+  - VCS: GitHub, GitLab
+  - Cloud: AWS, GCP, Azure
+  - CLI: CLI Execute
+  - Productivity: Notion, Stripe, Google Sheets
+- **Benchmark & Demo Suite**: Performance benchmarking with n8n comparison and capability demos
+- **MCP Server**: Model Context Protocol server integration
+- **Python & Node.js SDKs**: Official SDKs for workflow automation
+- **Agent Orchestrator Engine**: Control plane and worker architecture
+- **Dynamic Plugin System**: Runtime plugin loading and management
+- **Smoke Tests**: Comprehensive smoke test workflows
+- **Expression Engine**: Goja-based evaluation with full n8n compatibility
+- **Comprehensive CI/CD**: GitHub Actions with multi-platform builds, security scanning, and Docker publishing
+
+### Changed
+- **Refactored Architecture**: Modular, interface-driven design with clean separation of concerns
+- **Node Catalog**: Engine registry as single source of truth for node types
+- **Credential Management**: Secure credential storage with AES-256-GCM encryption
+- **Memory Storage**: In-memory workflow, execution, and credential storage
+
+### Fixed
+- **CI Stability**: Resolved lint errors, data races in benchmarks, and security scan permissions
+- **Expression Caching**: Thread-safe expression evaluation
+- **Auth Context Keys**: Proper context key types to avoid collisions
+
 ## [Unreleased]
 
-### Planned for 0.2.0
-- **Additional Node Types**: File operations, email, database connectors
-- **Enhanced Scheduling**: Built-in cron scheduler with web interface
-- **Workflow Editor**: Basic web-based workflow editor
-- **API Enhancements**: RESTful API for workflow management
-- **Performance Optimizations**: Further memory and speed improvements
+### Planned for 0.3.0
+- **Workflow Editor**: Web-based visual workflow editor
+- **Enhanced Scheduling**: Advanced cron and interval scheduling
+- **Plugin Marketplace**: Community plugin discovery and installation
+- **Multi-tenancy**: Organization and workspace isolation
 
 ### Planned for 1.0.0
 - **Production Hardening**: Enterprise-grade security and reliability
