@@ -47,11 +47,38 @@ Browse ready-to-use examples in the [`examples/`](examples/) directory.
 
 ### 1. Install
 
+**macOS / Linux (Homebrew)**
+```bash
+brew tap neul-labs/tap
+brew install m9m
+```
+
+**Installer script (any platform)**
 ```bash
 curl -fsSL https://raw.githubusercontent.com/neul-labs/m9m/main/install.sh | bash
 ```
 
-Or download from [GitHub Releases](https://github.com/neul-labs/m9m/releases). Docker also available: `docker run -p 8080:8080 neul-labs/m9m:latest`
+**Go Install**
+```bash
+go install github.com/neul-labs/m9m/cmd/m9m@latest
+```
+
+**Docker**
+```bash
+docker run -p 8080:8080 neul-labs/m9m:latest
+```
+
+Or download from [GitHub Releases](https://github.com/neul-labs/m9m/releases).
+
+**Python SDK**
+```bash
+pip install m9m
+```
+
+**Node.js SDK**
+```bash
+npm install @m9m/workflow-engine
+```
 
 ### 2. Run the demo
 

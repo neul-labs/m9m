@@ -1,15 +1,14 @@
 {
   "name": "@m9m/workflow-engine",
   "version": "1.0.0",
-  "description": "Node.js bindings for the m9m workflow automation engine",
+  "description": "Node.js SDK for the m9m workflow automation engine",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build:native": "node-gyp rebuild",
-    "build:ts": "tsc",
-    "build": "npm run build:native && npm run build:ts",
-    "clean": "node-gyp clean && rm -rf dist",
-    "test": "node --test tests/*.test.js",
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "test": "node --test dist/tests/*.test.js",
+    "postinstall": "node dist/postinstall.js || true",
     "prepare": "npm run build"
   },
   "keywords": [
@@ -29,16 +28,10 @@
   },
   "files": [
     "dist",
-    "src",
-    "lib",
-    "binding.gyp"
+    "src"
   ],
-  "dependencies": {
-    "node-addon-api": "^7.0.0"
-  },
   "devDependencies": {
     "@types/node": "^20.0.0",
-    "node-gyp": "^10.0.0",
     "typescript": "^5.0.0"
   }
 }

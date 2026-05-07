@@ -21,8 +21,20 @@ curl -fsSL https://raw.githubusercontent.com/neul-labs/m9m/main/install.sh | bas
 ### Homebrew (macOS/Linux)
 
 ```bash
-brew tap dipankar/tap
+brew tap neul-labs/tap
 brew install m9m
+```
+
+### Python SDK
+
+```bash
+pip install m9m
+```
+
+### Node.js SDK
+
+```bash
+npm install @m9m/workflow-engine
 ```
 
 ### Go Install (Alternative)

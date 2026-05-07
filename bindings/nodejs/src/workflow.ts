@@ -2,143 +2,73 @@
  * Workflow class for representing workflow definitions.
  */
 
-import { getNativeBinding, NativeWorkflow } from './native';
+import * as fs from 'fs';
 import type { WorkflowData, WorkflowNode, NodeConnections } from './types';
 
 /**
  * Represents a workflow definition.
- *
- * @example
- * ```typescript
- * // Load from file
- * const workflow = Workflow.fromFile('workflow.json');
- *
- * // Create from JSON
- * const workflow = Workflow.fromJSON({
- *   name: 'My Workflow',
- *   nodes: [],
- *   connections: {}
- * });
- *
- * console.log(workflow.name);
- * console.log(workflow.toJSON());
- * ```
  */
 export class Workflow {
-  private native: NativeWorkflow;
+  private data: WorkflowData;
 
-  /**
-   * Private constructor. Use static methods to create instances.
-   */
-  private constructor(native: NativeWorkflow) {
-    this.native = native;
+  private constructor(data: WorkflowData) {
+    this.data = data;
   }
 
   /**
    * Load a workflow from a JSON file.
-   *
-   * @param path - Path to the workflow JSON file.
-   * @returns The loaded Workflow object.
-   * @throws Error if the file cannot be read or parsed.
    */
   static fromFile(path: string): Workflow {
-    const binding = getNativeBinding();
-    const native = binding.Workflow.fromFile(path);
-    return new Workflow(native);
+    const content = fs.readFileSync(path, 'utf8');
+    return Workflow.fromJSON(content);
   }
 
   /**
    * Parse a workflow from a JSON string or object.
-   *
-   * @param json - JSON string or object representing the workflow.
-   * @returns The parsed Workflow object.
-   * @throws Error if the JSON is invalid.
    */
   static fromJSON(json: string | object): Workflow {
-    const binding = getNativeBinding();
-    const native = binding.Workflow.fromJSON(json);
-    return new Workflow(native);
+    const data = typeof json === 'string' ? JSON.parse(json) : json;
+    return new Workflow(data as WorkflowData);
   }
 
   /**
    * Create a workflow from workflow data.
-   *
-   * @param data - Workflow data object.
-   * @returns The created Workflow object.
    */
   static create(data: WorkflowData): Workflow {
     return Workflow.fromJSON(data);
   }
 
-  /**
-   * Get the workflow ID.
-   */
   get id(): string | null {
-    return this.native.id;
+    return this.data.id || null;
   }
 
-  /**
-   * Get the workflow name.
-   */
   get name(): string | null {
-    return this.native.name;
+    return this.data.name || null;
   }
 
-  /**
-   * Convert the workflow to a JSON object.
-   */
   toJSON(): WorkflowData {
-    return this.native.toJSON() as WorkflowData;
+    return this.data;
   }
 
-  /**
-   * Convert the workflow to a JSON string.
-   */
   toString(): string {
-    return JSON.stringify(this.toJSON());
+    return JSON.stringify(this.data);
   }
 
-  /**
-   * Get the workflow nodes.
-   */
   get nodes(): WorkflowNode[] {
-    return this.toJSON().nodes || [];
+    return this.data.nodes || [];
   }
 
-  /**
-   * Get the workflow connections.
-   */
   get connections(): Record<string, NodeConnections> {
-    return this.toJSON().connections || {};
+    return this.data.connections || {};
   }
 
-  /**
-   * Check if the workflow is active.
-   */
   get active(): boolean {
-    return this.toJSON().active || false;
+    return this.data.active ?? true;
   }
 }
 
 /**
  * Create a new workflow with the given configuration.
- *
- * @param options - Workflow configuration options.
- * @returns A new Workflow instance.
- *
- * @example
- * ```typescript
- * const workflow = createWorkflow({
- *   name: 'My Workflow',
- *   nodes: [
- *     {
- *       name: 'Start',
- *       type: 'n8n-nodes-base.start',
- *       parameters: {}
- *     }
- *   ]
- * });
- * ```
  */
 export function createWorkflow(options: {
   name: string;

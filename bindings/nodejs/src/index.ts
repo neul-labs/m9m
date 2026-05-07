@@ -1,5 +1,5 @@
 /**
- * m9m workflow engine Node.js bindings.
+ * m9m workflow engine Node.js SDK.
  *
  * @example
  * ```typescript
@@ -14,19 +14,21 @@
 
 export { WorkflowEngine } from './engine';
 export { Workflow } from './workflow';
-export { CredentialManager } from './credentials';
+export { downloadBinary, getBinaryPath } from './binary';
 export * from './types';
 
 // Re-export version function
-import { getNativeBinding } from './native';
+import { getBinaryPath } from './binary';
+import { spawnSync } from 'child_process';
 
 /**
  * Get the m9m library version.
  */
 export function version(): string {
   try {
-    const native = getNativeBinding();
-    return native.version();
+    const binary = getBinaryPath();
+    const result = spawnSync(binary, ['version'], { encoding: 'utf8' });
+    return result.stdout.trim() || 'unknown';
   } catch {
     return 'unknown';
   }

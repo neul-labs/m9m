@@ -1,11 +1,38 @@
 /**
- * WorkflowEngine class for executing workflows.
+ * WorkflowEngine class for executing workflows via the m9m binary.
  */
 
-import { getNativeBinding, NativeEngine } from './native';
+import { spawn } from 'child_process';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
+import { getBinaryPath, downloadBinary } from './binary';
 import { Workflow } from './workflow';
-import { CredentialManager } from './credentials';
 import type { DataItem, ExecutionResult, NodeExecutorFn } from './types';
+
+function runBinary(args: string[], stdin?: string): Promise<{ stdout: string; stderr: string; code: number }> {
+  return new Promise((resolve, reject) => {
+    const binary = getBinaryPath();
+    const child = spawn(binary, args, { stdio: ['pipe', 'pipe', 'pipe'] });
+
+    let stdout = '';
+    let stderr = '';
+
+    child.stdout.on('data', (data) => (stdout += data));
+    child.stderr.on('data', (data) => (stderr += data));
+
+    child.on('close', (code) => {
+      resolve({ stdout, stderr, code: code ?? 1 });
+    });
+
+    child.on('error', reject);
+
+    if (stdin) {
+      child.stdin.write(stdin);
+    }
+    child.stdin.end();
+  });
+}
 
 /**
  * High-level interface to the m9m workflow execution engine.
@@ -14,60 +41,70 @@ import type { DataItem, ExecutionResult, NodeExecutorFn } from './types';
  * ```typescript
  * const engine = new WorkflowEngine();
  *
- * // Register a custom node
- * engine.registerNode('custom.myNode', (input, params) => {
- *   return input.map(item => ({
- *     json: { ...item.json, processed: true }
- *   }));
- * });
- *
  * // Load and execute a workflow
  * const workflow = Workflow.fromFile('workflow.json');
  * const result = await engine.execute(workflow);
  * ```
  */
 export class WorkflowEngine {
-  private native: NativeEngine;
   private customNodes: Map<string, NodeExecutorFn> = new Map();
 
   /**
    * Create a new workflow engine.
-   *
-   * @param options - Optional configuration options.
-   * @param options.credentialManager - Optional credential manager for secure credential storage.
    */
-  constructor(options?: { credentialManager?: CredentialManager }) {
-    const binding = getNativeBinding();
-    this.native = new binding.Engine(options?.credentialManager?.['native']);
+  constructor(_options?: { credentialManager?: unknown }) {
+    // Binary is auto-downloaded on first use if needed
+  }
+
+  /**
+   * Ensure the binary is available (downloads if needed).
+   */
+  async ensureBinary(): Promise<void> {
+    try {
+      getBinaryPath();
+    } catch {
+      await downloadBinary();
+    }
   }
 
   /**
    * Execute a workflow with optional input data.
-   *
-   * @param workflow - The workflow to execute.
-   * @param inputData - Optional array of input data items.
-   * @returns Promise that resolves to the execution result.
-   *
-   * @example
-   * ```typescript
-   * const result = await engine.execute(workflow, [
-   *   { json: { message: 'Hello' } }
-   * ]);
-   * ```
    */
-  async execute(
-    workflow: Workflow,
-    inputData?: DataItem[]
-  ): Promise<ExecutionResult> {
-    const result = this.native.execute(workflow['native'], inputData);
-    return this.parseResult(result);
+  async execute(workflow: Workflow, inputData?: DataItem[]): Promise<ExecutionResult> {
+    await this.ensureBinary();
+
+    // Write workflow to temp file
+    const tmpDir = os.tmpdir();
+    const workflowPath = path.join(tmpDir, `m9m-workflow-${Date.now()}.json`);
+    fs.writeFileSync(workflowPath, JSON.stringify(workflow.toJSON()));
+
+    try {
+      const inputJson = inputData ? JSON.stringify(inputData) : '[]';
+      const { stdout, stderr, code } = await runBinary(
+        ['exec', workflowPath, '--input', inputJson]
+      );
+
+      if (code !== 0) {
+        return { data: [], error: stderr || 'execution failed' };
+      }
+
+      try {
+        const parsed = JSON.parse(stdout);
+        return { data: parsed.data || [], error: parsed.error };
+      } catch {
+        return { data: [{ json: { output: stdout } }], error: undefined };
+      }
+    } finally {
+      try {
+        fs.unlinkSync(workflowPath);
+      } catch {
+        // ignore
+      }
+    }
   }
 
   /**
    * Load a workflow from a JSON file.
-   *
-   * @param path - Path to the workflow JSON file.
-   * @returns The loaded Workflow object.
    */
   loadWorkflow(path: string): Workflow {
     return Workflow.fromFile(path);
@@ -75,9 +112,6 @@ export class WorkflowEngine {
 
   /**
    * Parse a workflow from a JSON string or object.
-   *
-   * @param json - JSON string or object representing the workflow.
-   * @returns The parsed Workflow object.
    */
   parseWorkflow(json: string | object): Workflow {
     return Workflow.fromJSON(json);
@@ -85,60 +119,18 @@ export class WorkflowEngine {
 
   /**
    * Register a custom node type.
-   *
-   * @param nodeType - The node type identifier (e.g., "custom.myNode").
-   * @param executor - The function to execute when the node runs.
-   *
-   * @example
-   * ```typescript
-   * engine.registerNode('custom.uppercase', (input, params) => {
-   *   return input.map(item => ({
-   *     json: { text: String(item.json.text).toUpperCase() }
-   *   }));
-   * });
-   * ```
    */
   registerNode(nodeType: string, executor: NodeExecutorFn): void {
     this.customNodes.set(nodeType, executor);
-    this.native.registerNode(nodeType, executor);
   }
 
   /**
    * Decorator-style method to register a node.
-   *
-   * @param nodeType - The node type identifier.
-   * @returns A decorator function.
-   *
-   * @example
-   * ```typescript
-   * const uppercase = engine.node('custom.uppercase')((input, params) => {
-   *   return input.map(item => ({
-   *     json: { text: String(item.json.text).toUpperCase() }
-   *   }));
-   * });
-   * ```
    */
   node(nodeType: string): (executor: NodeExecutorFn) => NodeExecutorFn {
     return (executor: NodeExecutorFn): NodeExecutorFn => {
       this.registerNode(nodeType, executor);
       return executor;
     };
-  }
-
-  /**
-   * Parse the raw result from the native binding.
-   */
-  private parseResult(result: unknown): ExecutionResult {
-    if (!result || typeof result !== 'object') {
-      return { data: [], error: undefined };
-    }
-
-    const r = result as Record<string, unknown>;
-    const data = Array.isArray(r.data)
-      ? (r.data as DataItem[])
-      : [];
-    const error = typeof r.error === 'string' ? r.error : undefined;
-
-    return { data, error };
   }
 }
