@@ -17,6 +17,11 @@ import (
 
 // --- DefaultAuditLoggerConfig ---
 
+
+//nolint:staticcheck
+type testContextKey string
+const userIDKey testContextKey = "userID"
+const requestIDKey testContextKey = "requestID"
 func TestDefaultAuditLoggerConfig(t *testing.T) {
 	cfg := DefaultAuditLoggerConfig()
 
@@ -507,9 +512,6 @@ func TestLogContext(t *testing.T) {
 	require.NoError(t, err)
 	defer logger.Close()
 
-	type testContextKey string
-	const userIDKey testContextKey = "userID"
-	const requestIDKey testContextKey = "requestID"
 	ctx := context.WithValue(context.Background(), userIDKey, "ctx-user")
 	ctx = context.WithValue(ctx, requestIDKey, "req-123")
 
