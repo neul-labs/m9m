@@ -212,15 +212,31 @@ jobs:
       - name: Checkout homebrew-tap repository
         uses: actions/checkout@v4
         with:
-          repository: dipankar/homebrew-tap
+          repository: neul-labs/homebrew-tap
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
 
       - name: Update formula
         run: |
           VERSION=${{ needs.release.outputs.version }}
+          BASE_URL="https://github.com/neul-labs/m9m/releases/download/v${VERSION}"
+
+          # Update version
           sed -i "s/version \".*\"/version \"$VERSION\"/" Formula/m9m.rb
-          sed -i "s|https://github.com/neul-labs/m9m/releases/download/v[^/\\\"]*/m9m-darwin-amd64|https://github.com/neul-labs/m9m/releases/download/v$VERSION/m9m-darwin-amd64|g" Formula/m9m.rb
-          sed -i "s|https://github.com/neul-labs/m9m/releases/download/v[^/\\\"]*/m9m-darwin-arm64|https://github.com/neul-labs/m9m/releases/download/v$VERSION/m9m-darwin-arm64|g" Formula/m9m.rb
+
+          # Update URLs and SHA256s for all platforms
+          for platform in darwin-amd64 darwin-arm64 linux-amd64 linux-arm64; do
+            # Download SHA256 checksum file
+            curl -sSL "${BASE_URL}/m9m-${platform}.sha256" -o "${platform}.sha256"
+            SHA256=$(cut -d' ' -f1 "${platform}.sha256")
+
+            # Update URL
+            sed -i "s|https://github.com/neul-labs/m9m/releases/download/v[^/\\\"]*/m9m-${platform}|https://github.com/neul-labs/m9m/releases/download/v${VERSION}/m9m-${platform}|g" Formula/m9m.rb
+
+            # Update SHA256 (line immediately following the URL for this platform)
+            sed -i "/m9m-${platform}\"/!b;n;s/sha256 \".*\"/sha256 \"${SHA256}\"/" Formula/m9m.rb
+          done
+
+          rm -f *.sha256
 
       - name: Commit and push
         run: |
