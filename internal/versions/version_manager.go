@@ -70,7 +70,7 @@ func (m *VersionManager) CreateVersion(workflowID, author string, request *Versi
 	// Unmark previous current version
 	if currentVersion, err := m.versionStorage.GetCurrentVersion(workflowID); err == nil {
 		currentVersion.IsCurrent = false
-		m.versionStorage.SaveVersion(currentVersion)
+		_ = m.versionStorage.SaveVersion(currentVersion)
 	}
 
 	// Save version

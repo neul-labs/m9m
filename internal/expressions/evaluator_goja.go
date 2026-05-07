@@ -473,27 +473,6 @@ func (e *ExpressionError) GetUserFriendlyMessage() string {
 	}
 }
 
-// normalizeResult converts result types for n8n compatibility
-func (e *GojaExpressionEvaluator) normalizeResult(result interface{}) interface{} {
-	switch v := result.(type) {
-	case int64:
-		// For arithmetic operations, prefer float64
-		// Only keep as int for small values that clearly should be integers
-		if v >= -100 && v <= 100 {
-			return int(v)
-		}
-		// Convert to float64 for mathematical compatibility
-		return float64(v)
-	case int32:
-		// Convert int32 to int for most operations
-		return int(v)
-	case int:
-		// Keep int as int for array operations
-		return v
-	default:
-		return result
-	}
-}
 
 // Evaluate is an alias for EvaluateExpression for backward compatibility
 func (e *GojaExpressionEvaluator) Evaluate(expression string, context *ExpressionContext) (interface{}, error) {

@@ -214,60 +214,6 @@ func (w *Workflow) toInternal() *model.Workflow {
 	return internal
 }
 
-// workflowFromInternal converts an internal model.Workflow to a public Workflow.
-func workflowFromInternal(w *model.Workflow) *Workflow {
-	if w == nil {
-		return nil
-	}
-
-	public := &Workflow{
-		ID:          w.ID,
-		Name:        w.Name,
-		Description: w.Description,
-		Active:      w.Active,
-		StaticData:  w.StaticData,
-		Tags:        w.Tags,
-		VersionID:   w.VersionID,
-		IsArchived:  w.IsArchived,
-		CreatedAt:   w.CreatedAt,
-		UpdatedAt:   w.UpdatedAt,
-		CreatedBy:   w.CreatedBy,
-	}
-
-	// Convert nodes
-	public.Nodes = make([]Node, len(w.Nodes))
-	for i, n := range w.Nodes {
-		public.Nodes[i] = nodeFromInternal(n)
-	}
-
-	// Convert connections
-	public.Connections = make(map[string]Connections)
-	for k, v := range w.Connections {
-		public.Connections[k] = connectionsFromInternal(v)
-	}
-
-	// Convert settings
-	if w.Settings != nil {
-		public.Settings = &WorkflowSettings{
-			ExecutionOrder:       w.Settings.ExecutionOrder,
-			Timezone:             w.Settings.Timezone,
-			SaveDataError:        w.Settings.SaveDataError,
-			SaveDataSuccess:      w.Settings.SaveDataSuccess,
-			SaveManualExecutions: w.Settings.SaveManualExecutions,
-		}
-	}
-
-	// Convert pin data
-	if w.PinData != nil {
-		public.PinData = make(map[string][]DataItem)
-		for k, v := range w.PinData {
-			public.PinData[k] = dataItemsFromInternal(v)
-		}
-	}
-
-	return public
-}
-
 func nodeToInternal(n Node) model.Node {
 	internal := model.Node{
 		ID:          n.ID,
@@ -297,35 +243,6 @@ func nodeToInternal(n Node) model.Node {
 	return internal
 }
 
-func nodeFromInternal(n model.Node) Node {
-	public := Node{
-		ID:          n.ID,
-		Name:        n.Name,
-		Type:        n.Type,
-		TypeVersion: n.TypeVersion,
-		Position:    n.Position,
-		Parameters:  n.Parameters,
-		WebhookID:   n.WebhookID,
-		Notes:       n.Notes,
-		Disabled:    n.Disabled,
-	}
-
-	// Convert credentials
-	if n.Credentials != nil {
-		public.Credentials = make(map[string]Credential)
-		for k, v := range n.Credentials {
-			public.Credentials[k] = Credential{
-				ID:   v.ID,
-				Name: v.Name,
-				Type: v.Type,
-				Data: v.Data,
-			}
-		}
-	}
-
-	return public
-}
-
 func connectionsToInternal(c Connections) model.Connections {
 	internal := model.Connections{}
 	if c.Main != nil {
@@ -342,24 +259,6 @@ func connectionsToInternal(c Connections) model.Connections {
 		}
 	}
 	return internal
-}
-
-func connectionsFromInternal(c model.Connections) Connections {
-	public := Connections{}
-	if c.Main != nil {
-		public.Main = make([][]Connection, len(c.Main))
-		for i, conns := range c.Main {
-			public.Main[i] = make([]Connection, len(conns))
-			for j, conn := range conns {
-				public.Main[i][j] = Connection{
-					Node:  conn.Node,
-					Type:  conn.Type,
-					Index: conn.Index,
-				}
-			}
-		}
-	}
-	return public
 }
 
 func dataItemsToInternal(items []DataItem) []model.DataItem {

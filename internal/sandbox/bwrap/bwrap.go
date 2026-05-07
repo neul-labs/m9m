@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"sync"
 	"syscall"
 	"time"
 
@@ -22,7 +21,6 @@ const (
 type BubblewrapSandbox struct {
 	bwrapPath     string
 	cgroupManager *CgroupManager
-	mu            sync.Mutex
 }
 
 // New creates a new bubblewrap sandbox

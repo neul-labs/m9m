@@ -959,9 +959,7 @@ func (n *CloudStorageNode) parseSourceDestination(path string, context *expressi
 	pathStr := fmt.Sprintf("%v", pathValue)
 
 	// Parse gs://bucket/object format or bucket/object
-	if strings.HasPrefix(pathStr, "gs://") {
-		pathStr = pathStr[5:] // Remove gs:// prefix
-	}
+	pathStr = strings.TrimPrefix(pathStr, "gs://")
 
 	parts := strings.SplitN(pathStr, "/", 2)
 	if len(parts) != 2 {

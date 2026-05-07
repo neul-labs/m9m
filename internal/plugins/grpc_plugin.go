@@ -86,9 +86,6 @@ func LoadGRPCPlugin(configPath string, config *GRPCPluginConfig) (*GRPCNodePlugi
 	}
 
 	// Create gRPC connection
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
 	opts := []grpc.DialOption{
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithDefaultCallOptions(
@@ -97,7 +94,7 @@ func LoadGRPCPlugin(configPath string, config *GRPCPluginConfig) (*GRPCNodePlugi
 		),
 	}
 
-	conn, err := grpc.DialContext(ctx, pluginConfig.Address, opts...)
+	conn, err := grpc.NewClient(pluginConfig.Address, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to gRPC service: %w", err)
 	}

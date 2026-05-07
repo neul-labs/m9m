@@ -15,7 +15,6 @@ import (
 var (
 	templatePath      string
 	outputDir         string
-	templateID        string
 	parametersFile    string
 	marketplaceRepo   string
 	verbose           bool

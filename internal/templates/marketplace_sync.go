@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"time"
 )
@@ -45,7 +45,7 @@ func (mm *MarketplaceManager) syncHTTPRepository(repo *Repository) error {
 		return fmt.Errorf("HTTP request failed with status: %d", resp.StatusCode)
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
@@ -127,7 +127,7 @@ func (mm *MarketplaceManager) syncAllRepositories() {
 
 	for _, repo := range repos {
 		if time.Since(repo.LastSync) >= repo.SyncInterval {
-			go mm.syncRepository(repo.ID)
+			go func() { _ = mm.syncRepository(repo.ID) }()
 		}
 	}
 }

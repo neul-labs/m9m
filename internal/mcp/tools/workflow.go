@@ -200,7 +200,7 @@ func (t *WorkflowCreateTool) Execute(ctx context.Context, args map[string]interf
 				Parameters: GetMap(nodeMap, "parameters"),
 			}
 
-			if pos := GetArray(nodeMap, "position"); pos != nil && len(pos) >= 2 {
+			if pos := GetArray(nodeMap, "position"); len(pos) >= 2 {
 				x, _ := pos[0].(float64)
 				y, _ := pos[1].(float64)
 				node.Position = []int{int(x), int(y)}
@@ -559,7 +559,7 @@ func (t *WorkflowValidateTool) Execute(ctx context.Context, args map[string]inte
 
 	// Validate nodes
 	nodeNames := make(map[string]bool)
-	if nodesArg == nil || len(nodesArg) == 0 {
+	if len(nodesArg) == 0 {
 		errors = append(errors, "Workflow must have at least one node")
 	} else {
 		for i, n := range nodesArg {

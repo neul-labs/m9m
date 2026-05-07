@@ -58,9 +58,9 @@ func LoadJavaScriptPlugin(filePath string, config *JavaScriptPluginConfig) (*Jav
 	}
 
 	// Setup module.exports pattern
-	vm.Set("module", vm.NewObject())
+	_ = vm.Set("module", vm.NewObject())
 	module := vm.Get("module").ToObject(vm)
-	module.Set("exports", vm.NewObject())
+\t_ = module.Set("exports", vm.NewObject())
 
 	// Execute plugin code
 	_, err = vm.RunString(string(code))
@@ -166,7 +166,7 @@ func (p *JavaScriptNodePlugin) GetDescription() base.NodeDescription {
 func setupConsole(vm *goja.Runtime) {
 	console := vm.NewObject()
 
-	console.Set("log", func(call goja.FunctionCall) goja.Value {
+	_ = console.Set("log", func(call goja.FunctionCall) goja.Value {
 		args := make([]interface{}, len(call.Arguments))
 		for i, arg := range call.Arguments {
 			args[i] = arg.Export()
@@ -175,7 +175,7 @@ func setupConsole(vm *goja.Runtime) {
 		return goja.Undefined()
 	})
 
-	console.Set("error", func(call goja.FunctionCall) goja.Value {
+	_ = console.Set("error", func(call goja.FunctionCall) goja.Value {
 		args := make([]interface{}, len(call.Arguments))
 		for i, arg := range call.Arguments {
 			args[i] = arg.Export()
@@ -184,7 +184,7 @@ func setupConsole(vm *goja.Runtime) {
 		return goja.Undefined()
 	})
 
-	console.Set("warn", func(call goja.FunctionCall) goja.Value {
+	_ = console.Set("warn", func(call goja.FunctionCall) goja.Value {
 		args := make([]interface{}, len(call.Arguments))
 		for i, arg := range call.Arguments {
 			args[i] = arg.Export()
@@ -194,7 +194,7 @@ func setupConsole(vm *goja.Runtime) {
 		return goja.Undefined()
 	})
 
-	vm.Set("console", console)
+	_ = vm.Set("console", console)
 }
 
 // getStringProperty safely extracts a string property from a Goja object
@@ -215,9 +215,9 @@ func convertToJSArray(vm *goja.Runtime, items []model.DataItem) goja.Value {
 
 		// Add JSON data
 		if item.JSON != nil {
-			jsItem.Set("json", vm.ToValue(item.JSON))
+			_ = jsItem.Set("json", vm.ToValue(item.JSON))
 		} else {
-			jsItem.Set("json", vm.NewObject())
+			_ = jsItem.Set("json", vm.NewObject())
 		}
 
 		// Add binary data if present
@@ -225,21 +225,21 @@ func convertToJSArray(vm *goja.Runtime, items []model.DataItem) goja.Value {
 			jsBinary := vm.NewObject()
 			for key, binaryData := range item.Binary {
 				binaryObj := vm.NewObject()
-				binaryObj.Set("data", vm.ToValue(binaryData.Data))
-				binaryObj.Set("mimeType", vm.ToValue(binaryData.MimeType))
-				binaryObj.Set("fileName", vm.ToValue(binaryData.FileName))
-				binaryObj.Set("fileExtension", vm.ToValue(binaryData.FileExtension))
-				jsBinary.Set(key, binaryObj)
+				_ = binaryObj.Set("data", vm.ToValue(binaryData.Data))
+				_ = binaryObj.Set("mimeType", vm.ToValue(binaryData.MimeType))
+				_ = binaryObj.Set("fileName", vm.ToValue(binaryData.FileName))
+				_ = binaryObj.Set("fileExtension", vm.ToValue(binaryData.FileExtension))
+				_ = jsBinary.Set(key, binaryObj)
 			}
-			jsItem.Set("binary", jsBinary)
+			_ = jsItem.Set("binary", jsBinary)
 		}
 
 		// Add paired item if present
 		if item.PairedItem != nil {
-			jsItem.Set("pairedItem", vm.ToValue(item.PairedItem))
+			_ = jsItem.Set("pairedItem", vm.ToValue(item.PairedItem))
 		}
 
-		arr.Set(fmt.Sprintf("%d", i), jsItem)
+		_ = arr.Set(fmt.Sprintf("%d", i), jsItem)
 	}
 
 	return arr

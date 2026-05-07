@@ -93,7 +93,7 @@ func (n *SMTPNode) Execute(inputData []model.DataItem, nodeParams map[string]int
 		}
 
 		// Add attachments from binary data if available
-		if item.Binary != nil && len(item.Binary) > 0 {
+		if len(item.Binary) > 0 {
 			for binaryKey, bd := range item.Binary {
 				attachmentName := bd.FileName
 				if attachmentName == "" {

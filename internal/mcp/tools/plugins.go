@@ -469,7 +469,7 @@ func (t *PluginDeleteTool) Execute(ctx context.Context, args map[string]interfac
 
 	// Reload to unregister the plugin
 	if t.registry != nil {
-		t.registry.ReloadAllPlugins()
+		_ = t.registry.ReloadAllPlugins()
 	}
 
 	return mcp.SuccessJSON(map[string]interface{}{

@@ -268,11 +268,6 @@ func runExecutionWatch(cmd *cobra.Command, args []string) {
 				break
 			}
 
-			if lastSeen == "" {
-				lastSeen = id
-				break
-			}
-
 			status, _ := execMap["status"].(string)
 			workflowID, _ := execMap["workflowId"].(string)
 			startedAt, _ := execMap["startedAt"].(string)

@@ -540,7 +540,7 @@ func TestLogContext_DoesNotOverrideExisting(t *testing.T) {
 	require.NoError(t, err)
 	defer logger.Close()
 
-	ctx := context.WithValue(context.Background(), "userID", "ctx-user")
+	ctx := context.WithValue(context.Background(), userIDKey, "ctx-user")
 
 	event := &AuditEvent{
 		EventType: EventTypeLogin,

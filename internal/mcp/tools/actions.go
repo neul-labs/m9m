@@ -70,8 +70,7 @@ func (t *HTTPRequestTool) Execute(ctx context.Context, args map[string]interface
 	}
 
 	// Set headers
-	if headers != nil {
-		for k, v := range headers {
+	for k, v := range headers {
 			if str, ok := v.(string); ok {
 				req.Header.Set(k, str)
 			}
@@ -479,8 +478,7 @@ func (t *TransformDataTool) Execute(ctx context.Context, args map[string]interfa
 	}
 
 	// Apply assignments
-	if assignments != nil {
-		for _, a := range assignments {
+	for _, a := range assignments {
 			if assignment, ok := a.(map[string]interface{}); ok {
 				name := GetString(assignment, "name")
 				value := assignment["value"]
@@ -492,7 +490,7 @@ func (t *TransformDataTool) Execute(ctx context.Context, args map[string]interfa
 	}
 
 	// Extract specific fields
-	if extract != nil && len(extract) > 0 {
+	if len(extract) > 0 {
 		extracted := make(map[string]interface{})
 		for _, field := range extract {
 			if fieldName, ok := field.(string); ok {

@@ -48,7 +48,7 @@ func (mm *MarketplaceManager) AddRepository(repo *Repository) error {
 	mm.repositories[repo.ID] = repo
 
 	if repo.Enabled {
-		go mm.syncRepository(repo.ID)
+		go func() { _ = mm.syncRepository(repo.ID) }()
 	}
 
 	return nil

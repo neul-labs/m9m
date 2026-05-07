@@ -503,6 +503,9 @@ func (d *Daemon) handleWorkflowRun(req *Request) Response {
 	var workflow *model.Workflow
 	if id, ok := req.Params["id"].(string); ok {
 		workflow, err = ctx.storage.GetWorkflow(id)
+		if err != nil {
+			return Response{Success: false, Error: err.Error()}
+		}
 	} else if name, ok := req.Params["name"].(string); ok {
 		workflows, _, err := ctx.storage.ListWorkflows(storage.WorkflowFilters{Search: name, Limit: 1})
 		if err == nil && len(workflows) > 0 {

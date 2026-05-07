@@ -108,7 +108,7 @@ func main() {
 		if err := pluginRegistry.LoadPluginsFromDirectory(pluginPath); err != nil {
 			logger.Printf("Warning: failed to load plugins: %v", err)
 		}
-		pluginRegistry.RegisterWithEngine(eng)
+		_ = pluginRegistry.RegisterWithEngine(eng)
 	}
 
 	// Create MCP server

@@ -783,9 +783,9 @@ func TestRatingSystem_AddRating_InvalidScore(t *testing.T) {
 func TestRatingSystem_GetAverageRating(t *testing.T) {
 	rs := NewRatingSystem()
 
-	rs.AddRating(&Rating{UserID: "u1", TemplateID: "tpl-1", Score: 4, CreatedAt: time.Now()})
-	rs.AddRating(&Rating{UserID: "u2", TemplateID: "tpl-1", Score: 5, CreatedAt: time.Now()})
-	rs.AddRating(&Rating{UserID: "u3", TemplateID: "tpl-1", Score: 3, CreatedAt: time.Now()})
+	_ = rs.AddRating(&Rating{UserID: "u1", TemplateID: "tpl-1", Score: 4, CreatedAt: time.Now()})
+	_ = rs.AddRating(&Rating{UserID: "u2", TemplateID: "tpl-1", Score: 5, CreatedAt: time.Now()})
+	_ = rs.AddRating(&Rating{UserID: "u3", TemplateID: "tpl-1", Score: 3, CreatedAt: time.Now()})
 
 	avg, count, err := rs.GetAverageRating("tpl-1")
 	require.NoError(t, err)

@@ -3,7 +3,7 @@ package compatibility
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -105,7 +105,7 @@ func NewN8nNodeExecutor(nodePath string, jsRuntime *runtime.JavaScriptRuntime) (
 		return nil, fmt.Errorf("no node definition found in %s", nodePath)
 	}
 
-	definitionData, err := ioutil.ReadFile(definitionFiles[0])
+	definitionData, err := os.ReadFile(definitionFiles[0])
 	if err != nil {
 		return nil, fmt.Errorf("failed to read node definition: %w", err)
 	}
@@ -121,7 +121,7 @@ func NewN8nNodeExecutor(nodePath string, jsRuntime *runtime.JavaScriptRuntime) (
 		return nil, fmt.Errorf("no node implementation found in %s", nodePath)
 	}
 
-	nodeCode, err := ioutil.ReadFile(jsFiles[0])
+	nodeCode, err := os.ReadFile(jsFiles[0])
 	if err != nil {
 		return nil, fmt.Errorf("failed to read node implementation: %w", err)
 	}
@@ -424,7 +424,7 @@ func LoadN8nNodesFromDirectory(nodesDir string, jsRuntime *runtime.JavaScriptRun
 	nodes := make(map[string]*N8nNodeExecutor)
 
 	// Walk through directories looking for node definitions
-	entries, err := ioutil.ReadDir(nodesDir)
+	entries, err := os.ReadDir(nodesDir)
 	if err != nil {
 		return nil, err
 	}

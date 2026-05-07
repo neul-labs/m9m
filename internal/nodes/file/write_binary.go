@@ -208,7 +208,7 @@ func (n *WriteBinaryFileNode) extractDataToWrite(item model.DataItem, nodeParams
 	switch dataSource {
 	case "binary":
 		// Use binary data from the item
-		if item.Binary != nil && len(item.Binary) > 0 {
+		if len(item.Binary) > 0 {
 			// Get the first binary data entry (or use a specific key if provided)
 			binaryKey, _ := nodeParams["binaryPropertyName"].(string)
 			if binaryKey == "" {

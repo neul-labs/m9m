@@ -344,47 +344,6 @@ func getClientIP(r *http.Request) string {
 	return remoteIP
 }
 
-// getClientIPWithTrustedProxies extracts the real client IP, trusting headers only from specified proxies
-func getClientIPWithTrustedProxies(r *http.Request, trustedProxies []string) string {
-	remoteIP := getClientIP(r)
-
-	// If no trusted proxies configured or remote is not trusted, return remote IP directly
-	if len(trustedProxies) == 0 || !isTrustedProxy(remoteIP, trustedProxies) {
-		return remoteIP
-	}
-
-	// Check X-Forwarded-For header from trusted proxy
-	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
-		// Parse the header - format: client, proxy1, proxy2, ...
-		// Take the rightmost non-trusted IP (the actual client)
-		ips := splitAndTrim(xff, ",")
-		for i := len(ips) - 1; i >= 0; i-- {
-			ip := ips[i]
-			if ip != "" && !isTrustedProxy(ip, trustedProxies) {
-				return ip
-			}
-		}
-	}
-
-	// Check X-Real-IP header from trusted proxy
-	if xri := r.Header.Get("X-Real-IP"); xri != "" {
-		return xri
-	}
-
-	return remoteIP
-}
-
-// isTrustedProxy checks if an IP is in the trusted proxies list
-func isTrustedProxy(ip string, trustedProxies []string) bool {
-	for _, trusted := range trustedProxies {
-		if ip == trusted {
-			return true
-		}
-		// TODO: Add CIDR range support if needed
-	}
-	return false
-}
-
 // lastIndexOf finds the last occurrence of substr in s
 func lastIndexOf(s string, substr string) int {
 	for i := len(s) - len(substr); i >= 0; i-- {
@@ -405,42 +364,6 @@ func containsColon(s string) bool {
 	return false
 }
 
-// splitAndTrim splits a string and trims whitespace from each part
-func splitAndTrim(s string, sep string) []string {
-	parts := make([]string, 0)
-	start := 0
-	for i := 0; i <= len(s)-len(sep); i++ {
-		if s[i:i+len(sep)] == sep {
-			part := s[start:i]
-			// Trim whitespace
-			part = trimWhitespace(part)
-			if part != "" {
-				parts = append(parts, part)
-			}
-			start = i + len(sep)
-		}
-	}
-	// Add the last part
-	part := trimWhitespace(s[start:])
-	if part != "" {
-		parts = append(parts, part)
-	}
-	return parts
-}
-
-// trimWhitespace removes leading and trailing whitespace
-func trimWhitespace(s string) string {
-	start := 0
-	end := len(s)
-	for start < end && (s[start] == ' ' || s[start] == '\t') {
-		start++
-	}
-	for end > start && (s[end-1] == ' ' || s[end-1] == '\t') {
-		end--
-	}
-	return s[start:end]
-}
-
 // Helper functions
 
 func contains(slice []string, item string) bool {
@@ -450,15 +373,6 @@ func contains(slice []string, item string) bool {
 		}
 	}
 	return false
-}
-
-func indexOf(s string, substr string) int {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return i
-		}
-	}
-	return -1
 }
 
 // SlidingWindowRateLimiter implements sliding window rate limiting

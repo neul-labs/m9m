@@ -15,6 +15,8 @@ import (
 	"strings"
 
 	"github.com/dop251/goja"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 // FunctionRegistry manages all built-in functions for n8n expressions
@@ -543,7 +545,7 @@ func (s *StringExtensions) toTitleCase(vm *goja.Runtime) func(call goja.Function
 		}
 
 		str := call.Arguments[0].String()
-		return vm.ToValue(strings.Title(strings.ToLower(str)))
+		return vm.ToValue(cases.Title(language.English).String(strings.ToLower(str)))
 	}
 }
 
@@ -561,7 +563,7 @@ func (s *StringExtensions) toCamelCase(vm *goja.Runtime) func(call goja.Function
 
 		result := strings.ToLower(words[0])
 		for i := 1; i < len(words); i++ {
-			result += strings.Title(strings.ToLower(words[i]))
+			result += cases.Title(language.English).String(strings.ToLower(words[i]))
 		}
 		return vm.ToValue(result)
 	}

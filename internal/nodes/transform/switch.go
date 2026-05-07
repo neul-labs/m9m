@@ -120,7 +120,7 @@ func (s *SwitchNode) evaluateRule(rule map[string]interface{}, context *expressi
 	// Get rule properties
 	field, _ := rule["field"].(string)
 	operation, _ := rule["operation"].(string)
-	value, _ := rule["value"]
+	value := rule["value"]
 
 	if field == "" || operation == "" {
 		return false, fmt.Errorf("field and operation are required for switch rule")
@@ -317,7 +317,7 @@ func (s *SwitchNode) ValidateParameters(params map[string]interface{}) error {
 		needsValue := map[string]bool{
 			"isEmpty": false, "isNotEmpty": false,
 		}
-		if needsValue[operation] == false && operation != "isEmpty" && operation != "isNotEmpty" {
+		if !needsValue[operation] && operation != "isEmpty" && operation != "isNotEmpty" {
 			if _, ok := ruleMap["value"]; !ok {
 				return fmt.Errorf("rule %d: value is required for operation %s", i, operation)
 			}

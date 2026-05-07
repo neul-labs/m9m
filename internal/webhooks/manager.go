@@ -187,7 +187,7 @@ func (m *WebhookManager) ExecuteWebhook(webhook *Webhook, request *WebhookReques
 	if executionErr != nil {
 		execution.Status = "failed"
 		execution.Error = executionErr.Error()
-		m.storage.SaveWebhookExecution(execution)
+		_ = m.storage.SaveWebhookExecution(execution)
 		return nil, fmt.Errorf("workflow execution failed: %w", executionErr)
 	}
 

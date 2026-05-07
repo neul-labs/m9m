@@ -76,17 +76,15 @@ func (t *ExecutionRunTool) Execute(ctx context.Context, args map[string]interfac
 
 	// Parse input data
 	inputData := make([]model.DataItem, 0)
-	if inputDataArg != nil {
-		for _, item := range inputDataArg {
-			if itemMap, ok := item.(map[string]interface{}); ok {
-				dataItem := model.DataItem{}
-				if json, ok := itemMap["json"].(map[string]interface{}); ok {
-					dataItem.JSON = json
-				} else {
-					dataItem.JSON = itemMap
-				}
-				inputData = append(inputData, dataItem)
+	for _, item := range inputDataArg {
+		if itemMap, ok := item.(map[string]interface{}); ok {
+			dataItem := model.DataItem{}
+			if json, ok := itemMap["json"].(map[string]interface{}); ok {
+				dataItem.JSON = json
+			} else {
+				dataItem.JSON = itemMap
 			}
+			inputData = append(inputData, dataItem)
 		}
 	}
 
@@ -108,9 +106,7 @@ func (t *ExecutionRunTool) Execute(ctx context.Context, args map[string]interfac
 	}
 
 	// Save initial execution state
-	if err := t.storage.SaveExecution(execution); err != nil {
-		// Non-fatal, continue with execution
-	}
+	_ = t.storage.SaveExecution(execution)
 
 	// Execute workflow
 	result, err := engine.ExecuteWorkflowWithContext(ctx, t.engine, workflow, inputData)
@@ -124,7 +120,7 @@ func (t *ExecutionRunTool) Execute(ctx context.Context, args map[string]interfac
 	if executionErr != nil {
 		execution.Status = "failed"
 		execution.Error = executionErr
-		t.storage.SaveExecution(execution)
+		_ = t.storage.SaveExecution(execution)
 		return mcp.ErrorContent(fmt.Sprintf("Workflow execution failed: %v", executionErr)), nil
 	}
 
@@ -184,17 +180,15 @@ func (t *ExecutionRunAsyncTool) Execute(ctx context.Context, args map[string]int
 
 	// Parse input data
 	inputData := make([]model.DataItem, 0)
-	if inputDataArg != nil {
-		for _, item := range inputDataArg {
-			if itemMap, ok := item.(map[string]interface{}); ok {
-				dataItem := model.DataItem{}
-				if json, ok := itemMap["json"].(map[string]interface{}); ok {
-					dataItem.JSON = json
-				} else {
-					dataItem.JSON = itemMap
-				}
-				inputData = append(inputData, dataItem)
+	for _, item := range inputDataArg {
+		if itemMap, ok := item.(map[string]interface{}); ok {
+			dataItem := model.DataItem{}
+			if json, ok := itemMap["json"].(map[string]interface{}); ok {
+				dataItem.JSON = json
+			} else {
+				dataItem.JSON = itemMap
 			}
+			inputData = append(inputData, dataItem)
 		}
 	}
 
@@ -220,7 +214,7 @@ func (t *ExecutionRunAsyncTool) Execute(ctx context.Context, args map[string]int
 	t.manager.mu.Unlock()
 
 	// Save initial state
-	t.manager.storage.SaveExecution(execution)
+	_ = t.manager.storage.SaveExecution(execution)
 
 	// Run async
 	execCtx, cancel := context.WithCancel(context.Background())
@@ -252,7 +246,7 @@ func (t *ExecutionRunAsyncTool) Execute(ctx context.Context, args map[string]int
 			execution.Data = result.Data
 		}
 
-		t.manager.storage.SaveExecution(execution)
+		_ = t.manager.storage.SaveExecution(execution)
 	}()
 
 	return mcp.SuccessJSON(map[string]interface{}{
@@ -483,7 +477,7 @@ func (t *ExecutionRetryTool) Execute(ctx context.Context, args map[string]interf
 		},
 	}
 
-	t.storage.SaveExecution(execution)
+	_ = t.storage.SaveExecution(execution)
 
 	// Execute
 	inputData := original.Data

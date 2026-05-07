@@ -171,15 +171,12 @@ func (rn *RaftNode) WaitForLeader(timeout time.Duration) error {
 	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
 
-	for {
-		select {
-		case <-ticker.C:
-			if rn.raft.Leader() != "" {
-				return nil
-			}
-			if time.Now().After(deadline) {
-				return fmt.Errorf("timeout waiting for leader")
-			}
+	for range ticker.C {
+		if rn.raft.Leader() != "" {
+			return nil
+		}
+		if time.Now().After(deadline) {
+			return fmt.Errorf("timeout waiting for leader")
 		}
 	}
 }
@@ -316,14 +313,14 @@ func (s *fsmSnapshot) Persist(sink raft.SnapshotSink) error {
 	})
 
 	if err != nil {
-		sink.Cancel()
+		_ = sink.Cancel()
 		return fmt.Errorf("failed to read database: %w", err)
 	}
 
 	// Encode and write to sink
 	encoder := json.NewEncoder(sink)
 	if err := encoder.Encode(data); err != nil {
-		sink.Cancel()
+		_ = sink.Cancel()
 		return fmt.Errorf("failed to encode snapshot: %w", err)
 	}
 

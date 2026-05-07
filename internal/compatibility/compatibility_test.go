@@ -3,7 +3,7 @@ package compatibility
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"os"
 	"path/filepath"
 	"strings"
@@ -135,11 +135,13 @@ func TestN8nJavaScriptRuntime(t *testing.T) {
 		// Test simple property access
 		result, err := suite.jsRuntime.ExecuteExpression("item.name", nil)
 		assert.NoError(t, err)
+		assert.NotNil(t, result)
 
 		// Test with lodash
 		code := `_.get(item, 'name', 'default')`
 		result, err = suite.jsRuntime.ExecuteExpression(code, nil)
 		assert.NoError(t, err)
+		assert.NotNil(t, result)
 
 		// Test with moment
 		code = `moment().format('YYYY-MM-DD')`
@@ -486,13 +488,13 @@ func TestRealWorldWorkflows(t *testing.T) {
 		t.Run(workflowFile, func(t *testing.T) {
 			// Skip if test file doesn't exist
 			workflowPath := filepath.Join(suite.testDataPath, "workflows", workflowFile)
-			if _, err := ioutil.ReadFile(workflowPath); err != nil {
+			if _, err := os.ReadFile(workflowPath); err != nil {
 				t.Skipf("Test workflow file not found: %s", workflowFile)
 				return
 			}
 
 			// Load and import workflow
-			workflowData, err := ioutil.ReadFile(workflowPath)
+			workflowData, err := os.ReadFile(workflowPath)
 			require.NoError(t, err)
 
 			result, err := suite.workflowImporter.ImportWorkflow(workflowData)
@@ -689,7 +691,7 @@ func createTestWorkflowFiles(testDataPath string) error {
 		return err
 	}
 
-	return ioutil.WriteFile(
+	return os.WriteFile(
 		filepath.Join(workflowsDir, "basic_http_to_email.json"),
 		data,
 		0644,
@@ -698,5 +700,5 @@ func createTestWorkflowFiles(testDataPath string) error {
 
 func init() {
 	// Create test data files if they don't exist
-	createTestWorkflowFiles("./test_data")
+	_ = createTestWorkflowFiles("./test_data")
 }

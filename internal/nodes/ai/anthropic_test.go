@@ -160,11 +160,11 @@ func TestAnthropicNode_Execute_RequestConstruction(t *testing.T) {
 			http.Error(w, "failed to read body", http.StatusInternalServerError)
 			return
 		}
-		json.Unmarshal(body, &capturedBody)
+		_ = json.Unmarshal(body, &capturedBody)
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"id":   "msg_123",
 			"type": "message",
 			"role": "assistant",
@@ -241,10 +241,10 @@ func TestAnthropicNode_Execute_DefaultParameters(t *testing.T) {
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		body, _ := io.ReadAll(r.Body)
-		json.Unmarshal(body, &capturedBody)
+		_ = json.Unmarshal(body, &capturedBody)
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"content": []interface{}{
 				map[string]interface{}{
 					"type": "text",
@@ -293,7 +293,7 @@ func TestAnthropicNode_Execute_MultipleInputItems(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		callCount++
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"content": []interface{}{
 				map[string]interface{}{
 					"type": "text",
@@ -559,10 +559,10 @@ func TestAnthropicNode_Execute_CustomTemperature(t *testing.T) {
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		body, _ := io.ReadAll(r.Body)
-		json.Unmarshal(body, &capturedBody)
+		_ = json.Unmarshal(body, &capturedBody)
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"content": []interface{}{
 				map[string]interface{}{
 					"type": "text",

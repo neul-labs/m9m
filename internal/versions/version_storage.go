@@ -409,7 +409,7 @@ func (s *PersistentVersionStorage) DeleteVersion(versionID string) error {
 
 	// Delete index
 	indexKey := fmt.Sprintf("version_index:%s:%d", version.WorkflowID, version.VersionNum)
-	s.workflowStorage.DeleteRaw(indexKey)
+	_ = s.workflowStorage.DeleteRaw(indexKey)
 
 	return nil
 }

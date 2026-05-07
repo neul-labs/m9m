@@ -158,7 +158,7 @@ func TestListSchedules_Multiple(t *testing.T) {
 			CronExpr:   "*/5 * * * *",
 			Enabled:    true,
 		}
-		scheduler.AddSchedule(config)
+		_ = scheduler.AddSchedule(config)
 	}
 
 	schedules := scheduler.ListSchedules()
@@ -177,7 +177,7 @@ func TestGetSchedule(t *testing.T) {
 		Enabled:      true,
 	}
 
-	scheduler.AddSchedule(config)
+	_ = scheduler.AddSchedule(config)
 
 	retrieved, err := scheduler.GetSchedule("schedule-1")
 	require.NoError(t, err)
@@ -204,7 +204,7 @@ func TestUpdateSchedule(t *testing.T) {
 		Enabled:    true,
 	}
 
-	scheduler.AddSchedule(config)
+	_ = scheduler.AddSchedule(config)
 
 	updatedConfig := &ScheduleConfig{
 		ID:         "schedule-1",
@@ -355,7 +355,7 @@ func TestLoadWorkflow_WithStorage(t *testing.T) {
 		ID:   "workflow-1",
 		Name: "Test Workflow",
 	}
-	store.SaveWorkflow(workflow)
+	_ = store.SaveWorkflow(workflow)
 
 	loaded, err := scheduler.loadWorkflow("workflow-1")
 	require.NoError(t, err)
