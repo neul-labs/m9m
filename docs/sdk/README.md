@@ -115,18 +115,8 @@ func (n *MyNode) Description() m9m.NodeDescription {
 
 ## Python Bindings
 
-Python bindings use ctypes to call the CGO shared library.
-
-### Installation
-
 ```bash
-# Build the shared library first
-cd /path/to/m9m
-make cgo-lib
-
-# Install Python package
-cd bindings/python
-uv pip install -e .
+pip install m9m
 ```
 
 ### Quick Start
@@ -213,19 +203,8 @@ result.success   # Boolean
 
 ## Node.js Bindings
 
-Node.js bindings use N-API for native addon support.
-
-### Installation
-
 ```bash
-# Build the shared library
-cd /path/to/m9m
-make cgo-lib
-
-# Install and build Node.js bindings
-cd bindings/nodejs
-npm install
-npm run build
+npm install @m9m/workflow-engine
 ```
 
 ### Quick Start
