@@ -91,12 +91,12 @@ func benchmarkExpressions(opts BenchmarkOptions) BenchmarkCategory {
 	for _, tc := range tests {
 		// Warmup
 		for i := 0; i < 100; i++ {
-			_ = evaluator.EvaluateExpression(tc.expr, ctx)
+			_, _ = evaluator.EvaluateExpression(tc.expr, ctx)
 		}
 
 		// Measure
 		opsPerSec := measureOpsPerSec(iters, func() {
-			_ = evaluator.EvaluateExpression(tc.expr, ctx)
+			_, _ = evaluator.EvaluateExpression(tc.expr, ctx)
 		})
 
 		ref := int64(500)
@@ -195,11 +195,11 @@ func benchmarkWorkflows(opts BenchmarkOptions, registerNodes func(engine.Workflo
 
 		// Warmup
 		for i := 0; i < 10; i++ {
-			_ = eng.ExecuteWorkflow(tc.wf, testData)
+			_, _ = eng.ExecuteWorkflow(tc.wf, testData)
 		}
 
 		opsPerSec := measureOpsPerSec(iters, func() {
-			_ = eng.ExecuteWorkflow(tc.wf, testData)
+			_, _ = eng.ExecuteWorkflow(tc.wf, testData)
 		})
 
 		ref := float64(100)
@@ -250,7 +250,7 @@ func benchmarkConcurrency(opts BenchmarkOptions) BenchmarkCategory {
 				}
 				expr := "{{ multiply($json.value, 2) + 8 }}"
 				for j := 0; j < opsPerLevel; j++ {
-					_ = evaluator.EvaluateExpression(expr, ctx)
+					_, _ = evaluator.EvaluateExpression(expr, ctx)
 				}
 			}()
 		}
@@ -316,7 +316,7 @@ func benchmarkMemory(opts BenchmarkOptions, registerNodes func(engine.WorkflowEn
 	before := m2.TotalAlloc
 
 	for i := 0; i < exprCount; i++ {
-		_ = evaluator.EvaluateExpression("{{ $json.value + 1 }}", ctx)
+		_, _ = evaluator.EvaluateExpression("{{ $json.value + 1 }}", ctx)
 	}
 	runtime.GC()
 	var m3 runtime.MemStats
@@ -362,7 +362,7 @@ func benchmarkMemory(opts BenchmarkOptions, registerNodes func(engine.WorkflowEn
 	before = m4.TotalAlloc
 
 	for i := 0; i < wfCount; i++ {
-		_ = eng.ExecuteWorkflow(wf, testData)
+		_, _ = eng.ExecuteWorkflow(wf, testData)
 	}
 	runtime.GC()
 	var m5 runtime.MemStats
@@ -440,7 +440,7 @@ func benchmarkStartup(opts BenchmarkOptions, registerNodes func(engine.WorkflowE
 	testData := []model.DataItem{{JSON: map[string]interface{}{"v": 1}}}
 
 	execMs := measureAvgMs(iters, func() {
-		_ = eng.ExecuteWorkflow(wf, testData)
+		_, _ = eng.ExecuteWorkflow(wf, testData)
 	})
 	results = append(results, BenchmarkResult{
 		Name:    "First execution",

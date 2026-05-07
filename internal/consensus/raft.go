@@ -179,6 +179,7 @@ func (rn *RaftNode) WaitForLeader(timeout time.Duration) error {
 			return fmt.Errorf("timeout waiting for leader")
 		}
 	}
+	return fmt.Errorf("timeout waiting for leader")
 }
 
 // GetLeader returns the current leader address
