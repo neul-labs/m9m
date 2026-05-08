@@ -280,9 +280,9 @@ func (h *Handler) sendResponse(w http.ResponseWriter, response *WebhookResponse)
 	if response.Body != nil {
 		switch body := response.Body.(type) {
 		case string:
-			_ = w.Write([]byte(body))
+			_, _ = w.Write([]byte(body))
 		case []byte:
-			_ = w.Write(body)
+			_, _ = w.Write(body)
 		default:
 			json.NewEncoder(w).Encode(body)
 		}

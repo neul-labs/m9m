@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"os"
 	"path/filepath"
 	"strings"
 	"testing"

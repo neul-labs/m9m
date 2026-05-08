@@ -71,9 +71,8 @@ func (t *HTTPRequestTool) Execute(ctx context.Context, args map[string]interface
 
 	// Set headers
 	for k, v := range headers {
-			if str, ok := v.(string); ok {
-				req.Header.Set(k, str)
-			}
+		if str, ok := v.(string); ok {
+			req.Header.Set(k, str)
 		}
 	}
 
@@ -479,12 +478,11 @@ func (t *TransformDataTool) Execute(ctx context.Context, args map[string]interfa
 
 	// Apply assignments
 	for _, a := range assignments {
-			if assignment, ok := a.(map[string]interface{}); ok {
-				name := GetString(assignment, "name")
-				value := assignment["value"]
-				if name != "" {
-					result[name] = value
-				}
+		if assignment, ok := a.(map[string]interface{}); ok {
+			name := GetString(assignment, "name")
+			value := assignment["value"]
+			if name != "" {
+				result[name] = value
 			}
 		}
 	}
