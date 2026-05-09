@@ -78,7 +78,7 @@ func (m *MathExtensions) RegisterFunctions(vm *goja.Runtime) error {
 	}
 
 	for name, fn := range functions {
-		vm.Set(name, fn)
+		_ = vm.Set(name, fn)
 	}
 
 	return nil
@@ -379,7 +379,7 @@ func (a *ArrayExtensions) RegisterFunctions(vm *goja.Runtime) error {
 	}
 
 	for name, fn := range functions {
-		vm.Set(name, fn)
+		_ = vm.Set(name, fn)
 	}
 
 	return nil
@@ -822,7 +822,7 @@ func (d *DateExtensions) RegisterFunctions(vm *goja.Runtime) error {
 	}
 
 	for name, fn := range functions {
-		vm.Set(name, fn)
+		_ = vm.Set(name, fn)
 	}
 
 	return nil
@@ -1075,7 +1075,7 @@ func (l *LogicExtensions) RegisterFunctions(vm *goja.Runtime) error {
 	}
 
 	for name, fn := range functions {
-		vm.Set(name, fn)
+		_ = vm.Set(name, fn)
 	}
 
 	// Register 'if' function using alias method
@@ -1083,7 +1083,7 @@ func (l *LogicExtensions) RegisterFunctions(vm *goja.Runtime) error {
 	vm.Set("_if", ifFunc)
 
 	// Set 'if' function on the global object using this instead of globalThis
-	vm.RunString(`this['if'] = this._if;`)
+	_ = vm.RunString(`this['if'] = this._if;`)
 
 	return nil
 }
@@ -1305,7 +1305,7 @@ func (o *ObjectExtensions) RegisterFunctions(vm *goja.Runtime) error {
 	}
 
 	for name, fn := range functions {
-		vm.Set(name, fn)
+		_ = vm.Set(name, fn)
 	}
 
 	return nil
@@ -1484,7 +1484,7 @@ func (u *UtilityExtensions) RegisterFunctions(vm *goja.Runtime) error {
 	}
 
 	for name, fn := range functions {
-		vm.Set(name, fn)
+		_ = vm.Set(name, fn)
 	}
 
 	return nil

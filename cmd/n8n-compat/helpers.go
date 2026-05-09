@@ -2,8 +2,8 @@ package main
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"log"
+	"os"
 
 	"github.com/neul-labs/m9m/internal/runtime"
 )
@@ -13,7 +13,7 @@ func newJavaScriptRuntime() *runtime.JavaScriptRuntime {
 }
 
 func mustReadFile(path string, description string) []byte {
-	data, err := ioutil.ReadFile(path)
+	data, err := os.ReadFile(path)
 	if err != nil {
 		log.Fatalf("Failed to read %s: %v", description, err)
 	}

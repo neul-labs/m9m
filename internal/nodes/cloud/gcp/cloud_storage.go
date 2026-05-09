@@ -383,7 +383,7 @@ func (n *CloudStorageNode) uploadObject(operation *StorageOperation, context *ex
 			data = jsonData
 			contentType = "application/json"
 		}
-	} else if item.Binary != nil && len(item.Binary) > 0 {
+	} else if len(item.Binary) > 0 {
 		// Use binary data from item - get first binary entry
 		for _, bd := range item.Binary {
 			decoded, err := base64.StdEncoding.DecodeString(bd.Data)

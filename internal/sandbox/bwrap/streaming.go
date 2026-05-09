@@ -206,7 +206,7 @@ func (se *StreamingExecution) cleanupResources() {
 		se.ptyFile.Close()
 	}
 	if se.cgroupPath != "" {
-		se.cgroupMgr.RemoveCgroup(se.cgroupPath)
+		_ = se.cgroupMgr.RemoveCgroup(se.cgroupPath)
 	}
 	if se.cleanup != nil {
 		se.cleanup()

@@ -323,7 +323,7 @@ func (vm *VersionManager) MergeBranch(workflowID string, branchName string, mess
 	}
 
 	var branchFound bool
-	branches.ForEach(func(ref *plumbing.Reference) error {
+	_ = branches.ForEach(func(ref *plumbing.Reference) error {
 		if ref.Name().Short() == branchName {
 			branchFound = true
 		}

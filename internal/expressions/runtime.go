@@ -71,14 +71,14 @@ func NewSecureGojaRuntime(config *RuntimeConfig) *SecureGojaRuntime {
 func (r *SecureGojaRuntime) initializeSecurity() {
 	// Set up console object (limited)
 	console := r.vm.NewObject()
-	console.Set("log", func(call goja.FunctionCall) goja.Value {
+	_ = console.Set("log", func(call goja.FunctionCall) goja.Value {
 		// No-op for security - expressions shouldn't log
 		return goja.Undefined()
 	})
-	r.vm.Set("console", console)
+	_ = r.vm.Set("console", console)
 
 	// Disable dangerous constructor access
-	r.vm.Set("constructor", goja.Undefined())
+	_ = r.vm.Set("constructor", goja.Undefined())
 }
 
 // registerAllowedGlobals registers globals that are allowed in n8n expressions
@@ -192,7 +192,7 @@ func (r *SecureGojaRuntime) blockDangerousGlobals() {
 
 	for _, name := range blockedGlobals {
 		r.blockedGlobals[name] = true
-		r.vm.Set(name, goja.Undefined())
+		_ = r.vm.Set(name, goja.Undefined())
 	}
 }
 
@@ -200,11 +200,11 @@ func (r *SecureGojaRuntime) blockDangerousGlobals() {
 func (r *SecureGojaRuntime) registerDateTimeObjects() {
 	// DateTime object (Go-based implementation of Luxon DateTime)
 	dateTime := r.vm.NewObject()
-	dateTime.Set("now", r.vm.ToValue(func(call goja.FunctionCall) goja.Value {
+	_ = dateTime.Set("now", r.vm.ToValue(func(call goja.FunctionCall) goja.Value {
 		return r.vm.ToValue(time.Now().Unix() * 1000) // JavaScript timestamp
 	}))
 
-	dateTime.Set("fromISO", r.vm.ToValue(func(call goja.FunctionCall) goja.Value {
+	_ = dateTime.Set("fromISO", r.vm.ToValue(func(call goja.FunctionCall) goja.Value {
 		if len(call.Arguments) == 0 {
 			return goja.Undefined()
 		}
@@ -216,13 +216,13 @@ func (r *SecureGojaRuntime) registerDateTimeObjects() {
 		}
 
 		dt := r.vm.NewObject()
-		dt.Set("toMillis", r.vm.ToValue(func(call goja.FunctionCall) goja.Value {
+		_ = dt.Set("toMillis", r.vm.ToValue(func(call goja.FunctionCall) goja.Value {
 			return r.vm.ToValue(t.Unix() * 1000)
 		}))
-		dt.Set("toISO", r.vm.ToValue(func(call goja.FunctionCall) goja.Value {
+		_ = dt.Set("toISO", r.vm.ToValue(func(call goja.FunctionCall) goja.Value {
 			return r.vm.ToValue(t.Format(time.RFC3339))
 		}))
-		dt.Set("toFormat", r.vm.ToValue(func(call goja.FunctionCall) goja.Value {
+		_ = dt.Set("toFormat", r.vm.ToValue(func(call goja.FunctionCall) goja.Value {
 			if len(call.Arguments) == 0 {
 				return r.vm.ToValue(t.Format(time.RFC3339))
 			}
@@ -241,24 +241,24 @@ func (r *SecureGojaRuntime) registerDateTimeObjects() {
 		return dt
 	}))
 
-	r.vm.Set("DateTime", dateTime)
+	_ = r.vm.Set("DateTime", dateTime)
 
 	// Duration object
 	duration := r.vm.NewObject()
-	duration.Set("fromObject", r.vm.ToValue(func(call goja.FunctionCall) goja.Value {
+	_ = duration.Set("fromObject", r.vm.ToValue(func(call goja.FunctionCall) goja.Value {
 		// Simple duration implementation
 		return r.vm.NewObject()
 	}))
-	r.vm.Set("Duration", duration)
+	_ = r.vm.Set("Duration", duration)
 
 	// Interval object
 	interval := r.vm.NewObject()
-	r.vm.Set("Interval", interval)
+	_ = r.vm.Set("Interval", interval)
 }
 
 // registerBuiltInFunctions registers all n8n built-in functions
 func (r *SecureGojaRuntime) registerBuiltInFunctions() {
-	r.functionRegistry.RegisterAllExtensions(r.vm)
+	_ = r.functionRegistry.RegisterAllExtensions(r.vm)
 }
 
 // ExecuteWithTimeout executes JavaScript code with a timeout
@@ -330,7 +330,7 @@ func (r *SecureGojaRuntime) SetContextVariable(name string, value interface{}) {
 		r.sanitizeObject(obj)
 	}
 
-	r.vm.Set(name, gojaValue)
+	_ = r.vm.Set(name, gojaValue)
 }
 
 // GetContextVariable gets a variable from the JavaScript context
@@ -377,7 +377,7 @@ func (r *SecureGojaRuntime) sanitizeObject(obj *goja.Object) {
 	// Block access to dangerous properties
 	unsafeProps := []string{"__proto__", "prototype", "constructor", "getPrototypeOf"}
 	for _, prop := range unsafeProps {
-		obj.Delete(prop)
+		_ = obj.Delete(prop)
 	}
 }
 

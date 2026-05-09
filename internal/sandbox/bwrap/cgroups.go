@@ -70,7 +70,7 @@ func (cm *CgroupManager) CreateCgroup(limits sandbox.ResourceLimits) (string, er
 	if limits.MaxMemoryBytes > 0 {
 		memMaxPath := filepath.Join(cgroupPath, "memory.max")
 		if err := os.WriteFile(memMaxPath, []byte(strconv.FormatInt(limits.MaxMemoryBytes, 10)), 0644); err != nil {
-			cm.RemoveCgroup(cgroupPath)
+			_ = cm.RemoveCgroup(cgroupPath)
 			return "", fmt.Errorf("failed to set memory limit: %w", err)
 		}
 
@@ -84,7 +84,7 @@ func (cm *CgroupManager) CreateCgroup(limits sandbox.ResourceLimits) (string, er
 	if limits.MaxProcesses > 0 {
 		pidsMaxPath := filepath.Join(cgroupPath, "pids.max")
 		if err := os.WriteFile(pidsMaxPath, []byte(strconv.Itoa(limits.MaxProcesses)), 0644); err != nil {
-			cm.RemoveCgroup(cgroupPath)
+			_ = cm.RemoveCgroup(cgroupPath)
 			return "", fmt.Errorf("failed to set process limit: %w", err)
 		}
 	}

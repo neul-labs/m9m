@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -108,7 +107,7 @@ func registerNodes(engine engine.WorkflowEngine) {
 
 func runWorkflowTest(workflowFile string, workflowEngine engine.WorkflowEngine) bool {
 	// Read workflow file
-	data, err := ioutil.ReadFile(workflowFile)
+	data, err := os.ReadFile(workflowFile)
 	if err != nil {
 		fmt.Printf("   Error reading workflow file: %v\n", err)
 		return false

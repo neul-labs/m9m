@@ -186,58 +186,54 @@ func (t *WorkflowCreateTool) Execute(ctx context.Context, args map[string]interf
 
 	// Parse nodes
 	nodes := make([]model.Node, 0)
-	if nodesArg != nil {
-		for i, n := range nodesArg {
-			nodeMap, ok := n.(map[string]interface{})
-			if !ok {
-				continue
-			}
-
-			node := model.Node{
-				ID:         fmt.Sprintf("node_%d", i),
-				Name:       GetString(nodeMap, "name"),
-				Type:       GetString(nodeMap, "type"),
-				Parameters: GetMap(nodeMap, "parameters"),
-			}
-
-			if pos := GetArray(nodeMap, "position"); len(pos) >= 2 {
-				x, _ := pos[0].(float64)
-				y, _ := pos[1].(float64)
-				node.Position = []int{int(x), int(y)}
-			} else {
-				// Default position
-				node.Position = []int{250 + i*200, 300}
-			}
-
-			nodes = append(nodes, node)
+	for i, n := range nodesArg {
+		nodeMap, ok := n.(map[string]interface{})
+		if !ok {
+			continue
 		}
+
+		node := model.Node{
+			ID:         fmt.Sprintf("node_%d", i),
+			Name:       GetString(nodeMap, "name"),
+			Type:       GetString(nodeMap, "type"),
+			Parameters: GetMap(nodeMap, "parameters"),
+		}
+
+		if pos := GetArray(nodeMap, "position"); len(pos) >= 2 {
+			x, _ := pos[0].(float64)
+			y, _ := pos[1].(float64)
+			node.Position = []int{int(x), int(y)}
+		} else {
+			// Default position
+			node.Position = []int{250 + i*200, 300}
+		}
+
+		nodes = append(nodes, node)
 	}
 
 	// Parse connections
 	connections := make(map[string]model.Connections)
-	if connectionsArg != nil {
-		for sourceName, conns := range connectionsArg {
-			if connMap, ok := conns.(map[string]interface{}); ok {
-				nodeConns := model.Connections{}
-				if mainConns, ok := connMap["main"].([]interface{}); ok {
-					for _, mc := range mainConns {
-						if connArr, ok := mc.([]interface{}); ok {
-							var connList []model.Connection
-							for _, c := range connArr {
-								if cm, ok := c.(map[string]interface{}); ok {
-									connList = append(connList, model.Connection{
-										Node:  GetString(cm, "node"),
-										Type:  GetStringOr(cm, "type", "main"),
-										Index: GetInt(cm, "index"),
-									})
-								}
+	for sourceName, conns := range connectionsArg {
+		if connMap, ok := conns.(map[string]interface{}); ok {
+			nodeConns := model.Connections{}
+			if mainConns, ok := connMap["main"].([]interface{}); ok {
+				for _, mc := range mainConns {
+					if connArr, ok := mc.([]interface{}); ok {
+						var connList []model.Connection
+						for _, c := range connArr {
+							if cm, ok := c.(map[string]interface{}); ok {
+								connList = append(connList, model.Connection{
+									Node:  GetString(cm, "node"),
+									Type:  GetStringOr(cm, "type", "main"),
+									Index: GetInt(cm, "index"),
+								})
 							}
-							nodeConns.Main = append(nodeConns.Main, connList)
 						}
+						nodeConns.Main = append(nodeConns.Main, connList)
 					}
 				}
-				connections[sourceName] = nodeConns
 			}
+			connections[sourceName] = nodeConns
 		}
 	}
 
@@ -587,11 +583,9 @@ func (t *WorkflowValidateTool) Execute(ctx context.Context, args map[string]inte
 	}
 
 	// Validate connections
-	if connectionsArg != nil {
-		for sourceName := range connectionsArg {
-			if !nodeNames[sourceName] {
-				errors = append(errors, fmt.Sprintf("Connection from unknown node: %s", sourceName))
-			}
+	for sourceName := range connectionsArg {
+		if !nodeNames[sourceName] {
+			errors = append(errors, fmt.Sprintf("Connection from unknown node: %s", sourceName))
 		}
 	}
 

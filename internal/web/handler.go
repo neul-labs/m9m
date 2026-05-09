@@ -108,7 +108,7 @@ func (h *Handler) serveIndex(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Cache-Control", "no-cache")
-	w.Write(indexContent)
+	_, _ = w.Write(indexContent)
 }
 
 // serveFavicon serves favicon files

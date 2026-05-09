@@ -3,8 +3,8 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -73,7 +73,7 @@ func testWorkflowCompatibility(cmd *cobra.Command, args []string) {
 	for _, file := range files {
 		fmt.Printf("Testing: %s\n", filepath.Base(file))
 
-		data, err := ioutil.ReadFile(file)
+		data, err := os.ReadFile(file)
 		if err != nil {
 			fmt.Printf("  ❌ Failed to read: %v\n", err)
 			continue

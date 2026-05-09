@@ -160,7 +160,7 @@ func (m *Manager) Delete(name string) error {
 	current, _ := m.GetCurrent()
 	if current == name {
 		// Unset current workspace
-		m.SetCurrent("")
+		_ = m.SetCurrent("")
 	}
 
 	if err := os.RemoveAll(wsPath); err != nil {
@@ -193,7 +193,7 @@ func (m *Manager) SetCurrent(name string) error {
 	ws, _ := m.Get(name)
 	if ws != nil {
 		ws.LastUsed = time.Now()
-		m.saveWorkspaceConfig(ws)
+		_ = m.saveWorkspaceConfig(ws)
 	}
 
 	return nil

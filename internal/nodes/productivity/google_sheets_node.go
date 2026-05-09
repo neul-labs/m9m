@@ -158,7 +158,7 @@ func (n *GoogleSheetsNode) readData(token, spreadsheetId, sheetRange string, nod
 
 	if resp.StatusCode != http.StatusOK {
 		var errorResp map[string]interface{}
-		json.NewDecoder(resp.Body).Decode(&errorResp)
+		_ = json.NewDecoder(resp.Body).Decode(&errorResp)
 		return nil, fmt.Errorf("Google Sheets API error: %v", errorResp)
 	}
 
@@ -214,7 +214,7 @@ func (n *GoogleSheetsNode) appendData(token, spreadsheetId, sheetRange string, n
 
 	if resp.StatusCode != http.StatusOK {
 		var errorResp map[string]interface{}
-		json.NewDecoder(resp.Body).Decode(&errorResp)
+		_ = json.NewDecoder(resp.Body).Decode(&errorResp)
 		return nil, fmt.Errorf("Google Sheets API error: %v", errorResp)
 	}
 
@@ -268,7 +268,7 @@ func (n *GoogleSheetsNode) updateData(token, spreadsheetId, sheetRange string, n
 
 	if resp.StatusCode != http.StatusOK {
 		var errorResp map[string]interface{}
-		json.NewDecoder(resp.Body).Decode(&errorResp)
+		_ = json.NewDecoder(resp.Body).Decode(&errorResp)
 		return nil, fmt.Errorf("Google Sheets API error: %v", errorResp)
 	}
 
@@ -303,7 +303,7 @@ func (n *GoogleSheetsNode) clearData(token, spreadsheetId, sheetRange string) (m
 
 	if resp.StatusCode != http.StatusOK {
 		var errorResp map[string]interface{}
-		json.NewDecoder(resp.Body).Decode(&errorResp)
+		_ = json.NewDecoder(resp.Body).Decode(&errorResp)
 		return nil, fmt.Errorf("Google Sheets API error: %v", errorResp)
 	}
 
@@ -343,7 +343,7 @@ func (n *GoogleSheetsNode) createSpreadsheet(token, title string) (map[string]in
 
 	if resp.StatusCode != http.StatusOK {
 		var errorResp map[string]interface{}
-		json.NewDecoder(resp.Body).Decode(&errorResp)
+		_ = json.NewDecoder(resp.Body).Decode(&errorResp)
 		return nil, fmt.Errorf("Google Sheets API error: %v", errorResp)
 	}
 
@@ -373,7 +373,7 @@ func (n *GoogleSheetsNode) getSpreadsheet(token, spreadsheetId string) (map[stri
 
 	if resp.StatusCode != http.StatusOK {
 		var errorResp map[string]interface{}
-		json.NewDecoder(resp.Body).Decode(&errorResp)
+		_ = json.NewDecoder(resp.Body).Decode(&errorResp)
 		return nil, fmt.Errorf("Google Sheets API error: %v", errorResp)
 	}
 

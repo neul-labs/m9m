@@ -173,7 +173,7 @@ func (s *StringExtensions) RegisterFunctions(vm *goja.Runtime) error {
 	}
 
 	for name, fn := range functions {
-		vm.Set(name, fn)
+		_ = vm.Set(name, fn)
 	}
 
 	return nil

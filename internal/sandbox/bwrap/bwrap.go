@@ -102,7 +102,9 @@ func (b *BubblewrapSandbox) Execute(
 			// Log warning but continue without cgroup limits
 			fmt.Fprintf(os.Stderr, "warning: failed to create cgroup: %v\n", err)
 		} else {
-			defer b.cgroupManager.RemoveCgroup(cgroupPath)
+			defer func() {
+				_ = b.cgroupManager.RemoveCgroup(cgroupPath)
+			}()
 		}
 	}
 

@@ -201,7 +201,7 @@ func (p *WorkflowDataProxy) createInputProxy() goja.Value {
 	}))
 
 	// $input.first() - first item from connection
-	inputProxy.Set("first", p.vm.ToValue(func(call goja.FunctionCall) goja.Value {
+	_ = inputProxy.Set("first", p.vm.ToValue(func(call goja.FunctionCall) goja.Value {
 		var connectionIndex int = 0
 		if len(call.Arguments) > 0 {
 			connectionIndex = int(call.Arguments[0].ToInteger())
@@ -215,7 +215,7 @@ func (p *WorkflowDataProxy) createInputProxy() goja.Value {
 	}))
 
 	// $input.last() - last item from connection
-	inputProxy.Set("last", p.vm.ToValue(func(call goja.FunctionCall) goja.Value {
+	_ = inputProxy.Set("last", p.vm.ToValue(func(call goja.FunctionCall) goja.Value {
 		var connectionIndex int = 0
 		if len(call.Arguments) > 0 {
 			connectionIndex = int(call.Arguments[0].ToInteger())
@@ -229,7 +229,7 @@ func (p *WorkflowDataProxy) createInputProxy() goja.Value {
 	}))
 
 	// $input.item - specific item by index
-	inputProxy.Set("item", p.vm.ToValue(func(call goja.FunctionCall) goja.Value {
+	_ = inputProxy.Set("item", p.vm.ToValue(func(call goja.FunctionCall) goja.Value {
 		var itemIndex int = p.itemIndex
 		var connectionIndex int = 0
 
@@ -266,29 +266,29 @@ func (p *WorkflowDataProxy) createNodeProxy() goja.Value {
 
 		// Current item from node (for current run/item index)
 		if len(nodeExecutionData) > 0 && p.itemIndex < len(nodeExecutionData) {
-			nodeProxy.Set("json", p.vm.ToValue(nodeExecutionData[p.itemIndex].JSON))
-			nodeProxy.Set("binary", p.vm.ToValue(nodeExecutionData[p.itemIndex].Binary))
+			_ = nodeProxy.Set("json", p.vm.ToValue(nodeExecutionData[p.itemIndex].JSON))
+			_ = nodeProxy.Set("binary", p.vm.ToValue(nodeExecutionData[p.itemIndex].Binary))
 		} else {
-			nodeProxy.Set("json", goja.Undefined())
-			nodeProxy.Set("binary", goja.Undefined())
+			_ = nodeProxy.Set("json", goja.Undefined())
+			_ = nodeProxy.Set("binary", goja.Undefined())
 		}
 
 		// Array-like access methods
-		nodeProxy.Set("first", p.vm.ToValue(func(call goja.FunctionCall) goja.Value {
+		_ = nodeProxy.Set("first", p.vm.ToValue(func(call goja.FunctionCall) goja.Value {
 			if len(nodeExecutionData) > 0 {
 				return p.vm.ToValue(nodeExecutionData[0].JSON)
 			}
 			return goja.Undefined()
 		}))
 
-		nodeProxy.Set("last", p.vm.ToValue(func(call goja.FunctionCall) goja.Value {
+		_ = nodeProxy.Set("last", p.vm.ToValue(func(call goja.FunctionCall) goja.Value {
 			if len(nodeExecutionData) > 0 {
 				return p.vm.ToValue(nodeExecutionData[len(nodeExecutionData)-1].JSON)
 			}
 			return goja.Undefined()
 		}))
 
-		nodeProxy.Set("all", p.vm.ToValue(func(call goja.FunctionCall) goja.Value {
+		_ = nodeProxy.Set("all", p.vm.ToValue(func(call goja.FunctionCall) goja.Value {
 			jsonData := make([]interface{}, len(nodeExecutionData))
 			for i, item := range nodeExecutionData {
 				jsonData[i] = item.JSON
@@ -296,7 +296,7 @@ func (p *WorkflowDataProxy) createNodeProxy() goja.Value {
 			return p.vm.ToValue(jsonData)
 		}))
 
-		nodeProxy.Set("item", p.vm.ToValue(func(call goja.FunctionCall) goja.Value {
+		_ = nodeProxy.Set("item", p.vm.ToValue(func(call goja.FunctionCall) goja.Value {
 			var itemIndex int = 0
 			if len(call.Arguments) > 0 {
 				itemIndex = int(call.Arguments[0].ToInteger())
@@ -309,7 +309,7 @@ func (p *WorkflowDataProxy) createNodeProxy() goja.Value {
 		}))
 
 		// Paired item support for data lineage
-		nodeProxy.Set("pairedItem", p.vm.ToValue(func(call goja.FunctionCall) goja.Value {
+		_ = nodeProxy.Set("pairedItem", p.vm.ToValue(func(call goja.FunctionCall) goja.Value {
 			var itemIndex int = p.itemIndex
 			if len(call.Arguments) > 0 {
 				itemIndex = int(call.Arguments[0].ToInteger())
@@ -358,16 +358,16 @@ func (p *WorkflowDataProxy) createWorkflowProxy() goja.Value {
 	workflowProxy := p.vm.NewObject()
 
 	if p.workflow != nil {
-		workflowProxy.Set("id", p.vm.ToValue(p.workflow.ID))
-		workflowProxy.Set("name", p.vm.ToValue(p.workflow.Name))
-		workflowProxy.Set("active", p.vm.ToValue(p.workflow.Active))
-		workflowProxy.Set("versionId", p.vm.ToValue(p.workflow.VersionID))
+		_ = workflowProxy.Set("id", p.vm.ToValue(p.workflow.ID))
+		_ = workflowProxy.Set("name", p.vm.ToValue(p.workflow.Name))
+		_ = workflowProxy.Set("active", p.vm.ToValue(p.workflow.Active))
+		_ = workflowProxy.Set("versionId", p.vm.ToValue(p.workflow.VersionID))
 
 		if p.workflow.Settings != nil {
 			settingsProxy := p.vm.NewObject()
-			settingsProxy.Set("timezone", p.vm.ToValue(p.workflow.Settings.Timezone))
-			settingsProxy.Set("executionOrder", p.vm.ToValue(p.workflow.Settings.ExecutionOrder))
-			workflowProxy.Set("settings", settingsProxy)
+			_ = settingsProxy.Set("timezone", p.vm.ToValue(p.workflow.Settings.Timezone))
+			_ = settingsProxy.Set("executionOrder", p.vm.ToValue(p.workflow.Settings.ExecutionOrder))
+			_ = workflowProxy.Set("settings", settingsProxy)
 		}
 	}
 
@@ -379,22 +379,22 @@ func (p *WorkflowDataProxy) createExecutionProxy() goja.Value {
 	executionProxy := p.vm.NewObject()
 
 	if p.runExecutionData != nil {
-		executionProxy.Set("mode", p.vm.ToValue(string(p.runExecutionData.ExecutionMode)))
-		executionProxy.Set("startedAt", p.vm.ToValue(p.runExecutionData.StartedAt.Unix()*1000))
+		_ = executionProxy.Set("mode", p.vm.ToValue(string(p.runExecutionData.ExecutionMode)))
+		_ = executionProxy.Set("startedAt", p.vm.ToValue(p.runExecutionData.StartedAt.Unix()*1000))
 
 		if p.runExecutionData.StoppedAt != nil {
-			executionProxy.Set("stoppedAt", p.vm.ToValue(p.runExecutionData.StoppedAt.Unix()*1000))
+			_ = executionProxy.Set("stoppedAt", p.vm.ToValue(p.runExecutionData.StoppedAt.Unix()*1000))
 		}
 	}
 
 	// Add additional execution keys
 	if p.additionalKeys != nil {
-		executionProxy.Set("id", p.vm.ToValue(p.additionalKeys.ExecutionId))
-		executionProxy.Set("restApiUrl", p.vm.ToValue(p.additionalKeys.RestApiUrl))
-		executionProxy.Set("instanceBaseUrl", p.vm.ToValue(p.additionalKeys.InstanceBaseUrl))
-		executionProxy.Set("webhookBaseUrl", p.vm.ToValue(p.additionalKeys.WebhookBaseUrl))
-		executionProxy.Set("webhookWaitingBaseUrl", p.vm.ToValue(p.additionalKeys.WebhookWaitingBaseUrl))
-		executionProxy.Set("webhookTestBaseUrl", p.vm.ToValue(p.additionalKeys.WebhookTestBaseUrl))
+		_ = executionProxy.Set("id", p.vm.ToValue(p.additionalKeys.ExecutionId))
+		_ = executionProxy.Set("restApiUrl", p.vm.ToValue(p.additionalKeys.RestApiUrl))
+		_ = executionProxy.Set("instanceBaseUrl", p.vm.ToValue(p.additionalKeys.InstanceBaseUrl))
+		_ = executionProxy.Set("webhookBaseUrl", p.vm.ToValue(p.additionalKeys.WebhookBaseUrl))
+		_ = executionProxy.Set("webhookWaitingBaseUrl", p.vm.ToValue(p.additionalKeys.WebhookWaitingBaseUrl))
+		_ = executionProxy.Set("webhookTestBaseUrl", p.vm.ToValue(p.additionalKeys.WebhookTestBaseUrl))
 	}
 
 	return executionProxy

@@ -17,7 +17,7 @@ func TestStripeNode_CreateCustomer(t *testing.T) {
 		assert.Equal(t, "Bearer sk_test_123", r.Header.Get("Authorization"))
 		assert.Equal(t, "application/x-www-form-urlencoded", r.Header.Get("Content-Type"))
 
-		r.ParseForm()
+		_ = r.ParseForm()
 		assert.Equal(t, "alice@example.com", r.FormValue("email"))
 		assert.Equal(t, "Alice", r.FormValue("name"))
 
@@ -49,7 +49,7 @@ func TestStripeNode_CreatePaymentIntent(t *testing.T) {
 		assert.Equal(t, "POST", r.Method)
 		assert.Contains(t, r.URL.Path, "/payment_intents")
 
-		r.ParseForm()
+		_ = r.ParseForm()
 		assert.Equal(t, "2000", r.FormValue("amount"))
 		assert.Equal(t, "usd", r.FormValue("currency"))
 
