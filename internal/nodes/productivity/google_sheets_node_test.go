@@ -573,7 +573,7 @@ func TestGoogleSheetsNode_Execute_CreateSpreadsheetWithMockServer(t *testing.T) 
 func TestGoogleSheetsNode_Execute_CreateSpreadsheetDefaultTitle(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var body map[string]interface{}
-		json.NewDecoder(r.Body).Decode(&body)
+		_ = json.NewDecoder(r.Body).Decode(&body)
 		props := body["properties"].(map[string]interface{})
 		assert.Equal(t, "New Spreadsheet", props["title"])
 
@@ -775,7 +775,7 @@ func TestGoogleSheetsNode_Execute_DefaultRange(t *testing.T) {
 func TestGoogleSheetsNode_Execute_AppendWithExplicitValues(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var body map[string]interface{}
-		json.NewDecoder(r.Body).Decode(&body)
+		_ = json.NewDecoder(r.Body).Decode(&body)
 		assert.NotNil(t, body["values"])
 
 		w.Header().Set("Content-Type", "application/json")

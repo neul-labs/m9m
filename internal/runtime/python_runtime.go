@@ -422,7 +422,7 @@ func (pr *PythonRuntime) installBasePackages() error {
 	for _, pkg := range basePackages {
 		if pr.isPackageAllowed(pkg) {
 			cmd := exec.Command(pr.getPipPath(), "install", "--quiet", pkg)
-			cmd.Run() // Ignore errors for optional packages
+			_ = cmd.Run() // Ignore errors for optional packages
 		}
 	}
 

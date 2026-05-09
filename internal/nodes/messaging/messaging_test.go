@@ -167,7 +167,7 @@ func TestSlackNode_Execute_API_AuthorizationHeaderFormat(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		capturedAuth = r.Header.Get("Authorization")
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]interface{}{"ok": true})
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"ok": true})
 	}))
 	defer server.Close()
 
@@ -196,7 +196,7 @@ func TestSlackNode_Execute_API_AuthorizationHeaderFormat(t *testing.T) {
 func TestSlackNode_Execute_API_ResultShape(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]interface{}{"ok": true})
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"ok": true})
 	}))
 	defer server.Close()
 
@@ -381,7 +381,7 @@ func TestDiscordNode_Execute_AvatarURLConditionalInclusion(t *testing.T) {
 			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				body, _ := io.ReadAll(r.Body)
 				defer r.Body.Close()
-				json.Unmarshal(body, &capturedPayload)
+				_ = json.Unmarshal(body, &capturedPayload)
 				w.WriteHeader(http.StatusNoContent)
 			}))
 			defer server.Close()
@@ -564,7 +564,7 @@ func TestBothNodes_DefaultUsernameMatches(t *testing.T) {
 		body, _ := io.ReadAll(r.Body)
 		defer r.Body.Close()
 		var payload map[string]interface{}
-		json.Unmarshal(body, &payload)
+		_ = json.Unmarshal(body, &payload)
 		slackUsername = payload["username"].(string)
 		w.WriteHeader(http.StatusOK)
 	}))
@@ -574,7 +574,7 @@ func TestBothNodes_DefaultUsernameMatches(t *testing.T) {
 		body, _ := io.ReadAll(r.Body)
 		defer r.Body.Close()
 		var payload map[string]interface{}
-		json.Unmarshal(body, &payload)
+		_ = json.Unmarshal(body, &payload)
 		discordUsername = payload["username"].(string)
 		w.WriteHeader(http.StatusNoContent)
 	}))

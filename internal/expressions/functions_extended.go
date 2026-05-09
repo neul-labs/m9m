@@ -1080,7 +1080,7 @@ func (l *LogicExtensions) RegisterFunctions(vm *goja.Runtime) error {
 
 	// Register 'if' function using alias method
 	ifFunc := l.ifFunc(vm)
-	vm.Set("_if", ifFunc)
+_ = vm.Set("_if", ifFunc)
 
 	// Set 'if' function on the global object using this instead of globalThis
 	_, _ = vm.RunString(`this['if'] = this._if;`)

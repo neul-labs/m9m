@@ -70,9 +70,9 @@ func TestVersionManager_SaveMultipleVersions(t *testing.T) {
 func TestVersionManager_ListVersions(t *testing.T) {
 	vm := newTestVersionManager(t)
 
-	_, _ = vm.SaveVersion("wf-1", map[string]interface{}{"v": 1}, "v1", "author")
-	_, _ = vm.SaveVersion("wf-1", map[string]interface{}{"v": 2}, "v2", "author")
-	_, _ = vm.SaveVersion("wf-1", map[string]interface{}{"v": 3}, "v3", "author")
+_ = vm.SaveVersion("wf-1", map[string]interface{}{"v": 1}, "v1", "author")
+_ = vm.SaveVersion("wf-1", map[string]interface{}{"v": 2}, "v2", "author")
+_ = vm.SaveVersion("wf-1", map[string]interface{}{"v": 3}, "v3", "author")
 
 	history, err := vm.ListVersions("wf-1")
 	require.NoError(t, err)

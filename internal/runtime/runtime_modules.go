@@ -127,7 +127,7 @@ func (js *JavaScriptRuntime) createHttpModule() interface{} {
 						"statusCode": 200,
 						"headers":    map[string]string{"content-type": "application/json"},
 					}
-					callable(goja.Undefined(), js.vm.ToValue(response), js.vm.ToValue(`{"success": true}`))
+					_, _ = callable(goja.Undefined(), js.vm.ToValue(response), js.vm.ToValue(`{"success": true}`))
 				}
 			}()
 		},

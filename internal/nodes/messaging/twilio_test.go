@@ -21,7 +21,7 @@ func TestTwilioNode_SendSms(t *testing.T) {
 		assert.Equal(t, "AC123", user)
 		assert.Equal(t, "token123", pass)
 
-		r.ParseForm()
+_ = r.ParseForm()
 		assert.Equal(t, "+15551234567", r.FormValue("From"))
 		assert.Equal(t, "+15559876543", r.FormValue("To"))
 		assert.Equal(t, "Hello!", r.FormValue("Body"))

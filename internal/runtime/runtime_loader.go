@@ -155,7 +155,7 @@ func (js *JavaScriptRuntime) executeModuleCode(code string, pkg *NpmPackage) (in
 
 	moduleObj := js.vm.NewObject()
 	exportsObj := js.vm.NewObject()
-	moduleObj.Set("exports", exportsObj)
+	_ = moduleObj.Set("exports", exportsObj)
 
 	moduleFunc, err := js.vm.RunProgram(program)
 	if err != nil {

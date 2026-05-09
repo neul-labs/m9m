@@ -680,7 +680,7 @@ func TestNewPythonRuntime(t *testing.T) {
 	if err != nil {
 		t.Skipf("Skipping Python runtime test: %v", err)
 	}
-	defer pr.Cleanup()
+	defer func() { _ = pr.Cleanup() }()
 
 	require.NotNil(t, pr)
 	assert.NotEmpty(t, pr.tempDir)
@@ -695,7 +695,7 @@ func TestPythonRuntime_SetMaxExecutionTime(t *testing.T) {
 	if err != nil {
 		t.Skipf("Skipping Python runtime test: %v", err)
 	}
-	defer pr.Cleanup()
+	defer func() { _ = pr.Cleanup() }()
 
 	// Default is 30s
 	assert.Equal(t, 30*time.Second, pr.maxExecutionTime)
@@ -714,7 +714,7 @@ func TestPythonRuntime_SetSandboxMode(t *testing.T) {
 	if err != nil {
 		t.Skipf("Skipping Python runtime test: %v", err)
 	}
-	defer pr.Cleanup()
+	defer func() { _ = pr.Cleanup() }()
 
 	// Default is true
 	assert.True(t, pr.sandboxMode)
@@ -733,7 +733,7 @@ func TestPythonRuntime_EnablePackage(t *testing.T) {
 	if err != nil {
 		t.Skipf("Skipping Python runtime test: %v", err)
 	}
-	defer pr.Cleanup()
+	defer func() { _ = pr.Cleanup() }()
 
 	// Custom package should not be allowed initially
 	assert.False(t, pr.enabledPackages["my-custom-pkg"])
@@ -748,7 +748,7 @@ func TestPythonRuntime_IsPackageAllowed(t *testing.T) {
 	if err != nil {
 		t.Skipf("Skipping Python runtime test: %v", err)
 	}
-	defer pr.Cleanup()
+	defer func() { _ = pr.Cleanup() }()
 
 	// Default allowed packages
 	assert.True(t, pr.isPackageAllowed("numpy"))

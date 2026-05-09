@@ -118,7 +118,7 @@ func (c *Client) StartDaemon() error {
 	// Redirect output to files for debugging
 	home, _ := os.UserHomeDir()
 	logDir := filepath.Join(home, ".m9m", "logs")
-	os.MkdirAll(logDir, 0755)
+	_ = os.MkdirAll(logDir, 0755)
 
 	logFile, err := os.OpenFile(filepath.Join(logDir, "daemon.log"), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	if err == nil {
@@ -132,8 +132,8 @@ func (c *Client) StartDaemon() error {
 
 	// Write PID file
 	pidFile := GetPidFile()
-	os.MkdirAll(filepath.Dir(pidFile), 0755)
-	os.WriteFile(pidFile, []byte(strconv.Itoa(cmd.Process.Pid)), 0644)
+	_ = os.MkdirAll(filepath.Dir(pidFile), 0755)
+	_ = os.WriteFile(pidFile, []byte(strconv.Itoa(cmd.Process.Pid)), 0644)
 
 	return nil
 }

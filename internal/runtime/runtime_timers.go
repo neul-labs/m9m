@@ -13,7 +13,7 @@ func (js *JavaScriptRuntime) setTimeout(call goja.FunctionCall) goja.Value {
 	go func() {
 		time.Sleep(time.Duration(delay) * time.Millisecond)
 		if callable, ok := goja.AssertFunction(callback); ok {
-			callable(goja.Undefined())
+			_, _ = callable(goja.Undefined())
 		}
 	}()
 
@@ -34,7 +34,7 @@ func (js *JavaScriptRuntime) setInterval(call goja.FunctionCall) goja.Value {
 
 		for range ticker.C {
 			if callable, ok := goja.AssertFunction(callback); ok {
-				callable(goja.Undefined())
+				_, _ = callable(goja.Undefined())
 			}
 		}
 	}()

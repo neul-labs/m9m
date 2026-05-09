@@ -106,8 +106,8 @@ func TestListWorkflows_Multiple(t *testing.T) {
 func TestListWorkflows_FilterByActive(t *testing.T) {
 	store := NewMemoryStorage()
 
-	_ = store.SaveWorkflow(&model.Workflow{ID: "active-1", Name: "Active", Active: true})
-	_ = store.SaveWorkflow(&model.Workflow{ID: "inactive-1", Name: "Inactive", Active: false})
+_ = store.SaveWorkflow(&model.Workflow{ID: "active-1", Name: "Active", Active: true})
+_ = store.SaveWorkflow(&model.Workflow{ID: "inactive-1", Name: "Inactive", Active: false})
 
 	active := true
 	workflows, total, err := store.ListWorkflows(WorkflowFilters{Active: &active})
@@ -319,9 +319,9 @@ func TestListExecutions_Empty(t *testing.T) {
 func TestListExecutions_FilterByWorkflowID(t *testing.T) {
 	store := NewMemoryStorage()
 
-	_ = store.SaveExecution(&model.WorkflowExecution{ID: "e1", WorkflowID: "w1"})
-	_ = store.SaveExecution(&model.WorkflowExecution{ID: "e2", WorkflowID: "w2"})
-	_ = store.SaveExecution(&model.WorkflowExecution{ID: "e3", WorkflowID: "w1"})
+_ = store.SaveExecution(&model.WorkflowExecution{ID: "e1", WorkflowID: "w1"})
+_ = store.SaveExecution(&model.WorkflowExecution{ID: "e2", WorkflowID: "w2"})
+_ = store.SaveExecution(&model.WorkflowExecution{ID: "e3", WorkflowID: "w1"})
 
 	executions, total, err := store.ListExecutions(ExecutionFilters{WorkflowID: "w1"})
 	require.NoError(t, err)
@@ -427,8 +427,8 @@ func TestGetCredential_NotFound(t *testing.T) {
 func TestListCredentials(t *testing.T) {
 	store := NewMemoryStorage()
 
-	_ = store.SaveCredential(&Credential{ID: "c1", Name: "Cred 1"})
-	_ = store.SaveCredential(&Credential{ID: "c2", Name: "Cred 2"})
+_ = store.SaveCredential(&Credential{ID: "c1", Name: "Cred 1"})
+_ = store.SaveCredential(&Credential{ID: "c2", Name: "Cred 2"})
 
 	credentials, err := store.ListCredentials()
 	require.NoError(t, err)
@@ -523,8 +523,8 @@ func TestGetTag_NotFound(t *testing.T) {
 func TestListTags(t *testing.T) {
 	store := NewMemoryStorage()
 
-	_ = store.SaveTag(&Tag{ID: "t1", Name: "Tag 1"})
-	_ = store.SaveTag(&Tag{ID: "t2", Name: "Tag 2"})
+_ = store.SaveTag(&Tag{ID: "t1", Name: "Tag 1"})
+_ = store.SaveTag(&Tag{ID: "t2", Name: "Tag 2"})
 
 	tags, err := store.ListTags()
 	require.NoError(t, err)
@@ -614,9 +614,9 @@ func TestGetRaw_IsCopy(t *testing.T) {
 func TestListKeys(t *testing.T) {
 	store := NewMemoryStorage()
 
-	_ = store.SaveRaw("webhook:1", []byte("data1"))
-	_ = store.SaveRaw("webhook:2", []byte("data2"))
-	_ = store.SaveRaw("settings:1", []byte("data3"))
+_ = store.SaveRaw("webhook:1", []byte("data1"))
+_ = store.SaveRaw("webhook:2", []byte("data2"))
+_ = store.SaveRaw("settings:1", []byte("data3"))
 
 	keys, err := store.ListKeys("webhook:")
 	require.NoError(t, err)

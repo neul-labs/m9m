@@ -10,8 +10,8 @@ func (js *JavaScriptRuntime) Execute(code string, context *ExecutionContext, ite
 	defer js.mu.Unlock()
 
 	js.executionContext = context
-	js.vm.Set("$items", js.createItemsHelperWithData(items))
-	js.vm.Set("items", items)
+_ = js.vm.Set("$items", js.createItemsHelperWithData(items))
+_ = js.vm.Set("items", items)
 
 	result, err := js.vm.RunString(code)
 	if err != nil {

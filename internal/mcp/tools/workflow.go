@@ -591,18 +591,16 @@ func (t *WorkflowValidateTool) Execute(ctx context.Context, args map[string]inte
 
 	// Check for disconnected nodes
 	connectedNodes := make(map[string]bool)
-	if connectionsArg != nil {
-		for sourceName, conns := range connectionsArg {
-			connectedNodes[sourceName] = true
-			if connMap, ok := conns.(map[string]interface{}); ok {
-				if mainConns, ok := connMap["main"].([]interface{}); ok {
-					for _, mc := range mainConns {
-						if connArr, ok := mc.([]interface{}); ok {
-							for _, c := range connArr {
-								if cm, ok := c.(map[string]interface{}); ok {
-									targetNode := GetString(cm, "node")
-									connectedNodes[targetNode] = true
-								}
+	for sourceName, conns := range connectionsArg {
+		connectedNodes[sourceName] = true
+		if connMap, ok := conns.(map[string]interface{}); ok {
+			if mainConns, ok := connMap["main"].([]interface{}); ok {
+				for _, mc := range mainConns {
+					if connArr, ok := mc.([]interface{}); ok {
+						for _, c := range connArr {
+							if cm, ok := c.(map[string]interface{}); ok {
+								targetNode := GetString(cm, "node")
+								connectedNodes[targetNode] = true
 							}
 						}
 					}

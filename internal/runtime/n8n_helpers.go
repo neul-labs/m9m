@@ -237,7 +237,7 @@ func (js *JavaScriptRuntime) createMomentHelper() interface{} {
 
 		momentObj := js.vm.NewObject()
 
-		momentObj.Set("format", func(call goja.FunctionCall) goja.Value {
+_ = momentObj.Set("format", func(call goja.FunctionCall) goja.Value {
 			format := "2006-01-02 15:04:05"
 			if len(call.Arguments) > 0 {
 				format = js.convertMomentFormat(call.Argument(0).String())
@@ -245,7 +245,7 @@ func (js *JavaScriptRuntime) createMomentHelper() interface{} {
 			return js.vm.ToValue(date.Format(format))
 		})
 
-		momentObj.Set("add", func(call goja.FunctionCall) goja.Value {
+_ = momentObj.Set("add", func(call goja.FunctionCall) goja.Value {
 			if len(call.Arguments) >= 2 {
 				amount := call.Argument(0).ToInteger()
 				unit := call.Argument(1).String()
@@ -271,7 +271,7 @@ func (js *JavaScriptRuntime) createMomentHelper() interface{} {
 			return momentFunc(newCall)
 		})
 
-		momentObj.Set("subtract", func(call goja.FunctionCall) goja.Value {
+_ = momentObj.Set("subtract", func(call goja.FunctionCall) goja.Value {
 			if len(call.Arguments) >= 2 {
 				amount := -call.Argument(0).ToInteger()
 				unit := call.Argument(1).String()
@@ -298,23 +298,23 @@ func (js *JavaScriptRuntime) createMomentHelper() interface{} {
 			return js.vm.ToValue(momentObj)
 		})
 
-		momentObj.Set("unix", func(call goja.FunctionCall) goja.Value {
+_ = momentObj.Set("unix", func(call goja.FunctionCall) goja.Value {
 			return js.vm.ToValue(date.Unix())
 		})
 
-		momentObj.Set("valueOf", func(call goja.FunctionCall) goja.Value {
+_ = momentObj.Set("valueOf", func(call goja.FunctionCall) goja.Value {
 			return js.vm.ToValue(date.UnixMilli())
 		})
 
-		momentObj.Set("toDate", func(call goja.FunctionCall) goja.Value {
+_ = momentObj.Set("toDate", func(call goja.FunctionCall) goja.Value {
 			return js.vm.ToValue(date)
 		})
 
-		momentObj.Set("isValid", func(call goja.FunctionCall) goja.Value {
+_ = momentObj.Set("isValid", func(call goja.FunctionCall) goja.Value {
 			return js.vm.ToValue(!date.IsZero())
 		})
 
-		momentObj.Set("diff", func(call goja.FunctionCall) goja.Value {
+_ = momentObj.Set("diff", func(call goja.FunctionCall) goja.Value {
 			if len(call.Arguments) > 0 {
 				_ = call.Argument(0) // otherMoment - not used in this simplified impl
 				// Extract date from other moment object

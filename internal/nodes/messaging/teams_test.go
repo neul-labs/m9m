@@ -17,11 +17,11 @@ func TestTeamsNode_SendMessage(t *testing.T) {
 		assert.Equal(t, "Bearer mytoken", r.Header.Get("Authorization"))
 
 		var body map[string]interface{}
-		json.NewDecoder(r.Body).Decode(&body)
+_ = json.NewDecoder(r.Body).Decode(&body)
 		bodyContent := body["body"].(map[string]interface{})
 		assert.Equal(t, "Hello Teams!", bodyContent["content"])
 
-		json.NewEncoder(w).Encode(map[string]interface{}{
+_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"id":        "msg123",
 			"createdAt": "2024-01-01T00:00:00Z",
 		})
@@ -47,7 +47,7 @@ func TestTeamsNode_ListChannels(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "GET", r.Method)
 		assert.Contains(t, r.URL.Path, "/teams/team1/channels")
-		json.NewEncoder(w).Encode(map[string]interface{}{
+_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"value": []interface{}{
 				map[string]interface{}{"id": "chan1", "displayName": "General"},
 				map[string]interface{}{"id": "chan2", "displayName": "Random"},

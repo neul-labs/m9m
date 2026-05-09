@@ -81,7 +81,7 @@ func TestPluginRegistry_RegisterPlugin_NormalizesName(t *testing.T) {
 func TestPluginRegistry_GetPlugin(t *testing.T) {
 	r := NewPluginRegistry()
 	p := newMockPlugin("test-plugin", PluginTypeREST)
-	r.RegisterPlugin("test-plugin", p)
+	_ = r.RegisterPlugin("test-plugin", p)
 
 	found, ok := r.GetPlugin("test-plugin")
 	assert.True(t, ok)
@@ -97,9 +97,9 @@ func TestPluginRegistry_GetPlugin_NotFound(t *testing.T) {
 
 func TestPluginRegistry_ListPlugins(t *testing.T) {
 	r := NewPluginRegistry()
-	r.RegisterPlugin("alpha", newMockPlugin("alpha", PluginTypeJavaScript))
-	r.RegisterPlugin("beta", newMockPlugin("beta", PluginTypeGRPC))
-	r.RegisterPlugin("gamma", newMockPlugin("gamma", PluginTypeREST))
+	_ = r.RegisterPlugin("alpha", newMockPlugin("alpha", PluginTypeJavaScript))
+	_ = r.RegisterPlugin("beta", newMockPlugin("beta", PluginTypeGRPC))
+	_ = r.RegisterPlugin("gamma", newMockPlugin("gamma", PluginTypeREST))
 
 	names := r.ListPlugins()
 	assert.Len(t, names, 3)
@@ -112,10 +112,10 @@ func TestPluginRegistry_Count(t *testing.T) {
 	r := NewPluginRegistry()
 	assert.Equal(t, 0, r.Count())
 
-	r.RegisterPlugin("p1", newMockPlugin("p1", PluginTypeJavaScript))
+	_ = r.RegisterPlugin("p1", newMockPlugin("p1", PluginTypeJavaScript))
 	assert.Equal(t, 1, r.Count())
 
-	r.RegisterPlugin("p2", newMockPlugin("p2", PluginTypeGRPC))
+	_ = r.RegisterPlugin("p2", newMockPlugin("p2", PluginTypeGRPC))
 	assert.Equal(t, 2, r.Count())
 }
 
