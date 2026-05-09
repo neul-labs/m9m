@@ -172,7 +172,7 @@ func (tm *TemplateManager) LoadTemplates() error {
 }
 
 func (tm *TemplateManager) loadTemplateFromFile(filePath string) (*WorkflowTemplate, error) {
-	data, err := ioutil.ReadFile(filePath)
+	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
