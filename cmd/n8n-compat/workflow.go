@@ -88,7 +88,7 @@ func importWorkflow(cmd *cobra.Command, args []string) {
 	}
 
 	outputFile := strings.TrimSuffix(workflowFile, filepath.Ext(workflowFile)) + "_converted.json"
-	if err := ioutil.WriteFile(outputFile, marshalIndented(result.Workflow), 0644); err != nil {
+	if err := os.WriteFile(outputFile, marshalIndented(result.Workflow), 0644); err != nil {
 		log.Printf("Warning: Failed to save converted workflow: %v", err)
 	} else {
 		log.Printf("💾 Converted workflow saved to: %s", outputFile)
@@ -153,7 +153,7 @@ func batchConvertWorkflows(cmd *cobra.Command, args []string) {
 	for _, file := range files {
 		log.Printf("Converting: %s", filepath.Base(file))
 
-		data, err := ioutil.ReadFile(file)
+		data, err := os.ReadFile(file)
 		if err != nil {
 			log.Printf("  ❌ Failed to read file: %v", err)
 			errorCount++
@@ -168,7 +168,7 @@ func batchConvertWorkflows(cmd *cobra.Command, args []string) {
 		}
 
 		outputFile := filepath.Join(outputDir, filepath.Base(file))
-		if err := ioutil.WriteFile(outputFile, marshalIndented(result.Workflow), 0644); err != nil {
+		if err := os.WriteFile(outputFile, marshalIndented(result.Workflow), 0644); err != nil {
 			log.Printf("  ❌ Failed to save: %v", err)
 			errorCount++
 			continue

@@ -26,7 +26,7 @@ func (js *JavaScriptRuntime) LoadNpmPackage(name, version string) (*NpmPackage, 
 	}
 
 	mainFile := filepath.Join(pkg.CachePath, pkg.Main)
-	moduleCode, err := ioutil.ReadFile(mainFile)
+	moduleCode, err := os.ReadFile(mainFile)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read main file %s: %w", mainFile, err)
 	}
@@ -134,7 +134,7 @@ func (js *JavaScriptRuntime) createMockPackage(pkg *NpmPackage) error {
 	if err := os.MkdirAll(filepath.Dir(mainFile), 0755); err != nil {
 		return fmt.Errorf("failed to create mock package directory: %w", err)
 	}
-	if err := ioutil.WriteFile(mainFile, []byte(mockCode), 0644); err != nil {
+	if err := os.WriteFile(mainFile, []byte(mockCode), 0644); err != nil {
 		return fmt.Errorf("failed to write mock package file: %w", err)
 	}
 

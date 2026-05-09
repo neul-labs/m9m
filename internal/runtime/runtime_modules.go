@@ -99,14 +99,14 @@ func (js *JavaScriptRuntime) createPathModule() interface{} {
 func (js *JavaScriptRuntime) createFsModule() interface{} {
 	return map[string]interface{}{
 		"readFileSync": func(filename string, encoding string) string {
-			data, err := ioutil.ReadFile(filename)
+			data, err := os.ReadFile(filename)
 			if err != nil {
 				panic(js.vm.NewGoError(err))
 			}
 			return string(data)
 		},
 		"writeFileSync": func(filename string, data string) {
-			if err := ioutil.WriteFile(filename, []byte(data), 0644); err != nil {
+			if err := os.WriteFile(filename, []byte(data), 0644); err != nil {
 				panic(js.vm.NewGoError(err))
 			}
 		},
