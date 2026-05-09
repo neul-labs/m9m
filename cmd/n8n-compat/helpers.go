@@ -21,7 +21,7 @@ func mustReadFile(path string, description string) []byte {
 }
 
 func mustWriteFile(path string, data []byte, description string) {
-	if err := ioutil.WriteFile(path, data, 0644); err != nil {
+	if err := os.WriteFile(path, data, 0644); err != nil {
 		log.Fatalf("Failed to save %s: %v", description, err)
 	}
 }

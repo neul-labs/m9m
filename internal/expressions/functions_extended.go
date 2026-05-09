@@ -1083,7 +1083,7 @@ func (l *LogicExtensions) RegisterFunctions(vm *goja.Runtime) error {
 	vm.Set("_if", ifFunc)
 
 	// Set 'if' function on the global object using this instead of globalThis
-	_ = vm.RunString(`this['if'] = this._if;`)
+	_, _ = vm.RunString(`this['if'] = this._if;`)
 
 	return nil
 }

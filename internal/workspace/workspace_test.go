@@ -87,8 +87,8 @@ func TestManager_Get_NotFound(t *testing.T) {
 func TestManager_List(t *testing.T) {
 	m := newTestManager(t)
 
-	_ = m.Create("ws-a", nil)
-	_ = m.Create("ws-b", nil)
+	_, _ = m.Create("ws-a", nil)
+	_, _ = m.Create("ws-b", nil)
 
 	workspaces, err := m.List()
 	require.NoError(t, err)
