@@ -11,6 +11,14 @@ import (
 	"time"
 )
 
+// contextKey is a custom type for context keys to avoid collisions.
+type contextKey string
+
+const (
+	userIDKey    contextKey = "userID"
+	requestIDKey contextKey = "requestID"
+)
+
 // EventType represents the type of audit event
 type EventType string
 
@@ -244,10 +252,10 @@ func (l *AuditLogger) Log(event *AuditEvent) {
 // LogContext logs an audit event with context
 func (l *AuditLogger) LogContext(ctx context.Context, event *AuditEvent) {
 	// Extract user info from context if available
-	if userID, ok := ctx.Value("userID").(string); ok && event.UserID == "" {
+	if userID, ok := ctx.Value(userIDKey).(string); ok && event.UserID == "" {
 		event.UserID = userID
 	}
-	if requestID, ok := ctx.Value("requestID").(string); ok && event.RequestID == "" {
+	if requestID, ok := ctx.Value(requestIDKey).(string); ok && event.RequestID == "" {
 		event.RequestID = requestID
 	}
 

@@ -18,10 +18,6 @@ import (
 // --- DefaultAuditLoggerConfig ---
 
 
-//nolint:staticcheck
-type testContextKey string
-const userIDKey testContextKey = "userID"
-const requestIDKey testContextKey = "requestID"
 func TestDefaultAuditLoggerConfig(t *testing.T) {
 	cfg := DefaultAuditLoggerConfig()
 

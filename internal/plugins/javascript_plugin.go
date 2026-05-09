@@ -60,7 +60,7 @@ func LoadJavaScriptPlugin(filePath string, config *JavaScriptPluginConfig) (*Jav
 	// Setup module.exports pattern
 	_ = vm.Set("module", vm.NewObject())
 	module := vm.Get("module").ToObject(vm)
-\t_ = module.Set("exports", vm.NewObject())
+	_ = module.Set("exports", vm.NewObject())
 
 	// Execute plugin code
 	_, err = vm.RunString(string(code))
