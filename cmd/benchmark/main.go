@@ -166,7 +166,7 @@ func runWorkflowBenchmarks() {
 	}
 
 	// Warm up
-	_ = engine.ExecuteWorkflow(workflow, testData)
+	_, _ = engine.ExecuteWorkflow(workflow, testData)
 
 	// Benchmark workflow execution
 	iterations := 1000
@@ -217,7 +217,7 @@ func runConcurrencyBenchmarks() {
 		for i := 0; i < concurrency; i++ {
 			go func() {
 				for j := 0; j < 1000; j++ {
-					_ = evaluator.EvaluateExpression(expression, context)
+					_, _ = evaluator.EvaluateExpression(expression, context)
 				}
 				done <- true
 			}()
