@@ -134,7 +134,7 @@ func TestListWorkflows_FilterByTags(t *testing.T) {
 
 	_ = store.SaveWorkflow(&model.Workflow{ID: "1", Name: "Workflow 1", Tags: []string{"production"}})
 	_ = store.SaveWorkflow(&model.Workflow{ID: "2", Name: "Workflow 2", Tags: []string{"staging"}})
-	store.SaveWorkflow(&model.Workflow{ID: "3", Name: "Workflow 3", Tags: []string{"production", "critical"}})
+	_ = store.SaveWorkflow(&model.Workflow{ID: "3", Name: "Workflow 3", Tags: []string{"production", "critical"}})
 
 	workflows, total, err := store.ListWorkflows(WorkflowFilters{Tags: []string{"production"}})
 	require.NoError(t, err)
@@ -146,7 +146,7 @@ func TestListWorkflows_Pagination(t *testing.T) {
 	store := NewMemoryStorage()
 
 	for i := 0; i < 10; i++ {
-		store.SaveWorkflow(&model.Workflow{
+		_ = store.SaveWorkflow(&model.Workflow{
 			ID:   string(rune('a' + i)),
 			Name: "Workflow",
 		})
@@ -168,7 +168,7 @@ func TestListWorkflows_PaginationBeyondEnd(t *testing.T) {
 	store := NewMemoryStorage()
 
 	for i := 0; i < 5; i++ {
-		store.SaveWorkflow(&model.Workflow{ID: string(rune('a' + i))})
+		_ = store.SaveWorkflow(&model.Workflow{ID: string(rune('a' + i))})
 	}
 
 	workflows, total, err := store.ListWorkflows(WorkflowFilters{Limit: 3, Offset: 10})
@@ -332,7 +332,7 @@ _ = store.SaveExecution(&model.WorkflowExecution{ID: "e3", WorkflowID: "w1"})
 func TestListExecutions_FilterByStatus(t *testing.T) {
 	store := NewMemoryStorage()
 
-	store.SaveExecution(&model.WorkflowExecution{ID: "e1", Status: "completed"})
+	_ = store.SaveExecution(&model.WorkflowExecution{ID: "e1", Status: "completed"})
 	_ = store.SaveExecution(&model.WorkflowExecution{ID: "e2", Status: "failed"})
 	_ = store.SaveExecution(&model.WorkflowExecution{ID: "e3", Status: "completed"})
 

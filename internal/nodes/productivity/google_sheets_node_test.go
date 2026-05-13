@@ -534,7 +534,7 @@ func TestGoogleSheetsNode_Execute_CreateSpreadsheetWithMockServer(t *testing.T) 
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"spreadsheetId": "new-spreadsheet-id",
 			"properties": map[string]interface{}{
 				"title": "My Spreadsheet",
@@ -579,7 +579,7 @@ func TestGoogleSheetsNode_Execute_CreateSpreadsheetDefaultTitle(t *testing.T) {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"spreadsheetId": "default-title-id",
 		})
 	}))
@@ -617,7 +617,7 @@ func TestGoogleSheetsNode_Execute_GetSpreadsheetWithMockServer(t *testing.T) {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"spreadsheetId": "get-test-id",
 			"properties": map[string]interface{}{
 				"title": "Test Sheet",

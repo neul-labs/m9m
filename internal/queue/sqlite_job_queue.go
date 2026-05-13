@@ -154,7 +154,7 @@ func (q *SQLiteJobQueue) scanJob(rows *sql.Rows) (*Job, error) {
 	}
 
 	var workflow model.Workflow
-	if err := json.Unmarshal([]byte(workflowJSON), &workflow); err != nil {
+	if err := _ = json.Unmarshal([]byte(workflowJSON), &workflow); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal workflow: %w", err)
 	}
 
@@ -437,10 +437,10 @@ func (q *SQLiteJobQueue) GetJob(jobID string) (*Job, error) {
 	}
 
 	if inputDataJSON.Valid {
-		json.Unmarshal([]byte(inputDataJSON.String), &job.InputData)
+		_ = json.Unmarshal([]byte(inputDataJSON.String), &job.InputData)
 	}
 	if resultDataJSON.Valid {
-		json.Unmarshal([]byte(resultDataJSON.String), &job.ResultData)
+		_ = json.Unmarshal([]byte(resultDataJSON.String), &job.ResultData)
 	}
 	if errStr.Valid {
 		job.Error = errStr.String
