@@ -26,7 +26,7 @@ _ = r.ParseForm()
 		assert.Equal(t, "+15559876543", r.FormValue("To"))
 		assert.Equal(t, "Hello!", r.FormValue("Body"))
 
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"sid":    "SM123",
 			"status": "queued",
 		})
@@ -53,7 +53,7 @@ _ = r.ParseForm()
 func TestTwilioNode_GetMessages(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "GET", r.Method)
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"messages": []interface{}{
 				map[string]interface{}{"sid": "SM1", "body": "msg1"},
 			},

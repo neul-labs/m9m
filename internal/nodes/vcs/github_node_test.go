@@ -121,7 +121,7 @@ func TestGitHubNode_Execute_RepositoryGet(t *testing.T) {
 		assert.Equal(t, "m9m", r.Header.Get("User-Agent"))
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(mockResponse)
+		_ = json.NewEncoder(w).Encode(mockResponse)
 	}))
 	defer server.Close()
 

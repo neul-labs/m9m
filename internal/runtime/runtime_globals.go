@@ -42,17 +42,17 @@ func (js *JavaScriptRuntime) initializeNodeJSGlobals() {
 }
 
 func (js *JavaScriptRuntime) initializeN8nGlobals() {
-	js.vm.Set("$json", js.createJsonHelper())
-	js.vm.Set("$node", js.createNodeHelper())
-	js.vm.Set("$parameter", js.createParameterHelper())
-	js.vm.Set("$workflow", js.createWorkflowHelper())
-	js.vm.Set("$execution", js.createExecutionHelper())
-	js.vm.Set("$items", js.createItemsHelper())
-	js.vm.Set("$input", js.createInputHelper())
-	js.vm.Set("$", js.createDollarHelper())
-	js.vm.Set("helpers", js.n8nHelpers)
-	js.vm.Set("moment", js.createMomentHelper())
-	js.vm.Set("_", js.createLodashHelper())
+	_ = js.vm.Set("$json", js.createJsonHelper())
+	_ = js.vm.Set("$node", js.createNodeHelper())
+	_ = js.vm.Set("$parameter", js.createParameterHelper())
+	_ = js.vm.Set("$workflow", js.createWorkflowHelper())
+	_ = js.vm.Set("$execution", js.createExecutionHelper())
+	_ = js.vm.Set("$items", js.createItemsHelper())
+	_ = js.vm.Set("$input", js.createInputHelper())
+	_ = js.vm.Set("$", js.createDollarHelper())
+	_ = js.vm.Set("helpers", js.n8nHelpers)
+	_ = js.vm.Set("moment", js.createMomentHelper())
+	_ = js.vm.Set("_", js.createLodashHelper())
 }
 
 func (js *JavaScriptRuntime) requireFunction(call goja.FunctionCall) goja.Value {

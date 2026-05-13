@@ -458,7 +458,7 @@ func TestGitLabNode_Execute_IssueUpdate(t *testing.T) {
 
 		body, _ := io.ReadAll(r.Body)
 		var reqBody map[string]interface{}
-		json.Unmarshal(body, &reqBody)
+		_ = json.Unmarshal(body, &reqBody)
 		assert.Equal(t, "Updated Title", reqBody["title"])
 
 		w.Header().Set("Content-Type", "application/json")
@@ -560,7 +560,7 @@ func TestGitLabNode_Execute_MergeRequestCreate(t *testing.T) {
 
 		body, _ := io.ReadAll(r.Body)
 		var reqBody map[string]interface{}
-		json.Unmarshal(body, &reqBody)
+		_ = json.Unmarshal(body, &reqBody)
 		assert.Equal(t, "feature", reqBody["source_branch"])
 		assert.Equal(t, "main", reqBody["target_branch"])
 		assert.Equal(t, "New MR", reqBody["title"])
@@ -771,7 +771,7 @@ func TestGitLabNode_Execute_PipelineTrigger(t *testing.T) {
 
 		body, _ := io.ReadAll(r.Body)
 		var reqBody map[string]interface{}
-		json.Unmarshal(body, &reqBody)
+		_ = json.Unmarshal(body, &reqBody)
 		assert.Equal(t, "main", reqBody["ref"])
 
 		w.Header().Set("Content-Type", "application/json")

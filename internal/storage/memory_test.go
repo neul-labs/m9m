@@ -132,8 +132,8 @@ func TestListWorkflows_FilterBySearch(t *testing.T) {
 func TestListWorkflows_FilterByTags(t *testing.T) {
 	store := NewMemoryStorage()
 
-	store.SaveWorkflow(&model.Workflow{ID: "1", Name: "Workflow 1", Tags: []string{"production"}})
-	store.SaveWorkflow(&model.Workflow{ID: "2", Name: "Workflow 2", Tags: []string{"staging"}})
+	_ = store.SaveWorkflow(&model.Workflow{ID: "1", Name: "Workflow 1", Tags: []string{"production"}})
+	_ = store.SaveWorkflow(&model.Workflow{ID: "2", Name: "Workflow 2", Tags: []string{"staging"}})
 	store.SaveWorkflow(&model.Workflow{ID: "3", Name: "Workflow 3", Tags: []string{"production", "critical"}})
 
 	workflows, total, err := store.ListWorkflows(WorkflowFilters{Tags: []string{"production"}})
