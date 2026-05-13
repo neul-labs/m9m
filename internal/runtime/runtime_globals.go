@@ -34,11 +34,11 @@ func (js *JavaScriptRuntime) initializeNodeJSGlobals() {
 	_ = js.vm.Set("process", process)
 	_ = js.vm.Set("Buffer", &BufferObject{runtime: js})
 	_ = js.vm.Set("global", js.vm.GlobalObject())
-	js.vm.Set("setTimeout", js.setTimeout)
-	js.vm.Set("clearTimeout", js.clearTimeout)
-	js.vm.Set("setInterval", js.setInterval)
-	js.vm.Set("clearInterval", js.clearInterval)
-	js.vm.Set("require", js.requireFunction)
+	_ = js.vm.Set("setTimeout", js.setTimeout)
+	_ = js.vm.Set("clearTimeout", js.clearTimeout)
+	_ = js.vm.Set("setInterval", js.setInterval)
+	_ = js.vm.Set("clearInterval", js.clearInterval)
+	_ = js.vm.Set("require", js.requireFunction)
 }
 
 func (js *JavaScriptRuntime) initializeN8nGlobals() {

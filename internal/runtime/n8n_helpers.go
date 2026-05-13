@@ -375,13 +375,13 @@ func (js *JavaScriptRuntime) createLodashHelper() interface{} {
 		"clone": func(obj interface{}) interface{} {
 			data, _ := json.Marshal(obj)
 			var result interface{}
-			json.Unmarshal(data, &result)
+			_ = json.Unmarshal(data, &result)
 			return result
 		},
 		"cloneDeep": func(obj interface{}) interface{} {
 			data, _ := json.Marshal(obj)
 			var result interface{}
-			json.Unmarshal(data, &result)
+			_ = json.Unmarshal(data, &result)
 			return result
 		},
 		"merge": func(target interface{}, sources ...interface{}) interface{} {

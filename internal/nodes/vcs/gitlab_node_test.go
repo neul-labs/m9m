@@ -265,7 +265,7 @@ func TestGitLabNode_Execute_IssueCreate(t *testing.T) {
 		// Verify body
 		body, _ := io.ReadAll(r.Body)
 		var reqBody map[string]interface{}
-		json.Unmarshal(body, &reqBody)
+		_ = json.Unmarshal(body, &reqBody)
 		assert.Equal(t, "New Issue", reqBody["title"])
 
 		w.Header().Set("Content-Type", "application/json")

@@ -397,7 +397,7 @@ func TestGoogleSheetsNode_Execute_AppendWithMockServer(t *testing.T) {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"spreadsheetId": "test-id",
 			"updates": map[string]interface{}{
 				"updatedRows":    1,
@@ -443,7 +443,7 @@ func TestGoogleSheetsNode_Execute_UpdateWithMockServer(t *testing.T) {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"updatedRange": "Sheet1!A1:B1",
 			"updatedRows":  1,
 		})
@@ -486,7 +486,7 @@ func TestGoogleSheetsNode_Execute_ClearWithMockServer(t *testing.T) {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"clearedRange":  "Sheet1!A:Z",
 			"spreadsheetId": "test-id",
 		})

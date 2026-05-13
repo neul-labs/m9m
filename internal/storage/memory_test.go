@@ -119,7 +119,7 @@ _ = store.SaveWorkflow(&model.Workflow{ID: "inactive-1", Name: "Inactive", Activ
 func TestListWorkflows_FilterBySearch(t *testing.T) {
 	store := NewMemoryStorage()
 
-	store.SaveWorkflow(&model.Workflow{ID: "1", Name: "Email Automation"})
+	_ = store.SaveWorkflow(&model.Workflow{ID: "1", Name: "Email Automation"})
 	_ = store.SaveWorkflow(&model.Workflow{ID: "2", Name: "Data Processing"})
 	_ = store.SaveWorkflow(&model.Workflow{ID: "3", Name: "Email Notification"})
 
