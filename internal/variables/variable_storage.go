@@ -488,7 +488,7 @@ func (s *PersistentVariableStorage) SaveEnvironment(environment *Environment) er
 		for _, env := range envs {
 			if env.ID != environment.ID {
 				env.Active = false
-				s.SaveEnvironment(env)
+				_ = s.SaveEnvironment(env)
 			}
 		}
 	}

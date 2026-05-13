@@ -763,7 +763,7 @@ func TestGetCredential(t *testing.T) {
 		Name: "Test Credential",
 		Type: "oauth2",
 	}
-	store.SaveCredential(credential)
+	_ = store.SaveCredential(credential)
 
 	req := httptest.NewRequest("GET", "/api/v1/credentials/cred-1", nil)
 	w := httptest.NewRecorder()

@@ -31,9 +31,9 @@ func (js *JavaScriptRuntime) initializeNodeJSGlobals() {
 		}
 	}
 
-	js.vm.Set("process", process)
-	js.vm.Set("Buffer", &BufferObject{runtime: js})
-	js.vm.Set("global", js.vm.GlobalObject())
+	_ = js.vm.Set("process", process)
+	_ = js.vm.Set("Buffer", &BufferObject{runtime: js})
+	_ = js.vm.Set("global", js.vm.GlobalObject())
 	js.vm.Set("setTimeout", js.setTimeout)
 	js.vm.Set("clearTimeout", js.clearTimeout)
 	js.vm.Set("setInterval", js.setInterval)

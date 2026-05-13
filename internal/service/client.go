@@ -177,7 +177,7 @@ func (c *Client) Call(req *Request) (*Response, error) {
 	defer conn.Close()
 
 	// Set deadline
-	conn.SetDeadline(time.Now().Add(c.requestTimeout))
+	_ = conn.SetDeadline(time.Now().Add(c.requestTimeout))
 
 	// Send request
 	encoder := json.NewEncoder(conn)

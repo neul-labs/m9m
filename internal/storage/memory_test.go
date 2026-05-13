@@ -120,8 +120,8 @@ func TestListWorkflows_FilterBySearch(t *testing.T) {
 	store := NewMemoryStorage()
 
 	store.SaveWorkflow(&model.Workflow{ID: "1", Name: "Email Automation"})
-	store.SaveWorkflow(&model.Workflow{ID: "2", Name: "Data Processing"})
-	store.SaveWorkflow(&model.Workflow{ID: "3", Name: "Email Notification"})
+	_ = store.SaveWorkflow(&model.Workflow{ID: "2", Name: "Data Processing"})
+	_ = store.SaveWorkflow(&model.Workflow{ID: "3", Name: "Email Notification"})
 
 	workflows, total, err := store.ListWorkflows(WorkflowFilters{Search: "email"})
 	require.NoError(t, err)
@@ -333,8 +333,8 @@ func TestListExecutions_FilterByStatus(t *testing.T) {
 	store := NewMemoryStorage()
 
 	store.SaveExecution(&model.WorkflowExecution{ID: "e1", Status: "completed"})
-	store.SaveExecution(&model.WorkflowExecution{ID: "e2", Status: "failed"})
-	store.SaveExecution(&model.WorkflowExecution{ID: "e3", Status: "completed"})
+	_ = store.SaveExecution(&model.WorkflowExecution{ID: "e2", Status: "failed"})
+	_ = store.SaveExecution(&model.WorkflowExecution{ID: "e3", Status: "completed"})
 
 	executions, total, err := store.ListExecutions(ExecutionFilters{Status: "completed"})
 	require.NoError(t, err)
@@ -440,6 +440,8 @@ func TestUpdateCredential(t *testing.T) {
 
 	store.SaveCredential(&Credential{ID: "cred-1", Name: "Original"})
 
+	_ = store.SaveCredential(&Credential{ID: "cred-2", Name: "Original 2"})
+
 	err := store.UpdateCredential("cred-1", &Credential{Name: "Updated"})
 	require.NoError(t, err)
 
@@ -535,6 +537,8 @@ func TestUpdateTag(t *testing.T) {
 	store := NewMemoryStorage()
 
 	store.SaveTag(&Tag{ID: "tag-1", Name: "Original"})
+
+	_ = store.SaveTag(&Tag{ID: "tag-2", Name: "Original 2"})
 
 	err := store.UpdateTag("tag-1", &Tag{Name: "Updated"})
 	require.NoError(t, err)
@@ -641,6 +645,8 @@ func TestDeleteRaw(t *testing.T) {
 	store := NewMemoryStorage()
 
 	store.SaveRaw("key-1", []byte("data"))
+
+	_ = store.SaveRaw("key-2", []byte("data2"))
 
 	err := store.DeleteRaw("key-1")
 	require.NoError(t, err)

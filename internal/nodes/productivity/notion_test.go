@@ -43,7 +43,7 @@ func TestNotionNode_CreatePage(t *testing.T) {
 		assert.Contains(t, r.URL.Path, "/pages")
 
 		var body map[string]interface{}
-		json.NewDecoder(r.Body).Decode(&body)
+		_ = json.NewDecoder(r.Body).Decode(&body)
 		parent := body["parent"].(map[string]interface{})
 		assert.Equal(t, "db123", parent["database_id"])
 

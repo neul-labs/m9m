@@ -26,7 +26,7 @@ func (js *JavaScriptRuntime) ExecuteExpression(expression string, context *expre
 	defer js.mu.Unlock()
 
 	for key, value := range context.GetVariables() {
-		js.vm.Set(key, value)
+		_ = js.vm.Set(key, value)
 	}
 
 	result, err := js.vm.RunString(expression)

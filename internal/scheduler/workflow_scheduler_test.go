@@ -246,7 +246,7 @@ func TestRemoveSchedule(t *testing.T) {
 		Enabled:    true,
 	}
 
-	scheduler.AddSchedule(config)
+	_ = scheduler.AddSchedule(config)
 
 	err := scheduler.RemoveSchedule("schedule-1")
 	require.NoError(t, err)
@@ -275,7 +275,7 @@ func TestGetExecutionHistory_Empty(t *testing.T) {
 		CronExpr:   "*/5 * * * *",
 		Enabled:    true,
 	}
-	scheduler.AddSchedule(config)
+	_ = scheduler.AddSchedule(config)
 
 	history, err := scheduler.GetExecutionHistory("schedule-1", 10)
 	require.NoError(t, err)
@@ -313,7 +313,7 @@ func TestGetMetrics_WithSchedules(t *testing.T) {
 			CronExpr:   "*/5 * * * *",
 			Enabled:    i < 2,
 		}
-		scheduler.AddSchedule(config)
+		_ = scheduler.AddSchedule(config)
 	}
 
 	metrics := scheduler.GetMetrics()

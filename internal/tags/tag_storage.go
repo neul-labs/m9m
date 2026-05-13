@@ -353,7 +353,7 @@ func (s *PersistentTagStorage) DeleteTag(id string) error {
 
 	// Delete name index
 	nameKey := fmt.Sprintf("tag_name:%s", tag.Name)
-	s.store.DeleteRaw(nameKey) // Ignore error
+	_ = s.store.DeleteRaw(nameKey) // Ignore error
 
 	return nil
 }
@@ -453,7 +453,7 @@ func (s *PersistentTagStorage) SetWorkflowTags(workflowID string, tagIDs []strin
 	keys, err := s.store.ListKeys(prefix)
 	if err == nil {
 		for _, key := range keys {
-			s.store.DeleteRaw(key)
+			_ = s.store.DeleteRaw(key)
 		}
 	}
 

@@ -17,7 +17,7 @@ func TestSendGridNode_Send(t *testing.T) {
 		assert.Equal(t, "Bearer sg-api-key", r.Header.Get("Authorization"))
 
 		var body map[string]interface{}
-		json.NewDecoder(r.Body).Decode(&body)
+		_ = json.NewDecoder(r.Body).Decode(&body)
 		from := body["from"].(map[string]interface{})
 		assert.Equal(t, "sender@example.com", from["email"])
 
@@ -44,7 +44,7 @@ func TestSendGridNode_Send(t *testing.T) {
 func TestSendGridNode_SendTemplate(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var body map[string]interface{}
-		json.NewDecoder(r.Body).Decode(&body)
+		_ = json.NewDecoder(r.Body).Decode(&body)
 		assert.Equal(t, "d-template123", body["template_id"])
 		w.WriteHeader(http.StatusAccepted)
 	}))

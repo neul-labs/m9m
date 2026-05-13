@@ -114,6 +114,6 @@ func (m *TagManager) GetTagWorkflows(tagID string) ([]string, error) {
 // generateTagID generates a unique tag ID
 func generateTagID() string {
 	b := make([]byte, 8)
-	rand.Read(b)
+	_ = rand.Read(b)
 	return "tag_" + hex.EncodeToString(b)
 }

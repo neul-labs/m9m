@@ -245,7 +245,7 @@ func (d *Daemon) handleConnection(conn net.Conn) {
 
 	var req Request
 	if err := decoder.Decode(&req); err != nil {
-		encoder.Encode(Response{
+		_ = encoder.Encode(Response{
 			Success: false,
 			Error:   fmt.Sprintf("failed to decode request: %v", err),
 		})
@@ -254,7 +254,7 @@ func (d *Daemon) handleConnection(conn net.Conn) {
 
 	resp := d.handleRequest(&req)
 	resp.ID = req.ID
-	encoder.Encode(resp)
+	_ = encoder.Encode(resp)
 }
 
 // handleRequest processes a request
@@ -550,7 +550,7 @@ func (d *Daemon) handleWorkflowRun(req *Request) Response {
 		execution.Data = result.Data
 	}
 
-	ctx.storage.SaveExecution(execution)
+	_ = ctx.storage.SaveExecution(execution)
 
 	if execution.Status == "error" {
 		errMsg := "execution failed"

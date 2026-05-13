@@ -253,7 +253,7 @@ func (n *TemplateNode) installTemplate(nodeParams map[string]interface{}, item m
 	if o, ok := nodeParams["options"].(map[string]interface{}); ok {
 		optData, _ := json.Marshal(o)
 		options = &InstallationOptions{}
-		json.Unmarshal(optData, options)
+		_ = json.Unmarshal(optData, options)
 	}
 
 	installResult, err := n.templateManager.InstallTemplate(templateID, parameters, options)

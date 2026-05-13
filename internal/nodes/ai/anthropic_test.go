@@ -356,7 +356,7 @@ func TestAnthropicNode_Execute_APIErrorStatus(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(tt.statusCode)
-				json.NewEncoder(w).Encode(map[string]interface{}{
+				_ = json.NewEncoder(w).Encode(map[string]interface{}{
 					"type": "error",
 					"error": map[string]interface{}{
 						"type":    "invalid_request_error",
@@ -394,7 +394,7 @@ func TestAnthropicNode_Execute_APIErrorStatus(t *testing.T) {
 func TestAnthropicNode_Execute_EmptyContent(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"content": []interface{}{},
 		})
 	}))
@@ -426,7 +426,7 @@ func TestAnthropicNode_Execute_EmptyContent(t *testing.T) {
 func TestAnthropicNode_Execute_MissingContentField(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"id":   "msg_123",
 			"type": "message",
 		})

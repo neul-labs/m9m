@@ -311,7 +311,7 @@ func (h *ErrorHandler) Handle(w http.ResponseWriter, r *http.Request, err error,
 	}
 
 	// Add request info
-	apiErr.WithRequestInfo(r, requestID)
+	_ = apiErr.WithRequestInfo(r, requestID)
 
 	// Add timestamp
 	apiErr.Timestamp = nowUTC()
@@ -332,7 +332,7 @@ func (h *ErrorHandler) Handle(w http.ResponseWriter, r *http.Request, err error,
 
 // HandleAPIError handles an APIError directly
 func (h *ErrorHandler) HandleAPIError(w http.ResponseWriter, r *http.Request, apiErr *APIError, requestID string) {
-	apiErr.WithRequestInfo(r, requestID)
+	_ = apiErr.WithRequestInfo(r, requestID)
 	apiErr.Timestamp = nowUTC()
 
 	if h.DevMode && apiErr.StatusCode >= 500 {

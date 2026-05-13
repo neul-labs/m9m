@@ -154,7 +154,7 @@ func TestOpenAINode_Execute_RequestConstruction(t *testing.T) {
 			http.Error(w, "failed to read body", http.StatusInternalServerError)
 			return
 		}
-		json.Unmarshal(body, &capturedBody)
+		_ = json.Unmarshal(body, &capturedBody)
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
@@ -242,7 +242,7 @@ func TestOpenAINode_Execute_DefaultParameters(t *testing.T) {
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		body, _ := io.ReadAll(r.Body)
-		json.Unmarshal(body, &capturedBody)
+		_ = json.Unmarshal(body, &capturedBody)
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]interface{}{

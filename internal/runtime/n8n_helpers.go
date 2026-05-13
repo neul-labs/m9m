@@ -346,14 +346,14 @@ _ = momentObj.Set("diff", func(call goja.FunctionCall) goja.Value {
 	}
 
 	moment := js.vm.NewObject()
-	moment.Set("call", momentFunc)
+	_ = moment.Set("call", momentFunc)
 
 	// Static methods
-	moment.Set("now", func() goja.Value {
+	_ = moment.Set("now", func() goja.Value {
 		return js.vm.ToValue(time.Now().UnixMilli())
 	})
 
-	moment.Set("utc", func(call goja.FunctionCall) goja.Value {
+	_ = moment.Set("utc", func(call goja.FunctionCall) goja.Value {
 		return momentFunc(call)
 	})
 

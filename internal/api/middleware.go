@@ -111,7 +111,7 @@ func RecoveryMiddleware(next http.Handler) http.Handler {
 				// Return 500 error
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(`{
+				_ = w.Write([]byte(`{
 					"error": true,
 					"message": "Internal server error",
 					"code": 500
@@ -169,7 +169,7 @@ func RateLimitMiddleware(requestsPerMinute int) func(http.Handler) http.Handler 
 			if c.requests >= requestsPerMinute {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusTooManyRequests)
-				w.Write([]byte(`{
+				_ = w.Write([]byte(`{
 					"error": true,
 					"message": "Rate limit exceeded",
 					"code": 429
@@ -365,7 +365,7 @@ func RequirePermissionMiddleware(permission string) func(http.Handler) http.Hand
 			if authCtx == nil {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusUnauthorized)
-				w.Write([]byte(`{
+				_ = w.Write([]byte(`{
 					"error": true,
 					"message": "Authentication required",
 					"code": 401

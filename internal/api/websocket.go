@@ -21,7 +21,7 @@ func (s *APIServer) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	s.wsClients[clientID] = conn
 	defer delete(s.wsClients, clientID)
 
-	conn.WriteJSON(map[string]interface{}{
+	_ = conn.WriteJSON(map[string]interface{}{
 		"type": "connected",
 		"data": map[string]interface{}{
 			"clientId": clientID,

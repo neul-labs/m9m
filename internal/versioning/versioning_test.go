@@ -103,8 +103,8 @@ func TestVersionManager_GetVersion(t *testing.T) {
 func TestVersionManager_CompareVersions(t *testing.T) {
 	vm := newTestVersionManager(t)
 
-	vm.SaveVersion("wf-1", map[string]interface{}{"name": "v1", "nodes": 1}, "v1", "author")
-	vm.SaveVersion("wf-1", map[string]interface{}{"name": "v2", "nodes": 2}, "v2", "author")
+	_ = vm.SaveVersion("wf-1", map[string]interface{}{"name": "v1", "nodes": 1}, "v1", "author")
+	_ = vm.SaveVersion("wf-1", map[string]interface{}{"name": "v2", "nodes": 2}, "v2", "author")
 
 	diff, err := vm.CompareVersions("wf-1", 1, 2)
 	require.NoError(t, err)
