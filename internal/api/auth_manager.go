@@ -363,7 +363,7 @@ func (am *AuthManager) writeErrorResponse(w http.ResponseWriter, statusCode int,
 // generateID generates a random ID
 func generateID() string {
 	bytes := make([]byte, 16)
-	_ = rand.Read(bytes)
+	_, _ = rand.Read(bytes)
 	return hex.EncodeToString(bytes)
 }
 
