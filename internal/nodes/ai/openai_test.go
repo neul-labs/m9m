@@ -158,7 +158,7 @@ func TestOpenAINode_Execute_RequestConstruction(t *testing.T) {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"choices": []interface{}{
 				map[string]interface{}{
 					"message": map[string]interface{}{
@@ -245,7 +245,7 @@ func TestOpenAINode_Execute_DefaultParameters(t *testing.T) {
 		_ = json.Unmarshal(body, &capturedBody)
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"choices": []interface{}{
 				map[string]interface{}{
 					"message":       map[string]interface{}{"content": "Hi"},

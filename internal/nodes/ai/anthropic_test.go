@@ -493,7 +493,7 @@ func TestAnthropicNode_Execute_MalformedJSON(t *testing.T) {
 func TestAnthropicNode_Execute_SuccessfulResponse(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"id":   "msg_01XFDUDYJgAACzvnptvVoYEL",
 			"type": "message",
 			"role": "assistant",

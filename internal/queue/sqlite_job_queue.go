@@ -532,7 +532,7 @@ func (q *SQLiteJobQueue) ListJobs(status *JobStatus, limit int) ([]*Job, error) 
 		}
 
 		var workflow model.Workflow
-		json.Unmarshal([]byte(workflowJSON), &workflow)
+		_ = json.Unmarshal([]byte(workflowJSON), &workflow)
 
 		job := &Job{
 			ID:         id,
@@ -546,10 +546,10 @@ func (q *SQLiteJobQueue) ListJobs(status *JobStatus, limit int) ([]*Job, error) 
 		}
 
 		if inputDataJSON.Valid {
-			json.Unmarshal([]byte(inputDataJSON.String), &job.InputData)
+			_ = json.Unmarshal([]byte(inputDataJSON.String), &job.InputData)
 		}
 		if resultDataJSON.Valid {
-			json.Unmarshal([]byte(resultDataJSON.String), &job.ResultData)
+			_ = json.Unmarshal([]byte(resultDataJSON.String), &job.ResultData)
 		}
 		if errStr.Valid {
 			job.Error = errStr.String

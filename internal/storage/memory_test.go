@@ -180,7 +180,7 @@ func TestListWorkflows_PaginationBeyondEnd(t *testing.T) {
 func TestUpdateWorkflow(t *testing.T) {
 	store := NewMemoryStorage()
 
-	store.SaveWorkflow(&model.Workflow{ID: "workflow-1", Name: "Original"})
+	_ = store.SaveWorkflow(&model.Workflow{ID: "workflow-1", Name: "Original"})
 
 	err := store.UpdateWorkflow("workflow-1", &model.Workflow{Name: "Updated"})
 	require.NoError(t, err)
@@ -199,7 +199,7 @@ func TestUpdateWorkflow_NotFound(t *testing.T) {
 func TestDeleteWorkflow(t *testing.T) {
 	store := NewMemoryStorage()
 
-	store.SaveWorkflow(&model.Workflow{ID: "workflow-1"})
+	_ = store.SaveWorkflow(&model.Workflow{ID: "workflow-1"})
 
 	err := store.DeleteWorkflow("workflow-1")
 	require.NoError(t, err)
@@ -218,7 +218,7 @@ func TestDeleteWorkflow_NotFound(t *testing.T) {
 func TestActivateWorkflow(t *testing.T) {
 	store := NewMemoryStorage()
 
-	store.SaveWorkflow(&model.Workflow{ID: "workflow-1", Active: false})
+	_ = store.SaveWorkflow(&model.Workflow{ID: "workflow-1", Active: false})
 
 	err := store.ActivateWorkflow("workflow-1")
 	require.NoError(t, err)
@@ -346,7 +346,7 @@ func TestListExecutions_Pagination(t *testing.T) {
 	store := NewMemoryStorage()
 
 	for i := 0; i < 10; i++ {
-		store.SaveExecution(&model.WorkflowExecution{ID: string(rune('a' + i))})
+		_ = store.SaveExecution(&model.WorkflowExecution{ID: string(rune('a' + i))})
 	}
 
 	executions, total, err := store.ListExecutions(ExecutionFilters{Limit: 3, Offset: 0})
