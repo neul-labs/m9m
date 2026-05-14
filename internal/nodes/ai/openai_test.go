@@ -294,7 +294,7 @@ func TestOpenAINode_Execute_MultipleInputItems(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		callCount++
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"choices": []interface{}{
 				map[string]interface{}{
 					"message":       map[string]interface{}{"content": "Reply"},
@@ -355,7 +355,7 @@ func TestOpenAINode_Execute_APIErrorStatus(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(tt.statusCode)
-				json.NewEncoder(w).Encode(map[string]interface{}{
+				_ = json.NewEncoder(w).Encode(map[string]interface{}{
 					"error": map[string]interface{}{
 						"message": "error occurred",
 					},
@@ -391,7 +391,7 @@ func TestOpenAINode_Execute_APIErrorStatus(t *testing.T) {
 func TestOpenAINode_Execute_EmptyChoices(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"choices": []interface{}{},
 		})
 	}))

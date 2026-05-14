@@ -386,7 +386,7 @@ func TestScheduleConfig_MaxRuns(t *testing.T) {
 		MaxRuns:    10,
 	}
 
-	scheduler.AddSchedule(config)
+	_ = scheduler.AddSchedule(config)
 
 	retrieved, _ := scheduler.GetSchedule("schedule-1")
 	assert.Equal(t, 10, retrieved.MaxRuns)
@@ -404,7 +404,7 @@ func TestScheduleConfig_MaxDuration(t *testing.T) {
 		MaxDuration: 5 * time.Minute,
 	}
 
-	scheduler.AddSchedule(config)
+	_ = scheduler.AddSchedule(config)
 
 	retrieved, _ := scheduler.GetSchedule("schedule-1")
 	assert.Equal(t, 5*time.Minute, retrieved.MaxDuration)
@@ -422,7 +422,7 @@ func TestScheduleConfig_Timezone(t *testing.T) {
 		Enabled:    true,
 	}
 
-	scheduler.AddSchedule(config)
+	_ = scheduler.AddSchedule(config)
 
 	retrieved, _ := scheduler.GetSchedule("schedule-1")
 	assert.Equal(t, "America/New_York", retrieved.Timezone)

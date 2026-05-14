@@ -151,7 +151,7 @@ func (c *Client) StopDaemon() error {
 			if err == nil {
 				proc, err := os.FindProcess(pid)
 				if err == nil {
-					proc.Signal(syscall.SIGTERM)
+					_ = proc.Signal(syscall.SIGTERM)
 				}
 			}
 		}

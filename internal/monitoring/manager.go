@@ -90,7 +90,7 @@ func NewMonitoringManager(config MonitoringConfig) *MonitoringManager {
 		}
 
 		for _, rule := range config.AlertRules {
-			alertManager.AddRule(rule)
+			_ = alertManager.AddRule(rule)
 		}
 	} else {
 		alertManager.Disable()
