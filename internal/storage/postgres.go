@@ -525,7 +525,7 @@ func (s *PostgresStorage) ListCredentials() ([]*Credential, error) {
 			continue
 		}
 
-		json.Unmarshal(dataJSON, &credential.Data)
+		_ = json.Unmarshal(dataJSON, &credential.Data)
 		credentials = append(credentials, &credential)
 	}
 

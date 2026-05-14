@@ -491,7 +491,7 @@ func TestCancelExecution_Running(t *testing.T) {
 		Status:     "running",
 		StartedAt:  time.Now(),
 	}
-	store.SaveExecution(execution)
+	_ = store.SaveExecution(execution)
 
 	req := httptest.NewRequest("POST", "/api/v1/executions/exec-1/cancel", nil)
 	w := httptest.NewRecorder()
@@ -519,7 +519,7 @@ func TestCancelExecution_TrackedRunning(t *testing.T) {
 	router := mux.NewRouter()
 	server.RegisterRoutes(router)
 
-	store.SaveWorkflow(&model.Workflow{
+	_ = store.SaveWorkflow(&model.Workflow{
 		ID:   "wf-1",
 		Name: "Cancelable Workflow",
 		Nodes: []model.Node{
@@ -589,7 +589,7 @@ func TestExecuteWorkflow_InputEnvelope(t *testing.T) {
 	router := mux.NewRouter()
 	server.RegisterRoutes(router)
 
-	store.SaveWorkflow(&model.Workflow{
+	_ = store.SaveWorkflow(&model.Workflow{
 		ID:   "wf-1",
 		Name: "Test",
 		Nodes: []model.Node{
@@ -617,7 +617,7 @@ func TestExecuteWorkflow_InvalidInputPayload(t *testing.T) {
 	router := mux.NewRouter()
 	server.RegisterRoutes(router)
 
-	store.SaveWorkflow(&model.Workflow{
+	_ = store.SaveWorkflow(&model.Workflow{
 		ID:   "wf-1",
 		Name: "Test",
 		Nodes: []model.Node{

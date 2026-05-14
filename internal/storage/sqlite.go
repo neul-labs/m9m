@@ -155,8 +155,8 @@ func (s *SQLiteStorage) GetWorkflow(id string) (*model.Workflow, error) {
 
 	workflow.Active = activeInt == 1
 
-	json.Unmarshal([]byte(nodesJSON), &workflow.Nodes)
-	json.Unmarshal([]byte(connectionsJSON), &workflow.Connections)
+	_ = json.Unmarshal([]byte(nodesJSON), &workflow.Nodes)
+	_ = json.Unmarshal([]byte(connectionsJSON), &workflow.Connections)
 	json.Unmarshal([]byte(settingsJSON), &workflow.Settings)
 	json.Unmarshal([]byte(tagsJSON), &workflow.Tags)
 
