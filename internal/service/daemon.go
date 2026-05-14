@@ -10,7 +10,6 @@ import (
 	"os/signal"
 	"path/filepath"
 	"sync"
-	"syscall"
 	"time"
 
 	"github.com/neul-labs/m9m/internal/credentials"
@@ -146,7 +145,7 @@ func (d *Daemon) Start(ctx context.Context) error {
 
 	// Handle signals
 	sigCh := make(chan os.Signal, 1)
-	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+	registerDaemonSignals(sigCh)
 
 	// Start idle checker
 	go d.idleChecker(ctx)

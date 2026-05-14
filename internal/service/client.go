@@ -8,7 +8,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strconv"
-	"syscall"
 	"time"
 )
 
@@ -111,9 +110,7 @@ func (c *Client) StartDaemon() error {
 
 	// Start daemon in background
 	cmd := exec.Command(execPath, "service", "start", "--background")
-	cmd.SysProcAttr = &syscall.SysProcAttr{
-		Setsid: true, // Create new session
-	}
+	setDaemonSysProcAttr(cmd)
 
 	// Redirect output to files for debugging
 	home, _ := os.UserHomeDir()
@@ -151,7 +148,7 @@ func (c *Client) StopDaemon() error {
 			if err == nil {
 				proc, err := os.FindProcess(pid)
 				if err == nil {
-					_ = proc.Signal(syscall.SIGTERM)
+					_ = sendTerminationSignal(proc)
 				}
 			}
 		}
