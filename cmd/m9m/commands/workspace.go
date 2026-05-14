@@ -138,7 +138,7 @@ func runWorkspaceCreate(cmd *cobra.Command, args []string) {
 	}
 
 	// Set as current workspace
-	mgr.SetCurrent(name)
+	_ = mgr.SetCurrent(name)
 
 	fmt.Printf("Created workspace '%s' at %s\n", ws.Name, ws.Path)
 	fmt.Printf("Switched to workspace '%s'\n", ws.Name)
@@ -158,7 +158,7 @@ func runWorkspaceDelete(cmd *cobra.Command, args []string) {
 	fmt.Print("Type the workspace name to confirm: ")
 
 	var confirm string
-	fmt.Scanln(&confirm)
+	_, _ = fmt.Scanln(&confirm)
 	if confirm != name {
 		fmt.Println("Deletion cancelled.")
 		return

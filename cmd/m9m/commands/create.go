@@ -36,7 +36,7 @@ func init() {
 	createCmd.Flags().StringVar(&createFrom, "from", "", "JSON file containing workflow definition (required)")
 	createCmd.Flags().StringVar(&createDescription, "description", "", "Workflow description")
 	createCmd.Flags().BoolVar(&createSkipValidate, "skip-validate", false, "Skip validation before creating")
-	createCmd.MarkFlagRequired("from")
+	_ = createCmd.MarkFlagRequired("from")
 }
 
 func runCreate(cmd *cobra.Command, args []string) {

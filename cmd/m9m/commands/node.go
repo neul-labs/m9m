@@ -192,7 +192,7 @@ func init() {
 	nodeListCmd.Flags().StringVar(&nodeSearch, "search", "", "Search by name or description")
 
 	nodeCreateCmd.Flags().StringVar(&nodeCreateFrom, "from", "", "Script file to create node from (required)")
-	nodeCreateCmd.MarkFlagRequired("from")
+	_ = nodeCreateCmd.MarkFlagRequired("from")
 
 	nodeTestCmd.Flags().StringVar(&nodeTestInput, "input", "", "Input data as JSON or @file.json")
 

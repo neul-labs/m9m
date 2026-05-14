@@ -199,7 +199,7 @@ func (s *APIServer) ApplyTemplate(w http.ResponseWriter, r *http.Request) {
 		Name string `json:"name"`
 	}
 	if r.Body != nil {
-		json.NewDecoder(r.Body).Decode(&req)
+		_ = json.NewDecoder(r.Body).Decode(&req)
 	}
 
 	workflow := &model.Workflow{

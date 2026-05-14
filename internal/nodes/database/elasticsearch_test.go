@@ -22,7 +22,7 @@ func TestElasticsearchNode_Search(t *testing.T) {
 	server, node := setupESServer(t, func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "POST", r.Method)
 		assert.Contains(t, r.URL.Path, "/_search")
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"hits": map[string]interface{}{
 				"total": map[string]interface{}{"value": 1},
 				"hits": []map[string]interface{}{
@@ -49,7 +49,7 @@ func TestElasticsearchNode_Search(t *testing.T) {
 func TestElasticsearchNode_Index(t *testing.T) {
 	server, node := setupESServer(t, func(w http.ResponseWriter, r *http.Request) {
 		assert.Contains(t, r.URL.Path, "/myindex/_doc")
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"_id":    "1",
 			"result": "created",
 		})
@@ -72,7 +72,7 @@ func TestElasticsearchNode_IndexWithID(t *testing.T) {
 	server, node := setupESServer(t, func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "PUT", r.Method)
 		assert.Contains(t, r.URL.Path, "/myindex/_doc/abc")
-		json.NewEncoder(w).Encode(map[string]interface{}{"result": "created"})
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"result": "created"})
 	})
 	defer server.Close()
 

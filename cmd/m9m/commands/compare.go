@@ -41,7 +41,7 @@ func runCompare(cmd *cobra.Command, args []string) {
 	report := showcase.BuildCompareReport()
 
 	if compareJSON {
-		report.PrintCompareJSON(os.Stdout)
+		_ = report.PrintCompareJSON(os.Stdout)
 	} else {
 		report.PrintCompareTable(os.Stdout, showcase.CompareOptions{
 			Section: compareSection,

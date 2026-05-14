@@ -348,7 +348,7 @@ func (s *PostgresStorage) GetExecution(id string) (*model.WorkflowExecution, err
 		execution.FinishedAt = &finishedAt.Time
 	}
 
-	json.Unmarshal(dataJSON, &execution.Data)
+	_ = json.Unmarshal(dataJSON, &execution.Data)
 
 	if errorText.Valid && errorText.String != "" {
 		execution.Error = fmt.Errorf("%s", errorText.String)
@@ -422,7 +422,7 @@ func (s *PostgresStorage) ListExecutions(filters ExecutionFilters) ([]*model.Wor
 			execution.FinishedAt = &finishedAt.Time
 		}
 
-		json.Unmarshal(dataJSON, &execution.Data)
+		_ = json.Unmarshal(dataJSON, &execution.Data)
 
 		if errorText.Valid && errorText.String != "" {
 			execution.Error = fmt.Errorf("%s", errorText.String)
@@ -498,7 +498,7 @@ func (s *PostgresStorage) GetCredential(id string) (*Credential, error) {
 		return nil, err
 	}
 
-	json.Unmarshal(dataJSON, &credential.Data)
+	_ = json.Unmarshal(dataJSON, &credential.Data)
 
 	return &credential, nil
 }

@@ -309,7 +309,7 @@ func TestDeleteWorkflow(t *testing.T) {
 		Name:   "Test Workflow",
 		Active: false,
 	}
-	store.SaveWorkflow(workflow)
+	_ = store.SaveWorkflow(workflow)
 
 	req := httptest.NewRequest("DELETE", "/api/v1/workflows/test-workflow-1", nil)
 	w := httptest.NewRecorder()
@@ -343,7 +343,7 @@ func TestActivateWorkflow(t *testing.T) {
 		Name:   "Test Workflow",
 		Active: false,
 	}
-	store.SaveWorkflow(workflow)
+	_ = store.SaveWorkflow(workflow)
 
 	req := httptest.NewRequest("POST", "/api/v1/workflows/test-workflow-1/activate", nil)
 	w := httptest.NewRecorder()
@@ -366,7 +366,7 @@ func TestDeactivateWorkflow(t *testing.T) {
 		Name:   "Test Workflow",
 		Active: true,
 	}
-	store.SaveWorkflow(workflow)
+	_ = store.SaveWorkflow(workflow)
 
 	req := httptest.NewRequest("POST", "/api/v1/workflows/test-workflow-1/deactivate", nil)
 	w := httptest.NewRecorder()
@@ -409,7 +409,7 @@ func TestGetExecution(t *testing.T) {
 		Status:     "completed",
 		StartedAt:  time.Now(),
 	}
-	store.SaveExecution(execution)
+	_ = store.SaveExecution(execution)
 
 	req := httptest.NewRequest("GET", "/api/v1/executions/exec-1", nil)
 	w := httptest.NewRecorder()
@@ -447,7 +447,7 @@ func TestDeleteExecution(t *testing.T) {
 		Status:     "completed",
 		StartedAt:  time.Now(),
 	}
-	store.SaveExecution(execution)
+	_ = store.SaveExecution(execution)
 
 	req := httptest.NewRequest("DELETE", "/api/v1/executions/exec-1", nil)
 	w := httptest.NewRecorder()
@@ -471,7 +471,7 @@ func TestCancelExecution_NotRunning(t *testing.T) {
 		Status:     "completed",
 		StartedAt:  time.Now(),
 	}
-	store.SaveExecution(execution)
+	_ = store.SaveExecution(execution)
 
 	req := httptest.NewRequest("POST", "/api/v1/executions/exec-1/cancel", nil)
 	w := httptest.NewRecorder()
@@ -799,7 +799,7 @@ func TestUpdateCredential(t *testing.T) {
 		Name: "Original Name",
 		Type: "oauth2",
 	}
-	store.SaveCredential(credential)
+	_ = store.SaveCredential(credential)
 
 	// Update it
 	updatedCredential := storage.Credential{
@@ -833,7 +833,7 @@ func TestDeleteCredential(t *testing.T) {
 		Name: "Test Credential",
 		Type: "oauth2",
 	}
-	store.SaveCredential(credential)
+	_ = store.SaveCredential(credential)
 
 	req := httptest.NewRequest("DELETE", "/api/v1/credentials/cred-1", nil)
 	w := httptest.NewRecorder()

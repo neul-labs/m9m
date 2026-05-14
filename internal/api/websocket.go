@@ -37,7 +37,7 @@ func (s *APIServer) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 		var msg map[string]interface{}
 		if err := json.Unmarshal(message, &msg); err == nil {
-			conn.WriteJSON(map[string]interface{}{
+			_ = conn.WriteJSON(map[string]interface{}{
 				"type": "response",
 				"data": msg,
 			})
@@ -52,6 +52,6 @@ func (s *APIServer) BroadcastExecutionUpdate(execution *model.WorkflowExecution)
 	}
 
 	for _, conn := range s.wsClients {
-		conn.WriteJSON(message)
+		_ = conn.WriteJSON(message)
 	}
 }

@@ -94,7 +94,7 @@ func runServe(cmd *cobra.Command, args []string) {
 			if dbPath == "" {
 				homeDir, _ := os.UserHomeDir()
 				dataDir := filepath.Join(homeDir, ".m9m", "data")
-				os.MkdirAll(dataDir, 0755)
+				_ = os.MkdirAll(dataDir, 0755)
 				dbPath = filepath.Join(dataDir, "m9m.db")
 			}
 		}
@@ -131,7 +131,7 @@ func runServe(cmd *cobra.Command, args []string) {
 			// Default to data directory
 			homeDir, _ := os.UserHomeDir()
 			dataDir := filepath.Join(homeDir, ".m9m", "data")
-			os.MkdirAll(dataDir, 0755)
+			_ = os.MkdirAll(dataDir, 0755)
 			queueDBPath = filepath.Join(dataDir, "queue.db")
 		}
 		logger.Printf("Using SQLite job queue: %s", queueDBPath)
@@ -153,8 +153,10 @@ func runServe(cmd *cobra.Command, args []string) {
 
 	// Initialize scheduler
 	sched := scheduler.NewWorkflowScheduler(eng)
-	sched.Start()
-	defer sched.Stop()
+	_ = sched.Start()
+	defer func() {
+		_ = sched.Stop()
+	}()
 
 	// Create API server
 	apiConfig := &api.APIServerConfig{

@@ -50,7 +50,7 @@ func runBenchmark(cmd *cobra.Command, args []string) {
 	report := showcase.RunBenchmark(opts, RegisterAllNodes)
 
 	if benchJSON {
-		report.PrintJSON(os.Stdout)
+		_ = report.PrintJSON(os.Stdout)
 	} else {
 		report.PrintTable(os.Stdout)
 	}

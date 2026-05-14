@@ -54,7 +54,7 @@ func runDemo(cmd *cobra.Command, args []string) {
 	results := showcase.RunDemos(opts, RegisterAllNodes)
 
 	if demoJSON {
-		showcase.PrintDemoJSON(os.Stdout, results)
+		_ = showcase.PrintDemoJSON(os.Stdout, results)
 	} else {
 		showcase.PrintDemoTable(os.Stdout, results, demoVerbose)
 	}
