@@ -200,7 +200,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			// No auth context - return 401 Unauthorized
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusUnauthorized)
-			w.Write([]byte(`{
+			_, _ = w.Write([]byte(`{
 				"error": true,
 				"message": "Authentication required",
 				"code": 401
@@ -263,7 +263,7 @@ func AuthMiddlewareWithManager(authManager *auth.AuthManager) func(http.Handler)
 			if user == nil {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusUnauthorized)
-				w.Write([]byte(`{
+				_, _ = w.Write([]byte(`{
 					"error": true,
 					"message": "Unauthorized: valid authentication required",
 					"code": 401

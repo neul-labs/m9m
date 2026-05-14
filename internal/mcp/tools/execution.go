@@ -495,13 +495,13 @@ func (t *ExecutionRetryTool) Execute(ctx context.Context, args map[string]interf
 	if executionErr != nil {
 		execution.Status = "failed"
 		execution.Error = executionErr
-		t.storage.SaveExecution(execution)
+		_ = t.storage.SaveExecution(execution)
 		return mcp.ErrorContent(fmt.Sprintf("Retry failed: %v", executionErr)), nil
 	}
 
 	execution.Status = "completed"
 	execution.Data = result.Data
-	t.storage.SaveExecution(execution)
+	_ = t.storage.SaveExecution(execution)
 
 	return mcp.SuccessJSON(map[string]interface{}{
 		"newExecutionId":      newExecutionId,

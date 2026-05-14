@@ -356,7 +356,7 @@ func (h *ErrorHandler) sendErrorResponse(w http.ResponseWriter, apiErr *APIError
 		"error": apiErr,
 	}
 
-	json.NewEncoder(w).Encode(response)
+	_ = json.NewEncoder(w).Encode(response)
 }
 
 // Helper functions

@@ -89,7 +89,7 @@ func (s *APIServer) UpdateSettings(w http.ResponseWriter, r *http.Request) {
 
 	existingSettings := make(map[string]interface{})
 	if data, err := s.storage.GetRaw("settings:system"); err == nil && len(data) > 0 {
-		json.Unmarshal(data, &existingSettings)
+		_ = json.Unmarshal(data, &existingSettings)
 	}
 
 	for key, value := range newSettings {

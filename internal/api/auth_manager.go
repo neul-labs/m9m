@@ -69,7 +69,7 @@ func NewAuthManager(jwtSecret string) *AuthManager {
 	if jwtSecret == "" {
 		// Generate a random secret if none provided
 		secretBytes := make([]byte, 32)
-		rand.Read(secretBytes)
+		_, _ = rand.Read(secretBytes)
 		jwtSecret = hex.EncodeToString(secretBytes)
 	}
 
@@ -357,7 +357,7 @@ func (am *AuthManager) writeErrorResponse(w http.ResponseWriter, statusCode int,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(errorResponse)
+	_ = json.NewEncoder(w).Encode(errorResponse)
 }
 
 // generateID generates a random ID
