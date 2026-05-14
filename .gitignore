@@ -65,3 +65,20 @@ bindings/nodejs/lib/*.so
 bindings/nodejs/lib/*.dylib
 bindings/nodejs/lib/*.dll
 bindings/nodejs/package-lock.json
+
+# packages/m9m-cli build artifacts
+packages/m9m-cli/python/.venv/
+packages/m9m-cli/python/__pycache__/
+packages/m9m-cli/python/*.egg-info/
+packages/m9m-cli/python/dist/
+packages/m9m-cli/python/build/
+packages/m9m-cli/python/.pytest_cache/
+packages/m9m-cli/python/uv.lock
+packages/m9m-cli/nodejs/node_modules/
+packages/m9m-cli/nodejs/dist/
+packages/m9m-cli/nodejs/build/
+packages/m9m-cli/nodejs/lib/*.node
+packages/m9m-cli/nodejs/lib/*.so
+packages/m9m-cli/nodejs/lib/*.dylib
+packages/m9m-cli/nodejs/lib/*.dll
+packages/m9m-cli/nodejs/package-lock.json

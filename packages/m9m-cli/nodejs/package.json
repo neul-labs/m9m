@@ -21,7 +21,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/neul-labs/m9m"
+    "url": "git+https://github.com/neul-labs/m9m.git"
   },
   "engines": {
     "node": ">=16.0.0"
