@@ -397,7 +397,7 @@ func TestGoogleSheetsNode_Execute_AppendWithMockServer(t *testing.T) {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		_ = json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = _ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"spreadsheetId": "test-id",
 			"updates": map[string]interface{}{
 				"updatedRows":    1,
@@ -443,7 +443,7 @@ func TestGoogleSheetsNode_Execute_UpdateWithMockServer(t *testing.T) {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		_ = json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = _ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"updatedRange": "Sheet1!A1:B1",
 			"updatedRows":  1,
 		})
@@ -486,7 +486,7 @@ func TestGoogleSheetsNode_Execute_ClearWithMockServer(t *testing.T) {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		_ = json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = _ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"clearedRange":  "Sheet1!A:Z",
 			"spreadsheetId": "test-id",
 		})
@@ -534,7 +534,7 @@ func TestGoogleSheetsNode_Execute_CreateSpreadsheetWithMockServer(t *testing.T) 
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		_ = json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = _ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"spreadsheetId": "new-spreadsheet-id",
 			"properties": map[string]interface{}{
 				"title": "My Spreadsheet",
@@ -579,7 +579,7 @@ func TestGoogleSheetsNode_Execute_CreateSpreadsheetDefaultTitle(t *testing.T) {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		_ = json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = _ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"spreadsheetId": "default-title-id",
 		})
 	}))
@@ -617,7 +617,7 @@ func TestGoogleSheetsNode_Execute_GetSpreadsheetWithMockServer(t *testing.T) {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		_ = json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = _ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"spreadsheetId": "get-test-id",
 			"properties": map[string]interface{}{
 				"title": "Test Sheet",
@@ -657,7 +657,7 @@ func TestGoogleSheetsNode_Execute_APIErrorResponse(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusForbidden)
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"error": map[string]interface{}{
 				"code":    403,
 				"message": "The caller does not have permission",
@@ -699,7 +699,7 @@ func TestGoogleSheetsNode_Execute_MultipleInputItems(t *testing.T) {
 		callCount++
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"range":  "Sheet1!A:Z",
 			"values": []interface{}{},
 		})
@@ -742,7 +742,7 @@ func TestGoogleSheetsNode_Execute_DefaultRange(t *testing.T) {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(map[string]interface{}{"values": []interface{}{}})
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"values": []interface{}{}})
 	}))
 	defer server.Close()
 
@@ -780,7 +780,7 @@ func TestGoogleSheetsNode_Execute_AppendWithExplicitValues(t *testing.T) {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(map[string]interface{}{"updates": map[string]interface{}{}})
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"updates": map[string]interface{}{}})
 	}))
 	defer server.Close()
 

@@ -237,7 +237,7 @@ func TestActivateWorkflow_NotFound(t *testing.T) {
 func TestDeactivateWorkflow(t *testing.T) {
 	store := NewMemoryStorage()
 
-	store.SaveWorkflow(&model.Workflow{ID: "workflow-1", Active: true})
+	_ = store.SaveWorkflow(&model.Workflow{ID: "workflow-1", Active: true})
 
 	err := store.DeactivateWorkflow("workflow-1")
 	require.NoError(t, err)
@@ -358,7 +358,7 @@ func TestListExecutions_Pagination(t *testing.T) {
 func TestDeleteExecution(t *testing.T) {
 	store := NewMemoryStorage()
 
-	store.SaveExecution(&model.WorkflowExecution{ID: "exec-1"})
+	_ = store.SaveExecution(&model.WorkflowExecution{ID: "exec-1"})
 
 	err := store.DeleteExecution("exec-1")
 	require.NoError(t, err)
@@ -438,7 +438,7 @@ _ = store.SaveCredential(&Credential{ID: "c2", Name: "Cred 2"})
 func TestUpdateCredential(t *testing.T) {
 	store := NewMemoryStorage()
 
-	store.SaveCredential(&Credential{ID: "cred-1", Name: "Original"})
+	_ = store.SaveCredential(&Credential{ID: "cred-1", Name: "Original"})
 
 	_ = store.SaveCredential(&Credential{ID: "cred-2", Name: "Original 2"})
 
@@ -459,7 +459,7 @@ func TestUpdateCredential_NotFound(t *testing.T) {
 func TestDeleteCredential(t *testing.T) {
 	store := NewMemoryStorage()
 
-	store.SaveCredential(&Credential{ID: "cred-1"})
+	_ = store.SaveCredential(&Credential{ID: "cred-1"})
 
 	err := store.DeleteCredential("cred-1")
 	require.NoError(t, err)
@@ -536,7 +536,7 @@ _ = store.SaveTag(&Tag{ID: "t2", Name: "Tag 2"})
 func TestUpdateTag(t *testing.T) {
 	store := NewMemoryStorage()
 
-	store.SaveTag(&Tag{ID: "tag-1", Name: "Original"})
+	_ = store.SaveTag(&Tag{ID: "tag-1", Name: "Original"})
 
 	_ = store.SaveTag(&Tag{ID: "tag-2", Name: "Original 2"})
 
@@ -557,7 +557,7 @@ func TestUpdateTag_NotFound(t *testing.T) {
 func TestDeleteTag(t *testing.T) {
 	store := NewMemoryStorage()
 
-	store.SaveTag(&Tag{ID: "tag-1"})
+	_ = store.SaveTag(&Tag{ID: "tag-1"})
 
 	err := store.DeleteTag("tag-1")
 	require.NoError(t, err)
@@ -634,7 +634,7 @@ _ = store.SaveRaw("settings:1", []byte("data3"))
 func TestListKeys_NoMatch(t *testing.T) {
 	store := NewMemoryStorage()
 
-	store.SaveRaw("key-1", []byte("data"))
+	_ = store.SaveRaw("key-1", []byte("data"))
 
 	keys, err := store.ListKeys("nonexistent:")
 	require.NoError(t, err)
@@ -644,7 +644,7 @@ func TestListKeys_NoMatch(t *testing.T) {
 func TestDeleteRaw(t *testing.T) {
 	store := NewMemoryStorage()
 
-	store.SaveRaw("key-1", []byte("data"))
+	_ = store.SaveRaw("key-1", []byte("data"))
 
 	_ = store.SaveRaw("key-2", []byte("data2"))
 
@@ -684,7 +684,7 @@ func TestConcurrentWorkflowOperations(t *testing.T) {
 		wg.Add(1)
 		go func(id int) {
 			defer wg.Done()
-			store.SaveWorkflow(&model.Workflow{
+			_ = store.SaveWorkflow(&model.Workflow{
 				ID:   string(rune('a' + (id % 26))),
 				Name: "Workflow",
 			})
