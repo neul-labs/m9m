@@ -238,7 +238,7 @@ func TestGetWorkflow(t *testing.T) {
 		Name:   "Test Workflow",
 		Active: false,
 	}
-	store.SaveWorkflow(workflow)
+	_ = store.SaveWorkflow(workflow)
 
 	req := httptest.NewRequest("GET", "/api/v1/workflows/test-workflow-1", nil)
 	w := httptest.NewRecorder()
@@ -275,7 +275,7 @@ func TestUpdateWorkflow(t *testing.T) {
 		Name:   "Original Name",
 		Active: false,
 	}
-	store.SaveWorkflow(workflow)
+	_ = store.SaveWorkflow(workflow)
 
 	// Update it
 	updatedWorkflow := model.Workflow{

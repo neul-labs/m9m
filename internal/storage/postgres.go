@@ -223,10 +223,10 @@ func (s *PostgresStorage) ListWorkflows(filters WorkflowFilters) ([]*model.Workf
 			continue
 		}
 
-		json.Unmarshal(nodesJSON, &workflow.Nodes)
-		json.Unmarshal(connectionsJSON, &workflow.Connections)
-		json.Unmarshal(settingsJSON, &workflow.Settings)
-		json.Unmarshal(tagsJSON, &workflow.Tags)
+		_ = json.Unmarshal(nodesJSON, &workflow.Nodes)
+		_ = json.Unmarshal(connectionsJSON, &workflow.Connections)
+		_ = json.Unmarshal(settingsJSON, &workflow.Settings)
+		_ = json.Unmarshal(tagsJSON, &workflow.Tags)
 
 		workflows = append(workflows, &workflow)
 	}

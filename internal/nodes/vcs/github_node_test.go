@@ -170,7 +170,7 @@ func TestGitHubNode_Execute_RepositoryList(t *testing.T) {
 		assert.Equal(t, "/users/testowner/repos", r.URL.Path)
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(mockResponse)
+		_ = json.NewEncoder(w).Encode(mockResponse)
 	}))
 	defer server.Close()
 
@@ -203,7 +203,7 @@ func TestGitHubNode_Execute_RepositoryList(t *testing.T) {
 func TestGitHubNode_Execute_UnsupportedRepoOperation(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(map[string]interface{}{})
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{})
 	}))
 	defer server.Close()
 
@@ -244,7 +244,7 @@ func TestGitHubNode_Execute_IssueList(t *testing.T) {
 		assert.Equal(t, "/repos/testowner/test-repo/issues", r.URL.Path)
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(mockResponse)
+		_ = json.NewEncoder(w).Encode(mockResponse)
 	}))
 	defer server.Close()
 
@@ -287,7 +287,7 @@ func TestGitHubNode_Execute_IssueGet(t *testing.T) {
 		assert.Equal(t, "/repos/testowner/test-repo/issues/42", r.URL.Path)
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(mockResponse)
+		_ = json.NewEncoder(w).Encode(mockResponse)
 	}))
 	defer server.Close()
 
@@ -355,7 +355,7 @@ func TestGitHubNode_Execute_PullRequestList(t *testing.T) {
 		assert.Equal(t, "/repos/testowner/test-repo/pulls", r.URL.Path)
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(mockResponse)
+		_ = json.NewEncoder(w).Encode(mockResponse)
 	}))
 	defer server.Close()
 
@@ -399,7 +399,7 @@ func TestGitHubNode_Execute_PullRequestGet(t *testing.T) {
 		assert.Equal(t, "/repos/testowner/test-repo/pulls/99", r.URL.Path)
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(mockResponse)
+		_ = json.NewEncoder(w).Encode(mockResponse)
 	}))
 	defer server.Close()
 
@@ -470,7 +470,7 @@ func TestGitHubNode_Execute_UserGetAuthenticated(t *testing.T) {
 		assert.Equal(t, "/user", r.URL.Path)
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(mockResponse)
+		_ = json.NewEncoder(w).Encode(mockResponse)
 	}))
 	defer server.Close()
 
@@ -511,7 +511,7 @@ func TestGitHubNode_Execute_UserGet(t *testing.T) {
 		assert.Equal(t, "/users/otheruser", r.URL.Path)
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(mockResponse)
+		_ = json.NewEncoder(w).Encode(mockResponse)
 	}))
 	defer server.Close()
 
@@ -570,7 +570,7 @@ func TestGitHubNode_Execute_UnsupportedUserOperation(t *testing.T) {
 func TestGitHubNode_Execute_APIError(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"message": "Not Found",
 		})
 	}))
@@ -611,7 +611,7 @@ func TestGitHubNode_Execute_DefaultResourceAndOperation(t *testing.T) {
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(mockResponse)
+		_ = json.NewEncoder(w).Encode(mockResponse)
 	}))
 	defer server.Close()
 
@@ -651,7 +651,7 @@ func TestGitHubNode_Execute_OwnerRepoFromInputData(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "/repos/inputowner/from-input", r.URL.Path)
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(mockResponse)
+		_ = json.NewEncoder(w).Encode(mockResponse)
 	}))
 	defer server.Close()
 
@@ -689,7 +689,7 @@ func TestGitHubNode_Execute_MultipleInputItems(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		callCount++
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"call": float64(callCount),
 		})
 	}))

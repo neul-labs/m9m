@@ -397,7 +397,7 @@ func RequireAdminMiddleware(next http.Handler) http.Handler {
 		if authCtx == nil {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusUnauthorized)
-			w.Write([]byte(`{
+			_, _ = w.Write([]byte(`{
 				"error": true,
 				"message": "Authentication required",
 				"code": 401
@@ -409,7 +409,7 @@ func RequireAdminMiddleware(next http.Handler) http.Handler {
 		if !authCtx.HasPermission("admin") {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusForbidden)
-			w.Write([]byte(`{
+			_, _ = w.Write([]byte(`{
 				"error": true,
 				"message": "Admin access required",
 				"code": 403
