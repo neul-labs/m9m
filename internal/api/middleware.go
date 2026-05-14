@@ -345,7 +345,7 @@ func RequireAuthMiddleware(next http.Handler) http.Handler {
 		if authCtx == nil {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusUnauthorized)
-			w.Write([]byte(`{
+			_, _ = w.Write([]byte(`{
 				"error": true,
 				"message": "Authentication required",
 				"code": 401
@@ -377,7 +377,7 @@ func RequirePermissionMiddleware(permission string) func(http.Handler) http.Hand
 			if !authCtx.HasPermission(permission) {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusForbidden)
-				w.Write([]byte(`{
+				_, _ = w.Write([]byte(`{
 					"error": true,
 					"message": "Permission denied: ` + permission + ` required",
 					"code": 403

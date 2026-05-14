@@ -144,7 +144,7 @@ func (h *AuthHandler) UpdateCurrentUser(w http.ResponseWriter, r *http.Request) 
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(updatedUser.Sanitize())
+	_ = json.NewEncoder(w).Encode(updatedUser.Sanitize())
 }
 
 // ListUsers lists all users (admin only)
@@ -169,7 +169,7 @@ func (h *AuthHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"data":  sanitized,
 		"count": len(sanitized),
 	})
@@ -198,7 +198,7 @@ func (h *AuthHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(newUser)
+	_ = json.NewEncoder(w).Encode(newUser)
 }
 
 // GetUser gets a user by ID (admin only)

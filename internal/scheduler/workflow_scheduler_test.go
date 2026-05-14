@@ -444,7 +444,7 @@ func TestScheduleConfig_InputData(t *testing.T) {
 		InputData:  inputData,
 	}
 
-	scheduler.AddSchedule(config)
+	_ = scheduler.AddSchedule(config)
 
 	retrieved, _ := scheduler.GetSchedule("schedule-1")
 	assert.Len(t, retrieved.InputData, 1)

@@ -126,7 +126,7 @@ func (t *ExecutionRunTool) Execute(ctx context.Context, args map[string]interfac
 
 	execution.Status = "completed"
 	execution.Data = result.Data
-	t.storage.SaveExecution(execution)
+	_ = t.storage.SaveExecution(execution)
 
 	return mcp.SuccessJSON(map[string]interface{}{
 		"executionId": executionId,

@@ -155,10 +155,10 @@ func (s *PostgresStorage) GetWorkflow(id string) (*model.Workflow, error) {
 		return nil, err
 	}
 
-	json.Unmarshal(nodesJSON, &workflow.Nodes)
-	json.Unmarshal(connectionsJSON, &workflow.Connections)
-	json.Unmarshal(settingsJSON, &workflow.Settings)
-	json.Unmarshal(tagsJSON, &workflow.Tags)
+	_ = json.Unmarshal(nodesJSON, &workflow.Nodes)
+	_ = json.Unmarshal(connectionsJSON, &workflow.Connections)
+	_ = json.Unmarshal(settingsJSON, &workflow.Settings)
+	_ = json.Unmarshal(tagsJSON, &workflow.Tags)
 
 	return &workflow, nil
 }
