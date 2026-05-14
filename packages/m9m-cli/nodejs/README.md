@@ -1,11 +1,11 @@
-# @m9m/workflow-engine
+# m9m-cli
 
 Node.js bindings for the m9m high-performance workflow automation engine.
 
 ## Installation
 
 ```bash
-npm install @m9m/workflow-engine
+npm install m9m-cli
 ```
 
 ### Prerequisites
@@ -20,7 +20,7 @@ make shared
 Then build the native addon:
 
 ```bash
-cd bindings/nodejs
+cd packages/m9m-cli/nodejs
 npm install
 npm run build
 ```
@@ -28,7 +28,7 @@ npm run build
 ## Quick Start
 
 ```typescript
-import { WorkflowEngine, Workflow, createWorkflow } from '@m9m/workflow-engine';
+import { WorkflowEngine, Workflow, createWorkflow } from 'm9m-cli';
 
 // Create an engine
 const engine = new WorkflowEngine();
@@ -66,7 +66,7 @@ const processData = engine.node('custom.process')((input, params) => {
 ## Creating Workflows
 
 ```typescript
-import { createWorkflow } from '@m9m/workflow-engine';
+import { createWorkflow } from 'm9m-cli';
 
 const workflow = createWorkflow({
   name: 'My Workflow',
@@ -95,7 +95,7 @@ const workflow = createWorkflow({
 Use the credential manager for secure credential storage:
 
 ```typescript
-import { WorkflowEngine, CredentialManager } from '@m9m/workflow-engine';
+import { WorkflowEngine, CredentialManager } from 'm9m-cli';
 
 const credManager = new CredentialManager();
 credManager.store({
@@ -147,7 +147,7 @@ import type {
   WorkflowNode,
   CredentialData,
   NodeExecutorFn
-} from '@m9m/workflow-engine';
+} from 'm9m-cli';
 ```
 
 ## License

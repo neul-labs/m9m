@@ -6,7 +6,7 @@ Python bindings for the m9m high-performance workflow automation engine.
 
 ```bash
 # From source
-cd bindings/python
+cd packages/m9m-cli/python
 pip install -e .
 ```
 

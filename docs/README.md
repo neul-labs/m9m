@@ -35,8 +35,8 @@ Official launch path: single binary distribution via package managers and releas
 ### SDK & Language Bindings
 - [SDK Overview](sdk/README.md) - Embedding m9m in your applications
 - Go SDK (`pkg/m9m`) - Native Go library
-- Python Bindings (`bindings/python`) - ctypes-based Python library
-- Node.js Bindings (`bindings/nodejs`) - N-API native addon
+- Python Package (`packages/m9m-cli/python`) - ctypes-based Python library
+- Node.js Package (`packages/m9m-cli/nodejs`) - N-API native addon
 
 ### Features
 - [Plugin System](PLUGIN_SYSTEM.md) - Plugin development and usage

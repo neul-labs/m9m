@@ -11,6 +11,7 @@ env:
 permissions:
   contents: write
   packages: write
+  id-token: write
   pull-requests: read
 
 jobs:
@@ -127,13 +128,23 @@ jobs:
 
           ## Installation
 
-          ### Docker
+          ### Docker (GHCR)
           ```bash
-          docker pull neul-labs/m9m:${{ needs.get-version.outputs.version }}
+          docker pull ghcr.io/neul-labs/m9m:${{ needs.get-version.outputs.version }}
           ```
 
           ### Binary
           Download the binary for your platform below.
+
+          ### npm
+          ```bash
+          npm install m9m-cli@${{ needs.get-version.outputs.version }}
+          ```
+
+          ### PyPI
+          ```bash
+          pip install m9m-cli==${{ needs.get-version.outputs.version }}
+          ```
 
           ### From Source
           ```bash
@@ -169,12 +180,6 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
@@ -187,7 +192,6 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            neul-labs/m9m
             ghcr.io/${{ github.repository }}
           tags: |
             type=semver,pattern={{version}}
@@ -213,6 +217,9 @@ jobs:
     needs: get-version
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      id-token: write
+      contents: read
 
     steps:
       - name: Checkout code
@@ -225,11 +232,11 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - name: Sync version and publish
-        working-directory: bindings/nodejs
+        working-directory: packages/m9m-cli/nodejs
         run: |
           VERSION=${{ needs.get-version.outputs.version }}
           npm version "$VERSION" --no-git-tag-version
-          npm publish --access public
+          npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
@@ -238,6 +245,9 @@ jobs:
     needs: get-version
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      id-token: write
+      contents: read
 
     steps:
       - name: Checkout code
@@ -252,7 +262,7 @@ jobs:
         run: pip install build hatchling
 
       - name: Sync version and build
-        working-directory: bindings/python
+        working-directory: packages/m9m-cli/python
         run: |
           VERSION=${{ needs.get-version.outputs.version }}
           sed -i "s/version = \".*\"/version = \"$VERSION\"/" pyproject.toml
@@ -261,53 +271,4 @@ jobs:
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          packages-dir: bindings/python/dist
-          password: ${{ secrets.PYPI_API_TOKEN }}
-
-  homebrew:
-    name: Update Homebrew Formula
-    needs: [get-version, release]
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
-
-    steps:
-      - name: Checkout homebrew-tap repository
-        uses: actions/checkout@v4
-        with:
-          repository: neul-labs/homebrew-tap
-          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
-
-      - name: Update formula
-        run: |
-          VERSION=${{ needs.get-version.outputs.version }}
-          BASE_URL="https://github.com/neul-labs/m9m/releases/download/v${VERSION}"
-
-          # Update version
-          sed -i "s/version \".*\"/version \"$VERSION\"/" Formula/m9m.rb
-
-          # Update URLs and SHA256s for all platforms
-          for platform in darwin-amd64 darwin-arm64 linux-amd64 linux-arm64; do
-            # Download SHA256 checksum file
-            curl -sSL "${BASE_URL}/m9m-${platform}.sha256" -o "${platform}.sha256"
-            SHA256=$(cut -d' ' -f1 "${platform}.sha256")
-
-            # Update URL
-            sed -i "s|https://github.com/neul-labs/m9m/releases/download/v[^/\\\"]*/m9m-${platform}|https://github.com/neul-labs/m9m/releases/download/v${VERSION}/m9m-${platform}|g" Formula/m9m.rb
-
-            # Update SHA256 (line immediately following the URL for this platform)
-            sed -i "/m9m-${platform}\"\)/!b;n;s/sha256 \".*\"/sha256 \"${SHA256}\"/" Formula/m9m.rb
-          done
-
-          rm -f *.sha256
-
-      - name: Commit and push
-        run: |
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-          git add Formula/m9m.rb
-          if git diff --cached --quiet; then
-            echo "No formula changes to commit"
-            exit 0
-          fi
-          git commit -m "Update m9m to v${{ needs.get-version.outputs.version }}"
-          git push
+          packages-dir: packages/m9m-cli/python/dist

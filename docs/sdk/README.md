@@ -7,8 +7,8 @@ m9m can be embedded as a library in your applications. This documentation covers
 | Language | Package | Status |
 |----------|---------|--------|
 | Go | `pkg/m9m` | Stable |
-| Python | `bindings/python` | Stable |
-| Node.js | `bindings/nodejs` | Stable |
+| Python | `packages/m9m-cli/python` | Stable |
+| Node.js | `packages/m9m-cli/nodejs` | Stable |
 
 ## Go SDK
 
@@ -116,7 +116,7 @@ func (n *MyNode) Description() m9m.NodeDescription {
 ## Python Bindings
 
 ```bash
-pip install m9m
+pip install m9m-cli
 ```
 
 ### Quick Start
@@ -204,13 +204,13 @@ result.success   # Boolean
 ## Node.js Bindings
 
 ```bash
-npm install @m9m/workflow-engine
+npm install m9m-cli
 ```
 
 ### Quick Start
 
 ```typescript
-import { WorkflowEngine, Workflow } from '@m9m/workflow-engine';
+import { WorkflowEngine, Workflow } from 'm9m-cli';
 
 const engine = new WorkflowEngine();
 
@@ -231,7 +231,7 @@ console.log(result.data);
 #### WorkflowEngine
 
 ```typescript
-import { WorkflowEngine, CredentialManager } from '@m9m/workflow-engine';
+import { WorkflowEngine, CredentialManager } from 'm9m-cli';
 
 // Basic engine
 const engine = new WorkflowEngine();
@@ -247,7 +247,7 @@ const result = await engine.execute(workflow, inputData);
 #### Workflow
 
 ```typescript
-import { Workflow } from '@m9m/workflow-engine';
+import { Workflow } from 'm9m-cli';
 
 // From JSON object
 const workflow = Workflow.fromJSON({
@@ -325,10 +325,10 @@ make nodejs-bindings
 cd pkg/m9m && go test -v ./...
 
 # Python tests
-cd bindings/python && uv run pytest tests/ -v
+cd packages/m9m-cli/python && uv run pytest tests/ -v
 
 # Node.js tests
-cd bindings/nodejs && npm test
+cd packages/m9m-cli/nodejs && npm test
 ```
 
 ## Architecture

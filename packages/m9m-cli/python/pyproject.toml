@@ -1,5 +1,5 @@
 [project]
-name = "m9m"
+name = "m9m-cli"
 version = "1.0.0"
 description = "Python bindings for the m9m workflow automation engine"
 readme = "README.md"
