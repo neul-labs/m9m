@@ -7,7 +7,6 @@ import (
 	"log"
 	"net"
 	"os"
-	"os/signal"
 	"path/filepath"
 	"sync"
 	"time"
