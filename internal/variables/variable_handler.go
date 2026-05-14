@@ -69,7 +69,7 @@ func (h *VariableHandler) ListVariables(w http.ResponseWriter, r *http.Request) 
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"data":   variables,
 		"total":  total,
 		"count":  len(variables),
@@ -99,7 +99,7 @@ func (h *VariableHandler) CreateVariable(w http.ResponseWriter, r *http.Request)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(variable)
+	_ = json.NewEncoder(w).Encode(variable)
 }
 
 // GetVariable retrieves a specific variable
@@ -117,7 +117,7 @@ func (h *VariableHandler) GetVariable(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(variable)
+	_ = json.NewEncoder(w).Encode(variable)
 }
 
 // UpdateVariable updates a variable
@@ -138,7 +138,7 @@ func (h *VariableHandler) UpdateVariable(w http.ResponseWriter, r *http.Request)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(variable)
+	_ = json.NewEncoder(w).Encode(variable)
 }
 
 // DeleteVariable deletes a variable
@@ -163,7 +163,7 @@ func (h *VariableHandler) ListEnvironments(w http.ResponseWriter, r *http.Reques
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"data":  environments,
 		"total": len(environments),
 		"count": len(environments),
@@ -186,7 +186,7 @@ func (h *VariableHandler) CreateEnvironment(w http.ResponseWriter, r *http.Reque
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(environment)
+	_ = json.NewEncoder(w).Encode(environment)
 }
 
 // GetEnvironment retrieves a specific environment
@@ -201,7 +201,7 @@ func (h *VariableHandler) GetEnvironment(w http.ResponseWriter, r *http.Request)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(environment)
+	_ = json.NewEncoder(w).Encode(environment)
 }
 
 // UpdateEnvironment updates an environment
@@ -222,7 +222,7 @@ func (h *VariableHandler) UpdateEnvironment(w http.ResponseWriter, r *http.Reque
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(environment)
+	_ = json.NewEncoder(w).Encode(environment)
 }
 
 // DeleteEnvironment deletes an environment
@@ -250,7 +250,7 @@ func (h *VariableHandler) GetWorkflowVariables(w http.ResponseWriter, r *http.Re
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"workflowId": workflowID,
 		"variables":  variables,
 	})
@@ -273,7 +273,7 @@ func (h *VariableHandler) SaveWorkflowVariables(w http.ResponseWriter, r *http.R
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"success":    true,
 		"workflowId": workflowID,
 		"variables":  request,

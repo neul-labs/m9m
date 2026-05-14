@@ -92,7 +92,7 @@ func TestElasticsearchNode_IndexWithID(t *testing.T) {
 func TestElasticsearchNode_Get(t *testing.T) {
 	server, node := setupESServer(t, func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "GET", r.Method)
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"_id":     "1",
 			"_source": map[string]interface{}{"name": "test"},
 		})
@@ -114,7 +114,7 @@ func TestElasticsearchNode_Get(t *testing.T) {
 func TestElasticsearchNode_Delete(t *testing.T) {
 	server, node := setupESServer(t, func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "DELETE", r.Method)
-		json.NewEncoder(w).Encode(map[string]interface{}{"result": "deleted"})
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"result": "deleted"})
 	})
 	defer server.Close()
 
@@ -134,7 +134,7 @@ func TestElasticsearchNode_Update(t *testing.T) {
 	server, node := setupESServer(t, func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "POST", r.Method)
 		assert.Contains(t, r.URL.Path, "/_update/")
-		json.NewEncoder(w).Encode(map[string]interface{}{"result": "updated"})
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"result": "updated"})
 	})
 	defer server.Close()
 
@@ -155,7 +155,7 @@ func TestElasticsearchNode_CreateIndex(t *testing.T) {
 	server, node := setupESServer(t, func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "PUT", r.Method)
 		assert.Equal(t, "/newindex", r.URL.Path)
-		json.NewEncoder(w).Encode(map[string]interface{}{"acknowledged": true})
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"acknowledged": true})
 	})
 	defer server.Close()
 
@@ -174,7 +174,7 @@ func TestElasticsearchNode_Bulk(t *testing.T) {
 	server, node := setupESServer(t, func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "POST", r.Method)
 		assert.Equal(t, "application/x-ndjson", r.Header.Get("Content-Type"))
-		json.NewEncoder(w).Encode(map[string]interface{}{"errors": false, "items": []interface{}{}})
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"errors": false, "items": []interface{}{}})
 	})
 	defer server.Close()
 

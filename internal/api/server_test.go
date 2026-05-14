@@ -692,7 +692,7 @@ func TestExecuteWorkflow_ResultErrorMarksFailed(t *testing.T) {
 	router := mux.NewRouter()
 	server.RegisterRoutes(router)
 
-	store.SaveWorkflow(&model.Workflow{
+	_ = store.SaveWorkflow(&model.Workflow{
 		ID:   "wf-1",
 		Name: "Test",
 		Nodes: []model.Node{
@@ -1014,7 +1014,7 @@ func TestListWorkflows_Pagination(t *testing.T) {
 			Name:   "Workflow " + string(rune('A'+i)),
 			Active: false,
 		}
-		store.SaveWorkflow(workflow)
+		_ = store.SaveWorkflow(workflow)
 	}
 
 	req := httptest.NewRequest("GET", "/api/v1/workflows?limit=2&offset=0", nil)
@@ -1037,8 +1037,8 @@ func TestListWorkflows_FilterByActive(t *testing.T) {
 	_, router, store := setupTestServer(t)
 
 	// Create active and inactive workflows
-	store.SaveWorkflow(&model.Workflow{ID: "active-1", Name: "Active", Active: true})
-	store.SaveWorkflow(&model.Workflow{ID: "inactive-1", Name: "Inactive", Active: false})
+	_ = store.SaveWorkflow(&model.Workflow{ID: "active-1", Name: "Active", Active: true})
+	_ = store.SaveWorkflow(&model.Workflow{ID: "inactive-1", Name: "Inactive", Active: false})
 
 	req := httptest.NewRequest("GET", "/api/v1/workflows?active=true", nil)
 	w := httptest.NewRecorder()
@@ -1064,7 +1064,7 @@ func TestUpdateWorkflow_InvalidJSON(t *testing.T) {
 	_, router, store := setupTestServer(t)
 
 	// Create a workflow first
-	store.SaveWorkflow(&model.Workflow{ID: "test-1", Name: "Test"})
+	_ = store.SaveWorkflow(&model.Workflow{ID: "test-1", Name: "Test"})
 
 	req := httptest.NewRequest("PUT", "/api/v1/workflows/test-1", bytes.NewReader([]byte("invalid")))
 	req.Header.Set("Content-Type", "application/json")

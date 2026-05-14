@@ -62,7 +62,7 @@ func (h *TagHandler) ListTags(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"data":   tags,
 		"total":  total,
 		"count":  len(tags),
@@ -91,7 +91,7 @@ func (h *TagHandler) CreateTag(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(tag)
+	_ = json.NewEncoder(w).Encode(tag)
 }
 
 // GetTag retrieves a specific tag
@@ -110,7 +110,7 @@ func (h *TagHandler) GetTag(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(tag)
+	_ = json.NewEncoder(w).Encode(tag)
 }
 
 // UpdateTag updates a tag
@@ -137,7 +137,7 @@ func (h *TagHandler) UpdateTag(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(tag)
+	_ = json.NewEncoder(w).Encode(tag)
 }
 
 // DeleteTag deletes a tag
@@ -172,7 +172,7 @@ func (h *TagHandler) GetWorkflowTags(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"data":  tags,
 		"count": len(tags),
 	})
@@ -202,7 +202,7 @@ func (h *TagHandler) SetWorkflowTags(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"success": true,
 		"data":    tags,
 		"count":   len(tags),
@@ -225,7 +225,7 @@ func (h *TagHandler) AddWorkflowTag(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"success": true,
 		"message": "Tag added to workflow",
 	})

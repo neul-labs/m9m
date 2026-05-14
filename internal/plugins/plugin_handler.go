@@ -110,7 +110,7 @@ func (h *PluginHandler) ReloadPlugins(w http.ResponseWriter, r *http.Request) {
 	log.Printf("✅ Plugins reloaded successfully: %d total", stats["total"])
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	_ = json.NewEncoder(w).Encode(response)
 }
 
 // ReloadSinglePlugin reloads a specific plugin
@@ -134,7 +134,7 @@ func (h *PluginHandler) ReloadSinglePlugin(w http.ResponseWriter, r *http.Reques
 	log.Printf("✅ Plugin %s reloaded successfully", name)
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	_ = json.NewEncoder(w).Encode(response)
 }
 
 // UploadPlugin handles plugin file uploads (for cluster distribution)
@@ -205,7 +205,7 @@ func (h *PluginHandler) UploadPlugin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	_ = json.NewEncoder(w).Encode(response)
 }
 
 // DeletePlugin removes a plugin file
@@ -244,14 +244,14 @@ func (h *PluginHandler) DeletePlugin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	_ = json.NewEncoder(w).Encode(response)
 }
 
 // sendError sends an error response
 func (h *PluginHandler) sendError(w http.ResponseWriter, statusCode int, message string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"success": false,
 		"error":   message,
 	})

@@ -60,7 +60,7 @@ func (h *VersionHandler) ListVersions(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"data":   versions,
 		"total":  total,
 		"count":  len(versions),
@@ -94,7 +94,7 @@ func (h *VersionHandler) CreateVersion(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(version)
+	_ = json.NewEncoder(w).Encode(version)
 }
 
 // GetVersion retrieves a specific version
@@ -109,7 +109,7 @@ func (h *VersionHandler) GetVersion(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(version)
+	_ = json.NewEncoder(w).Encode(version)
 }
 
 // DeleteVersion deletes a version
@@ -149,7 +149,7 @@ func (h *VersionHandler) RestoreVersion(w http.ResponseWriter, r *http.Request) 
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"message":        "Workflow restored successfully",
 		"restoredFrom":   version,
 		"backupCreated":  request.CreateBackup,
@@ -173,5 +173,5 @@ func (h *VersionHandler) CompareVersions(w http.ResponseWriter, r *http.Request)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(comparison)
+	_ = json.NewEncoder(w).Encode(comparison)
 }

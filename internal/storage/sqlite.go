@@ -157,8 +157,8 @@ func (s *SQLiteStorage) GetWorkflow(id string) (*model.Workflow, error) {
 
 	_ = json.Unmarshal([]byte(nodesJSON), &workflow.Nodes)
 	_ = json.Unmarshal([]byte(connectionsJSON), &workflow.Connections)
-	json.Unmarshal([]byte(settingsJSON), &workflow.Settings)
-	json.Unmarshal([]byte(tagsJSON), &workflow.Tags)
+	_ = json.Unmarshal([]byte(settingsJSON), &workflow.Settings)
+	_ = json.Unmarshal([]byte(tagsJSON), &workflow.Tags)
 
 	return &workflow, nil
 }
@@ -227,10 +227,10 @@ func (s *SQLiteStorage) ListWorkflows(filters WorkflowFilters) ([]*model.Workflo
 
 		workflow.Active = activeInt == 1
 
-		json.Unmarshal([]byte(nodesJSON), &workflow.Nodes)
-		json.Unmarshal([]byte(connectionsJSON), &workflow.Connections)
-		json.Unmarshal([]byte(settingsJSON), &workflow.Settings)
-		json.Unmarshal([]byte(tagsJSON), &workflow.Tags)
+		_ = json.Unmarshal([]byte(nodesJSON), &workflow.Nodes)
+		_ = json.Unmarshal([]byte(connectionsJSON), &workflow.Connections)
+		_ = json.Unmarshal([]byte(settingsJSON), &workflow.Settings)
+		_ = json.Unmarshal([]byte(tagsJSON), &workflow.Tags)
 
 		workflows = append(workflows, &workflow)
 	}
@@ -352,7 +352,7 @@ func (s *SQLiteStorage) GetExecution(id string) (*model.WorkflowExecution, error
 		execution.FinishedAt = &finishedAt.Time
 	}
 
-	json.Unmarshal([]byte(dataJSON), &execution.Data)
+	_ = json.Unmarshal([]byte(dataJSON), &execution.Data)
 
 	if errorText.Valid && errorText.String != "" {
 		execution.Error = fmt.Errorf("%s", errorText.String)
@@ -423,7 +423,7 @@ func (s *SQLiteStorage) ListExecutions(filters ExecutionFilters) ([]*model.Workf
 			execution.FinishedAt = &finishedAt.Time
 		}
 
-		json.Unmarshal([]byte(dataJSON), &execution.Data)
+		_ = json.Unmarshal([]byte(dataJSON), &execution.Data)
 
 		if errorText.Valid && errorText.String != "" {
 			execution.Error = fmt.Errorf("%s", errorText.String)
@@ -494,7 +494,7 @@ func (s *SQLiteStorage) GetCredential(id string) (*Credential, error) {
 		return nil, err
 	}
 
-	json.Unmarshal([]byte(dataJSON), &credential.Data)
+	_ = json.Unmarshal([]byte(dataJSON), &credential.Data)
 
 	return &credential, nil
 }
@@ -521,7 +521,7 @@ func (s *SQLiteStorage) ListCredentials() ([]*Credential, error) {
 			continue
 		}
 
-		json.Unmarshal([]byte(dataJSON), &credential.Data)
+		_ = json.Unmarshal([]byte(dataJSON), &credential.Data)
 		credentials = append(credentials, &credential)
 	}
 

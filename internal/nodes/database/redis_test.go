@@ -19,7 +19,7 @@ func setupRedisServer(t *testing.T, handler http.HandlerFunc) (*httptest.Server,
 
 func TestRedisNode_Get(t *testing.T) {
 	server, node := setupRedisServer(t, func(w http.ResponseWriter, r *http.Request) {
-		json.NewEncoder(w).Encode("hello")
+		_ = json.NewEncoder(w).Encode("hello")
 	})
 	defer server.Close()
 
@@ -42,7 +42,7 @@ func TestRedisNode_Set(t *testing.T) {
 		assert.Equal(t, "SET", cmd[0])
 		assert.Equal(t, "mykey", cmd[1])
 		assert.Equal(t, "myvalue", cmd[2])
-		json.NewEncoder(w).Encode("OK")
+		_ = json.NewEncoder(w).Encode("OK")
 	})
 	defer server.Close()
 
@@ -60,7 +60,7 @@ func TestRedisNode_Set(t *testing.T) {
 
 func TestRedisNode_Delete(t *testing.T) {
 	server, node := setupRedisServer(t, func(w http.ResponseWriter, r *http.Request) {
-		json.NewEncoder(w).Encode(float64(1))
+		_ = json.NewEncoder(w).Encode(float64(1))
 	})
 	defer server.Close()
 
@@ -77,7 +77,7 @@ func TestRedisNode_Delete(t *testing.T) {
 
 func TestRedisNode_Keys(t *testing.T) {
 	server, node := setupRedisServer(t, func(w http.ResponseWriter, r *http.Request) {
-		json.NewEncoder(w).Encode([]string{"key1", "key2"})
+		_ = json.NewEncoder(w).Encode([]string{"key1", "key2"})
 	})
 	defer server.Close()
 
@@ -94,7 +94,7 @@ func TestRedisNode_Keys(t *testing.T) {
 
 func TestRedisNode_HashOps(t *testing.T) {
 	server, node := setupRedisServer(t, func(w http.ResponseWriter, r *http.Request) {
-		json.NewEncoder(w).Encode("OK")
+		_ = json.NewEncoder(w).Encode("OK")
 	})
 	defer server.Close()
 
@@ -126,7 +126,7 @@ func TestRedisNode_HashOps(t *testing.T) {
 
 func TestRedisNode_ListOps(t *testing.T) {
 	server, node := setupRedisServer(t, func(w http.ResponseWriter, r *http.Request) {
-		json.NewEncoder(w).Encode(float64(1))
+		_ = json.NewEncoder(w).Encode(float64(1))
 	})
 	defer server.Close()
 
@@ -155,7 +155,7 @@ func TestRedisNode_ListOps(t *testing.T) {
 
 func TestRedisNode_LRange(t *testing.T) {
 	server, node := setupRedisServer(t, func(w http.ResponseWriter, r *http.Request) {
-		json.NewEncoder(w).Encode([]string{"a", "b", "c"})
+		_ = json.NewEncoder(w).Encode([]string{"a", "b", "c"})
 	})
 	defer server.Close()
 
@@ -174,7 +174,7 @@ func TestRedisNode_LRange(t *testing.T) {
 
 func TestRedisNode_Incr(t *testing.T) {
 	server, node := setupRedisServer(t, func(w http.ResponseWriter, r *http.Request) {
-		json.NewEncoder(w).Encode(float64(5))
+		_ = json.NewEncoder(w).Encode(float64(5))
 	})
 	defer server.Close()
 
@@ -191,7 +191,7 @@ func TestRedisNode_Incr(t *testing.T) {
 
 func TestRedisNode_Expire(t *testing.T) {
 	server, node := setupRedisServer(t, func(w http.ResponseWriter, r *http.Request) {
-		json.NewEncoder(w).Encode(float64(1))
+		_ = json.NewEncoder(w).Encode(float64(1))
 	})
 	defer server.Close()
 

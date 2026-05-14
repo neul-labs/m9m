@@ -107,7 +107,7 @@ func (h *Handler) ListWebhooks(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"data":  webhooks,
 		"count": len(webhooks),
 	})
@@ -128,7 +128,7 @@ func (h *Handler) CreateWebhook(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(webhook)
+	_ = json.NewEncoder(w).Encode(webhook)
 }
 
 // GetWebhook retrieves a webhook by ID
@@ -143,7 +143,7 @@ func (h *Handler) GetWebhook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(webhook)
+	_ = json.NewEncoder(w).Encode(webhook)
 }
 
 // DeleteWebhook deletes a webhook
@@ -284,7 +284,7 @@ func (h *Handler) sendResponse(w http.ResponseWriter, response *WebhookResponse)
 		case []byte:
 			_, _ = w.Write(body)
 		default:
-			json.NewEncoder(w).Encode(body)
+			_ = json.NewEncoder(w).Encode(body)
 		}
 	}
 }

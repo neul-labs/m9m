@@ -21,7 +21,7 @@ func TestStripeNode_CreateCustomer(t *testing.T) {
 		assert.Equal(t, "alice@example.com", r.FormValue("email"))
 		assert.Equal(t, "Alice", r.FormValue("name"))
 
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"id":     "cus_abc123",
 			"object": "customer",
 			"email":  "alice@example.com",
@@ -53,7 +53,7 @@ func TestStripeNode_CreatePaymentIntent(t *testing.T) {
 		assert.Equal(t, "2000", r.FormValue("amount"))
 		assert.Equal(t, "usd", r.FormValue("currency"))
 
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"id":       "pi_xyz",
 			"object":   "payment_intent",
 			"amount":   float64(2000),
@@ -94,7 +94,7 @@ func TestStripeNode_ListPayments(t *testing.T) {
 		assert.Contains(t, r.URL.Path, "/payment_intents")
 		assert.Equal(t, "10", r.URL.Query().Get("limit"))
 
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"data": []interface{}{
 				map[string]interface{}{"id": "pi_1", "amount": float64(1000)},
 			},

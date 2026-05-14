@@ -220,7 +220,7 @@ func (h *AuthHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(user.Sanitize())
+	_ = json.NewEncoder(w).Encode(user.Sanitize())
 }
 
 // UpdateUser updates a user (admin only)
@@ -249,7 +249,7 @@ func (h *AuthHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(updatedUser.Sanitize())
+	_ = json.NewEncoder(w).Encode(updatedUser.Sanitize())
 }
 
 // DeleteUser deletes a user (admin only)
@@ -289,7 +289,7 @@ func (h *AuthHandler) InviteUser(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(invite)
+	_ = json.NewEncoder(w).Encode(invite)
 }
 
 // AcceptInvite accepts an invitation
@@ -312,7 +312,7 @@ func (h *AuthHandler) AcceptInvite(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(user)
+	_ = json.NewEncoder(w).Encode(user)
 }
 
 // CreateAPIKey creates a new API key
@@ -337,7 +337,7 @@ func (h *AuthHandler) CreateAPIKey(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"apiKey": apiKey,
 		"key":    plainKey, // Only shown once!
 	})
@@ -354,7 +354,7 @@ func (h *AuthHandler) ListAPIKeys(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"data":  keys,
 		"count": len(keys),
 	})

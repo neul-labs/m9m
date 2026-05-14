@@ -453,7 +453,7 @@ func TestOpenAINode_Execute_MalformedJSON(t *testing.T) {
 func TestOpenAINode_Execute_MissingChoicesField(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"id": "chatcmpl-123",
 		})
 	}))
@@ -489,7 +489,7 @@ func TestOpenAINode_Execute_MissingChoicesField(t *testing.T) {
 func TestOpenAINode_Execute_SuccessfulResponse(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"id":     "chatcmpl-abc123",
 			"object": "chat.completion",
 			"choices": []interface{}{

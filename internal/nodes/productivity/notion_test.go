@@ -17,7 +17,7 @@ func TestNotionNode_GetPage(t *testing.T) {
 		assert.Equal(t, "Bearer notion-key", r.Header.Get("Authorization"))
 		assert.Equal(t, "2022-06-28", r.Header.Get("Notion-Version"))
 
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"id":     "page123",
 			"object": "page",
 		})
@@ -47,7 +47,7 @@ func TestNotionNode_CreatePage(t *testing.T) {
 		parent := body["parent"].(map[string]interface{})
 		assert.Equal(t, "db123", parent["database_id"])
 
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"id":     "newpage",
 			"object": "page",
 		})
@@ -77,7 +77,7 @@ func TestNotionNode_CreatePage(t *testing.T) {
 func TestNotionNode_UpdatePage(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "PATCH", r.Method)
-		json.NewEncoder(w).Encode(map[string]interface{}{"id": "page1", "object": "page"})
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"id": "page1", "object": "page"})
 	}))
 	defer server.Close()
 
@@ -98,7 +98,7 @@ func TestNotionNode_QueryDatabase(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "POST", r.Method)
 		assert.Contains(t, r.URL.Path, "/databases/db1/query")
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"results": []interface{}{
 				map[string]interface{}{"id": "page1"},
 			},
@@ -123,7 +123,7 @@ func TestNotionNode_Search(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "POST", r.Method)
 		assert.Contains(t, r.URL.Path, "/search")
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"results": []interface{}{},
 		})
 	}))

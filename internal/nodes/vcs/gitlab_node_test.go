@@ -269,7 +269,7 @@ func TestGitLabNode_Execute_IssueCreate(t *testing.T) {
 		assert.Equal(t, "New Issue", reqBody["title"])
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(mockResponse)
+		_ = json.NewEncoder(w).Encode(mockResponse)
 	}))
 	defer server.Close()
 
@@ -357,7 +357,7 @@ func TestGitLabNode_Execute_IssueGet(t *testing.T) {
 		assert.Contains(t, r.URL.Path, "/projects/123/issues/5")
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(mockResponse)
+		_ = json.NewEncoder(w).Encode(mockResponse)
 	}))
 	defer server.Close()
 
@@ -419,7 +419,7 @@ func TestGitLabNode_Execute_IssueGetAll(t *testing.T) {
 		assert.Contains(t, r.URL.Path, "/projects/123/issues")
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(mockResponse)
+		_ = json.NewEncoder(w).Encode(mockResponse)
 	}))
 	defer server.Close()
 
@@ -462,7 +462,7 @@ func TestGitLabNode_Execute_IssueUpdate(t *testing.T) {
 		assert.Equal(t, "Updated Title", reqBody["title"])
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(mockResponse)
+		_ = json.NewEncoder(w).Encode(mockResponse)
 	}))
 	defer server.Close()
 
@@ -566,7 +566,7 @@ func TestGitLabNode_Execute_MergeRequestCreate(t *testing.T) {
 		assert.Equal(t, "New MR", reqBody["title"])
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(mockResponse)
+		_ = json.NewEncoder(w).Encode(mockResponse)
 	}))
 	defer server.Close()
 
@@ -632,7 +632,7 @@ func TestGitLabNode_Execute_MergeRequestGet(t *testing.T) {
 		assert.Contains(t, r.URL.Path, "/projects/123/merge_requests/10")
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(mockResponse)
+		_ = json.NewEncoder(w).Encode(mockResponse)
 	}))
 	defer server.Close()
 
@@ -669,7 +669,7 @@ func TestGitLabNode_Execute_MergeRequestGetAll(t *testing.T) {
 		assert.Contains(t, r.URL.Path, "/projects/123/merge_requests")
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(mockResponse)
+		_ = json.NewEncoder(w).Encode(mockResponse)
 	}))
 	defer server.Close()
 
@@ -706,7 +706,7 @@ func TestGitLabNode_Execute_MergeRequestMerge(t *testing.T) {
 		assert.Contains(t, r.URL.Path, "/projects/123/merge_requests/10/merge")
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(mockResponse)
+		_ = json.NewEncoder(w).Encode(mockResponse)
 	}))
 	defer server.Close()
 
@@ -775,7 +775,7 @@ func TestGitLabNode_Execute_PipelineTrigger(t *testing.T) {
 		assert.Equal(t, "main", reqBody["ref"])
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(mockResponse)
+		_ = json.NewEncoder(w).Encode(mockResponse)
 	}))
 	defer server.Close()
 
@@ -838,7 +838,7 @@ func TestGitLabNode_Execute_PipelineGet(t *testing.T) {
 		assert.Contains(t, r.URL.Path, "/projects/123/pipelines/42")
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(mockResponse)
+		_ = json.NewEncoder(w).Encode(mockResponse)
 	}))
 	defer server.Close()
 
@@ -875,7 +875,7 @@ func TestGitLabNode_Execute_PipelineGetAll(t *testing.T) {
 		assert.Contains(t, r.URL.Path, "/projects/123/pipelines")
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(mockResponse)
+		_ = json.NewEncoder(w).Encode(mockResponse)
 	}))
 	defer server.Close()
 
@@ -912,7 +912,7 @@ func TestGitLabNode_Execute_PipelineCancel(t *testing.T) {
 		assert.Contains(t, r.URL.Path, "/projects/123/pipelines/42/cancel")
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(mockResponse)
+		_ = json.NewEncoder(w).Encode(mockResponse)
 	}))
 	defer server.Close()
 
@@ -949,7 +949,7 @@ func TestGitLabNode_Execute_PipelineRetry(t *testing.T) {
 		assert.Contains(t, r.URL.Path, "/projects/123/pipelines/42/retry")
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(mockResponse)
+		_ = json.NewEncoder(w).Encode(mockResponse)
 	}))
 	defer server.Close()
 
@@ -1011,7 +1011,7 @@ func TestGitLabNode_Execute_ProjectGet(t *testing.T) {
 		assert.Contains(t, r.URL.Path, "/projects/123")
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(mockResponse)
+		_ = json.NewEncoder(w).Encode(mockResponse)
 	}))
 	defer server.Close()
 
@@ -1072,7 +1072,7 @@ func TestGitLabNode_Execute_ProjectList(t *testing.T) {
 		assert.Equal(t, "/projects", r.URL.Path)
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(mockResponse)
+		_ = json.NewEncoder(w).Encode(mockResponse)
 	}))
 	defer server.Close()
 
@@ -1131,7 +1131,7 @@ func TestGitLabNode_Execute_UserGetAuthenticated(t *testing.T) {
 		assert.Equal(t, "/user", r.URL.Path)
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(mockResponse)
+		_ = json.NewEncoder(w).Encode(mockResponse)
 	}))
 	defer server.Close()
 
@@ -1167,7 +1167,7 @@ func TestGitLabNode_Execute_UserGet(t *testing.T) {
 		assert.Equal(t, "/users/42", r.URL.Path)
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(mockResponse)
+		_ = json.NewEncoder(w).Encode(mockResponse)
 	}))
 	defer server.Close()
 
@@ -1251,7 +1251,7 @@ func TestGitLabNode_Execute_BranchList(t *testing.T) {
 		assert.Contains(t, r.URL.Path, "/projects/123/repository/branches")
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(mockResponse)
+		_ = json.NewEncoder(w).Encode(mockResponse)
 	}))
 	defer server.Close()
 
@@ -1288,7 +1288,7 @@ func TestGitLabNode_Execute_BranchGet(t *testing.T) {
 		assert.Contains(t, r.URL.Path, "/projects/123/repository/branches/main")
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(mockResponse)
+		_ = json.NewEncoder(w).Encode(mockResponse)
 	}))
 	defer server.Close()
 
@@ -1400,7 +1400,7 @@ func TestGitLabNode_Execute_DefaultResourceAndOperation(t *testing.T) {
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(mockResponse)
+		_ = json.NewEncoder(w).Encode(mockResponse)
 	}))
 	defer server.Close()
 
@@ -1435,7 +1435,7 @@ func TestGitLabNode_Execute_ProjectIdFromInputData(t *testing.T) {
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(mockResponse)
+		_ = json.NewEncoder(w).Encode(mockResponse)
 	}))
 	defer server.Close()
 

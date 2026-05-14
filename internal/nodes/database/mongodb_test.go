@@ -29,7 +29,7 @@ func baseMongoParams(serverURL string) map[string]interface{} {
 func TestMongoDBNode_Find(t *testing.T) {
 	server, node := setupMongoServer(t, func(w http.ResponseWriter, r *http.Request) {
 		assert.Contains(t, r.URL.Path, "/action/find")
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"documents": []interface{}{
 				map[string]interface{}{"_id": "1", "name": "Alice"},
 			},
@@ -50,7 +50,7 @@ func TestMongoDBNode_Find(t *testing.T) {
 func TestMongoDBNode_FindOne(t *testing.T) {
 	server, node := setupMongoServer(t, func(w http.ResponseWriter, r *http.Request) {
 		assert.Contains(t, r.URL.Path, "/action/findOne")
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"document": map[string]interface{}{"_id": "1", "name": "Alice"},
 		})
 	})
@@ -67,7 +67,7 @@ func TestMongoDBNode_FindOne(t *testing.T) {
 func TestMongoDBNode_Insert(t *testing.T) {
 	server, node := setupMongoServer(t, func(w http.ResponseWriter, r *http.Request) {
 		assert.Contains(t, r.URL.Path, "/action/insertOne")
-		json.NewEncoder(w).Encode(map[string]interface{}{"insertedId": "abc123"})
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"insertedId": "abc123"})
 	})
 	defer server.Close()
 
@@ -82,7 +82,7 @@ func TestMongoDBNode_Insert(t *testing.T) {
 
 func TestMongoDBNode_InsertFromInput(t *testing.T) {
 	server, node := setupMongoServer(t, func(w http.ResponseWriter, r *http.Request) {
-		json.NewEncoder(w).Encode(map[string]interface{}{"insertedId": "xyz"})
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"insertedId": "xyz"})
 	})
 	defer server.Close()
 
@@ -98,7 +98,7 @@ func TestMongoDBNode_InsertFromInput(t *testing.T) {
 func TestMongoDBNode_InsertMany(t *testing.T) {
 	server, node := setupMongoServer(t, func(w http.ResponseWriter, r *http.Request) {
 		assert.Contains(t, r.URL.Path, "/action/insertMany")
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"insertedIds": []string{"a", "b"},
 		})
 	})
@@ -120,7 +120,7 @@ func TestMongoDBNode_InsertMany(t *testing.T) {
 func TestMongoDBNode_Update(t *testing.T) {
 	server, node := setupMongoServer(t, func(w http.ResponseWriter, r *http.Request) {
 		assert.Contains(t, r.URL.Path, "/action/updateMany")
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"matchedCount":  float64(1),
 			"modifiedCount": float64(1),
 		})
@@ -140,7 +140,7 @@ func TestMongoDBNode_Update(t *testing.T) {
 func TestMongoDBNode_Delete(t *testing.T) {
 	server, node := setupMongoServer(t, func(w http.ResponseWriter, r *http.Request) {
 		assert.Contains(t, r.URL.Path, "/action/deleteMany")
-		json.NewEncoder(w).Encode(map[string]interface{}{"deletedCount": float64(1)})
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"deletedCount": float64(1)})
 	})
 	defer server.Close()
 
@@ -156,7 +156,7 @@ func TestMongoDBNode_Delete(t *testing.T) {
 func TestMongoDBNode_Aggregate(t *testing.T) {
 	server, node := setupMongoServer(t, func(w http.ResponseWriter, r *http.Request) {
 		assert.Contains(t, r.URL.Path, "/action/aggregate")
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"documents": []interface{}{
 				map[string]interface{}{"_id": "group1", "total": float64(10)},
 			},
@@ -177,7 +177,7 @@ func TestMongoDBNode_Aggregate(t *testing.T) {
 
 func TestMongoDBNode_Count(t *testing.T) {
 	server, node := setupMongoServer(t, func(w http.ResponseWriter, r *http.Request) {
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"documents": []interface{}{
 				map[string]interface{}{"count": float64(42)},
 			},
