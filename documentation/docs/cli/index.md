@@ -1,3 +1,9 @@
+---
+title: "CLI Reference"
+description: "The m9m command-line interface provides full control over workflows, executions, and server management."
+keywords: "m9m CLI, command line, m9m serve, m9m exec, workflow CLI"
+---
+
 # CLI Reference
 
 The m9m command-line interface provides full control over workflows, executions, and server management.

@@ -1,3 +1,9 @@
+---
+title: "API Reference"
+description: "m9m provides a comprehensive REST API for workflow management."
+keywords: "m9m API, REST API, workflow API, n8n API compatibility"
+---
+
 # API Reference
 
 m9m provides a comprehensive REST API for workflow management.

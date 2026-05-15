@@ -1,3 +1,9 @@
+---
+title: "Core Concepts"
+description: "This guide explains the fundamental concepts in m9m workflow automation."
+keywords: "m9m, n8n alternative, workflow automation, Go, MCP server, AI agents, Claude Code, workflow engine, iPaaS"
+---
+
 # Core Concepts
 
 This guide explains the fundamental concepts in m9m workflow automation.

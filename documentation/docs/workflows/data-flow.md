@@ -1,3 +1,9 @@
+---
+title: "Data Flow"
+description: "Understanding how data moves through workflows."
+keywords: "m9m workflows, n8n workflows, workflow examples, data flow"
+---
+
 # Data Flow
 
 Understanding how data moves through workflows.

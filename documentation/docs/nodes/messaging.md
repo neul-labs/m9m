@@ -1,3 +1,9 @@
+---
+title: "Messaging Nodes"
+description: "Messaging nodes send notifications to chat platforms."
+keywords: "m9m nodes, n8n nodes, workflow nodes, HTTP, database, AI, messaging, integrations"
+---
+
 # Messaging Nodes
 
 Messaging nodes send notifications to chat platforms.

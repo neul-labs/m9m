@@ -1,3 +1,9 @@
+---
+title: "Version Control Nodes"
+description: "Version control nodes interact with Git hosting platforms."
+keywords: "m9m nodes, n8n nodes, workflow nodes, HTTP, database, AI, messaging, integrations"
+---
+
 # Version Control Nodes
 
 Version control nodes interact with Git hosting platforms.

@@ -1,3 +1,9 @@
+---
+title: "File Operation Nodes"
+description: "File operation nodes read and write files on the filesystem."
+keywords: "m9m nodes, n8n nodes, workflow nodes, HTTP, database, AI, messaging, integrations"
+---
+
 # File Operation Nodes
 
 File operation nodes read and write files on the filesystem.

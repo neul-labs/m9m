@@ -1,3 +1,9 @@
+---
+title: "CLI Nodes"
+description: "CLI nodes enable secure execution of command-line tools within workflows. The primary use case is running CLI-based AI agents like OpenAI Codex CLI, Claude…"
+keywords: "m9m nodes, n8n nodes, workflow nodes, HTTP, database, AI, messaging, integrations"
+---
+
 # CLI Nodes
 
 CLI nodes enable secure execution of command-line tools within workflows. The primary use case is running **CLI-based AI agents** like OpenAI Codex CLI, Claude Code, Aider, and similar tools in a sandboxed environment.

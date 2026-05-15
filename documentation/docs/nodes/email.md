@@ -1,3 +1,9 @@
+---
+title: "Email Nodes"
+description: "Email nodes send emails via SMTP servers."
+keywords: "m9m nodes, n8n nodes, workflow nodes, HTTP, database, AI, messaging, integrations"
+---
+
 # Email Nodes
 
 Email nodes send emails via SMTP servers.

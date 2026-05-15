@@ -1,3 +1,9 @@
+---
+title: "Kubernetes Deployment"
+description: "Deploy m9m on Kubernetes using experimental reference manifests."
+keywords: "m9m deployment, Docker, Kubernetes, production workflow automation"
+---
+
 # Kubernetes Deployment
 
 Deploy m9m on Kubernetes using experimental reference manifests.

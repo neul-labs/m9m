@@ -1,3 +1,9 @@
+---
+title: "Webhooks API"
+description: "API endpoints for configuring webhook triggers."
+keywords: "m9m API, REST API, workflow API, n8n API compatibility"
+---
+
 # Webhooks API
 
 API endpoints for configuring webhook triggers.

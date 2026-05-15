@@ -1,3 +1,9 @@
+---
+title: "Getting Started"
+description: "Welcome to m9m! This guide will help you get up and running quickly."
+keywords: "m9m, n8n alternative, workflow automation, Go, MCP server, AI agents, Claude Code, workflow engine, iPaaS"
+---
+
 # Getting Started
 
 Welcome to m9m! This guide will help you get up and running quickly.

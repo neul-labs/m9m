@@ -1,7 +1,7 @@
 {
   "name": "m9m-cli",
   "version": "1.0.0",
-  "description": "Node.js SDK for the m9m workflow automation engine",
+  "description": "Drop-in n8n alternative in Go — faster, more reliable, no Node.js required. Run n8n workflows unchanged.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -13,22 +13,42 @@
   },
   "keywords": [
     "workflow",
+    "workflow-automation",
     "automation",
-    "m9m",
-    "n8n"
+    "n8n",
+    "n8n-alternative",
+    "n8n-replacement",
+    "low-code",
+    "ipaas",
+    "integration-platform",
+    "mcp",
+    "mcp-server",
+    "ai-agents",
+    "claude-code",
+    "webhook",
+    "cron",
+    "scheduler",
+    "workflow-engine",
+    "m9m"
   ],
-  "author": "m9m Team",
+  "author": "Neul Labs",
   "license": "MIT",
+  "homepage": "https://github.com/neul-labs/m9m#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/neul-labs/m9m.git"
+    "url": "git+https://github.com/neul-labs/m9m.git",
+    "directory": "packages/m9m-cli/nodejs"
+  },
+  "bugs": {
+    "url": "https://github.com/neul-labs/m9m/issues"
   },
   "engines": {
     "node": ">=16.0.0"
   },
   "files": [
     "dist",
-    "src"
+    "src",
+    "README.md"
   ],
   "devDependencies": {
     "@types/node": "^20.0.0",

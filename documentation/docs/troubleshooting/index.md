@@ -1,3 +1,9 @@
+---
+title: "Troubleshooting"
+description: "Common issues and how to resolve them."
+keywords: "m9m troubleshooting, FAQ, common issues, debugging"
+---
+
 # Troubleshooting
 
 Common issues and how to resolve them.

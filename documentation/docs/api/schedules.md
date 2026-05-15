@@ -1,3 +1,9 @@
+---
+title: "Schedules API"
+description: "API endpoints for managing scheduled workflow executions."
+keywords: "m9m API, REST API, workflow API, n8n API compatibility"
+---
+
 # Schedules API
 
 API endpoints for managing scheduled workflow executions.

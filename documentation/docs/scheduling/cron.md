@@ -1,3 +1,9 @@
+---
+title: "Cron Expressions"
+description: "Detailed guide to cron expression syntax."
+keywords: "m9m scheduling, cron, scheduled workflows, recurring jobs"
+---
+
 # Cron Expressions
 
 Detailed guide to cron expression syntax.

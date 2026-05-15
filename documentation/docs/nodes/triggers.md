@@ -1,3 +1,9 @@
+---
+title: "Trigger Nodes"
+description: "Trigger nodes start workflow execution based on external events or schedules."
+keywords: "m9m nodes, n8n nodes, workflow nodes, HTTP, database, AI, messaging, integrations"
+---
+
 # Trigger Nodes
 
 Trigger nodes start workflow execution based on external events or schedules.

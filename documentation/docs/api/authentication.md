@@ -1,3 +1,9 @@
+---
+title: "API Authentication"
+description: "m9m supports multiple authentication methods for API access."
+keywords: "m9m API, REST API, workflow API, n8n API compatibility"
+---
+
 # API Authentication
 
 m9m supports multiple authentication methods for API access.

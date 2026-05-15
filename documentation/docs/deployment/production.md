@@ -1,3 +1,9 @@
+---
+title: "Production Checklist"
+description: "Essential steps for production deployment."
+keywords: "m9m deployment, Docker, Kubernetes, production workflow automation"
+---
+
 # Production Checklist
 
 Essential steps for production deployment.

@@ -1,3 +1,9 @@
+---
+title: "Server Configuration"
+description: "Configure the m9m HTTP server."
+keywords: "m9m configuration, environment variables, server config, database config"
+---
+
 # Server Configuration
 
 Configure the m9m HTTP server.

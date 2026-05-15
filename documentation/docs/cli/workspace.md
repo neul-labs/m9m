@@ -1,3 +1,9 @@
+---
+title: "Workspace Commands"
+description: "Commands for managing m9m workspaces."
+keywords: "m9m CLI, command line, m9m serve, m9m exec, workflow CLI"
+---
+
 # Workspace Commands
 
 Commands for managing m9m workspaces.

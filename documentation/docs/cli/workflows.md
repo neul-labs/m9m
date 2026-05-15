@@ -1,3 +1,9 @@
+---
+title: "Workflow Commands"
+description: "Commands for managing workflows from the command line."
+keywords: "m9m CLI, command line, m9m serve, m9m exec, workflow CLI"
+---
+
 # Workflow Commands
 
 Commands for managing workflows from the command line.

@@ -1,24 +1,36 @@
-# First Workflow
+---
+title: Your first m9m workflow
+description: Build, run, and trigger your first m9m workflow in five minutes. Start node, HTTP request, Set transform, webhook trigger, error handling.
+keywords: m9m tutorial, workflow tutorial, first workflow, n8n workflow, webhook, expression syntax
+---
 
-This guide walks you through creating and running your first m9m workflow.
+# Your first m9m workflow
 
-## What You'll Build
+A five-minute walkthrough: fetch JSON from an API, transform the response, return the result. Then add a webhook trigger and basic error handling.
 
-A simple workflow that:
+## What you'll build
 
-1. Starts with a trigger
-2. Makes an HTTP request to fetch data
-3. Transforms the response
-4. Outputs the result
+```
+┌─────────┐    ┌─────────────┐    ┌──────────────┐
+│  Start  │───▶│ Fetch Posts │───▶│ Format Output│
+└─────────┘    └─────────────┘    └──────────────┘
+```
+
+A workflow that:
+
+1. Starts via the `Start` node (or a webhook trigger — added later)
+2. Fetches a JSON post from `jsonplaceholder.typicode.com`
+3. Transforms the response into a compact summary
+4. Returns the output
 
 ## Prerequisites
 
-- m9m installed and running (`m9m serve`)
-- `curl` for API calls (or use the Web UI)
+- m9m installed ([installation guide](installation.md))
+- `curl` for API calls (or the Web UI at `http://localhost:8080`)
 
-## Step 1: Create the Workflow
+## Step 1 — define the workflow
 
-Create a file named `my-first-workflow.json`:
+Save as `my-first-workflow.json`:
 
 ```json
 {
@@ -48,14 +60,8 @@ Create a file named `my-first-workflow.json`:
       "position": [650, 300],
       "parameters": {
         "assignments": [
-          {
-            "name": "title",
-            "value": "={{ $json.title }}"
-          },
-          {
-            "name": "summary",
-            "value": "Post ID: {{ $json.id }} by User {{ $json.userId }}"
-          }
+          { "name": "title",   "value": "={{ $json.title }}" },
+          { "name": "summary", "value": "Post ID: {{ $json.id }} by User {{ $json.userId }}" }
         ]
       }
     }
@@ -71,12 +77,14 @@ Create a file named `my-first-workflow.json`:
 }
 ```
 
-## Step 2: Run the Workflow
+This is the same JSON shape n8n uses. Workflows exported from n8n drop in here.
 
-### Using the CLI
+## Step 2 — run it
+
+### CLI
 
 ```bash
-m9m run my-first-workflow.json
+m9m exec my-first-workflow.json
 ```
 
 Expected output:
@@ -93,38 +101,29 @@ Expected output:
 }
 ```
 
-### Using the API
-
-First, create the workflow:
+### REST API
 
 ```bash
+# Create
 curl -X POST http://localhost:8080/api/v1/workflows \
   -H "Content-Type: application/json" \
   -d @my-first-workflow.json
-```
 
-Then execute it:
-
-```bash
+# Execute
 curl -X POST http://localhost:8080/api/v1/workflows/{workflow-id}/execute
 ```
 
-## Step 3: Understand the Workflow
+## Step 3 — what each node does
 
-Let's break down what each node does:
-
-### Start Node
+### Start node
 
 ```json
-{
-  "type": "n8n-nodes-base.start",
-  "parameters": {}
-}
+{ "type": "n8n-nodes-base.start", "parameters": {} }
 ```
 
-The Start node is the entry point. It passes through any input data or creates an empty item if none is provided.
+Entry point. Passes input through, or emits a single empty data item if no input is provided.
 
-### HTTP Request Node
+### HTTP Request node
 
 ```json
 {
@@ -136,46 +135,38 @@ The Start node is the entry point. It passes through any input data or creates a
 }
 ```
 
-Makes an HTTP GET request and returns the response. The response JSON is available as `$json` in downstream nodes.
+Makes an HTTP call. The parsed response body is exposed to downstream nodes as `$json`.
 
-### Set Node
+### Set node
 
 ```json
 {
   "type": "n8n-nodes-base.set",
   "parameters": {
     "assignments": [
-      {"name": "title", "value": "={{ $json.title }}"},
-      {"name": "summary", "value": "Post ID: {{ $json.id }} by User {{ $json.userId }}"}
+      { "name": "title",   "value": "={{ $json.title }}" },
+      { "name": "summary", "value": "Post ID: {{ $json.id }} by User {{ $json.userId }}" }
     ]
   }
 }
 ```
 
-Transforms data by setting new fields. Uses expressions (`={{ }}` or `{{ }}`) to reference data from previous nodes.
+Reshapes data with expressions. Use `={{ ... }}` for a value computed entirely by an expression, or interpolate inline with `{{ ... }}` inside a string.
 
 ### Connections
 
 ```json
 {
-  "Start": {
-    "main": [[{"node": "Fetch Posts", "type": "main", "index": 0}]]
-  },
-  "Fetch Posts": {
-    "main": [[{"node": "Format Output", "type": "main", "index": 0}]]
-  }
+  "Start":       { "main": [[{ "node": "Fetch Posts",  "type": "main", "index": 0 }]] },
+  "Fetch Posts": { "main": [[{ "node": "Format Output","type": "main", "index": 0 }]] }
 }
 ```
 
-Defines the data flow between nodes. Each connection specifies:
+Defines the directed graph: which node's output feeds which node's input.
 
-- Source node name
-- Connection type (`main` for data flow)
-- Target node and input index
+## Step 4 — trigger via webhook
 
-## Adding a Webhook Trigger
-
-Replace the Start node with a Webhook to trigger the workflow via HTTP:
+Replace the `Start` node with a webhook:
 
 ```json
 {
@@ -190,7 +181,7 @@ Replace the Start node with a Webhook to trigger the workflow via HTTP:
 }
 ```
 
-Now you can trigger the workflow with:
+Then trigger it:
 
 ```bash
 curl -X POST http://localhost:8080/webhook/my-workflow \
@@ -198,9 +189,11 @@ curl -X POST http://localhost:8080/webhook/my-workflow \
   -d '{"custom": "data"}'
 ```
 
-## Adding Error Handling
+The posted body is available as `$json` in downstream nodes.
 
-Wrap operations in a filter to handle errors:
+## Step 5 — add error handling
+
+Insert a filter to short-circuit on non-2xx responses:
 
 ```json
 {
@@ -220,11 +213,12 @@ Wrap operations in a filter to handle errors:
 }
 ```
 
-## Next Steps
+For richer error handling, see [Workflow patterns › Error handling](../workflows/examples.md).
 
-Now that you've created your first workflow:
+## Next steps
 
-1. **[Core Concepts](concepts.md)** - Understand workflows, nodes, and data
-2. **[Nodes Reference](../nodes/index.md)** - Explore all available nodes
-3. **[Expressions](../expressions/index.md)** - Learn the expression syntax
-4. **[Workflow Examples](../workflows/examples.md)** - See more complex workflows
+1. **[Core Concepts](concepts.md)** — workflows, nodes, data flow, expressions
+2. **[Nodes Reference](../nodes/index.md)** — all 40+ available node types
+3. **[Expressions](../expressions/index.md)** — full expression syntax and built-in functions
+4. **[Workflow Examples](../workflows/examples.md)** — common patterns
+5. **[Migrate from n8n](../migrate-from-n8n.md)** — import your existing workflows

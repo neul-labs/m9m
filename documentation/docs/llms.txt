@@ -1,0 +1,121 @@
+# m9m Documentation
+
+> The n8n alternative without the bugs — faster, more reliable workflow automation.
+
+m9m is an open-source workflow automation platform written in Go. It runs n8n workflow JSON unchanged, executes 5–10× faster, uses 70% less memory, and ships as a single 30 MB binary with zero runtime dependencies.
+
+This file follows the proposed llms.txt convention (https://llmstxt.org/) — a curated, low-cost index of the documentation for AI assistants. For the full concatenated markdown of every page, see https://docs.neullabs.com/m9m/llms-full.txt.
+
+## Start here
+
+- [Home](https://docs.neullabs.com/m9m/): tagline, quickstart, navigation hub
+- [Why m9m?](https://docs.neullabs.com/m9m/why-m9m/): full comparison vs n8n with benchmarks and reliability evidence
+- [FAQ](https://docs.neullabs.com/m9m/faq/): authoritative Q&A on performance, reliability, compatibility, deployment, licensing
+- [Migrate from n8n](https://docs.neullabs.com/m9m/migrate-from-n8n/): step-by-step migration with one-command workflow import
+
+## Getting Started
+
+- [Overview](https://docs.neullabs.com/m9m/getting-started/): orientation for new users
+- [Installation](https://docs.neullabs.com/m9m/getting-started/installation/): Homebrew, install.sh, Go, Docker (GHCR + Docker Hub), npm, pip, prebuilt binaries
+- [First Workflow](https://docs.neullabs.com/m9m/getting-started/first-workflow/): five-minute walkthrough — Start, HTTP, Set, webhook trigger, error handling
+- [Core Concepts](https://docs.neullabs.com/m9m/getting-started/concepts/): workflows, nodes, data flow, expressions
+
+## Configuration
+
+- [Configuration overview](https://docs.neullabs.com/m9m/configuration/)
+- [Server](https://docs.neullabs.com/m9m/configuration/server/): port, host, log level, metrics, tracing
+- [Database](https://docs.neullabs.com/m9m/configuration/database/): SQLite (default), PostgreSQL
+- [Queue](https://docs.neullabs.com/m9m/configuration/queue/): in-memory, SQLite, Redis, RabbitMQ
+- [Security](https://docs.neullabs.com/m9m/configuration/security/): credentials, encryption, auth
+- [Environment variables](https://docs.neullabs.com/m9m/configuration/environment/): full env var reference
+
+## CLI Reference
+
+- [CLI overview](https://docs.neullabs.com/m9m/cli/)
+- [serve](https://docs.neullabs.com/m9m/cli/serve/): start the HTTP server
+- [Workflow commands](https://docs.neullabs.com/m9m/cli/workflows/): create, list, export, import, delete
+- [Execution commands](https://docs.neullabs.com/m9m/cli/executions/): run, status, logs
+- [Node commands](https://docs.neullabs.com/m9m/cli/nodes/): list built-in node types
+- [Workspace commands](https://docs.neullabs.com/m9m/cli/workspace/): multi-workspace management
+
+## API Reference
+
+- [API overview](https://docs.neullabs.com/m9m/api/): REST endpoints, n8n-compatible surface
+- [Authentication](https://docs.neullabs.com/m9m/api/authentication/)
+- [Workflows](https://docs.neullabs.com/m9m/api/workflows/)
+- [Executions](https://docs.neullabs.com/m9m/api/executions/)
+- [Jobs](https://docs.neullabs.com/m9m/api/jobs/)
+- [Schedules](https://docs.neullabs.com/m9m/api/schedules/)
+- [Credentials](https://docs.neullabs.com/m9m/api/credentials/)
+- [Webhooks](https://docs.neullabs.com/m9m/api/webhooks/)
+
+## Nodes (40+ built-in)
+
+- [Nodes overview](https://docs.neullabs.com/m9m/nodes/): complete catalog
+- [Core](https://docs.neullabs.com/m9m/nodes/core/): start, noOp, wait, executeWorkflow
+- [Transform](https://docs.neullabs.com/m9m/nodes/transform/): set, filter, code, function, merge, json, if, loop
+- [HTTP](https://docs.neullabs.com/m9m/nodes/http/): HTTP Request node
+- [Triggers](https://docs.neullabs.com/m9m/nodes/triggers/): webhook, errorTrigger, cron
+- [Database](https://docs.neullabs.com/m9m/nodes/database/): PostgreSQL, MySQL, SQLite, MongoDB, Redis, Elasticsearch
+- [Messaging](https://docs.neullabs.com/m9m/nodes/messaging/): Slack, Discord, Twilio, Teams
+- [AI & LLM](https://docs.neullabs.com/m9m/nodes/ai/): OpenAI, Anthropic
+- [CLI Execution](https://docs.neullabs.com/m9m/nodes/cli/): sandboxed Claude Code, Codex, Aider
+- [Cloud Storage](https://docs.neullabs.com/m9m/nodes/cloud/): AWS S3, GCS, Azure Blob
+- [Version Control](https://docs.neullabs.com/m9m/nodes/vcs/): GitHub, GitLab
+- [Email](https://docs.neullabs.com/m9m/nodes/email/): SMTP, SendGrid
+- [File Operations](https://docs.neullabs.com/m9m/nodes/file/)
+
+## Workflows
+
+- [Overview](https://docs.neullabs.com/m9m/workflows/)
+- [Creating workflows](https://docs.neullabs.com/m9m/workflows/creating/)
+- [Executing workflows](https://docs.neullabs.com/m9m/workflows/executing/)
+- [Data flow](https://docs.neullabs.com/m9m/workflows/data-flow/)
+- [Examples](https://docs.neullabs.com/m9m/workflows/examples/): patterns including error handling, conditional routing, retry
+
+## Expressions
+
+- [Overview](https://docs.neullabs.com/m9m/expressions/): n8n-compatible expression syntax
+- [Variables](https://docs.neullabs.com/m9m/expressions/variables/): $json, $node, $now, $workflow, $execution
+- [Functions](https://docs.neullabs.com/m9m/expressions/functions/): string, number, date, array, object helpers
+
+## Credentials
+
+- [Overview](https://docs.neullabs.com/m9m/credentials/)
+- [Credential types](https://docs.neullabs.com/m9m/credentials/types/)
+
+## Scheduling
+
+- [Overview](https://docs.neullabs.com/m9m/scheduling/)
+- [Cron expressions](https://docs.neullabs.com/m9m/scheduling/cron/)
+
+## Webhooks
+
+- [Overview](https://docs.neullabs.com/m9m/webhooks/)
+- [Authentication](https://docs.neullabs.com/m9m/webhooks/authentication/)
+
+## Deployment
+
+- [Overview](https://docs.neullabs.com/m9m/deployment/)
+- [Docker](https://docs.neullabs.com/m9m/deployment/docker/): GHCR and Docker Hub
+- [Kubernetes](https://docs.neullabs.com/m9m/deployment/kubernetes/): Helm chart, manifests
+- [Production](https://docs.neullabs.com/m9m/deployment/production/): monitoring, scaling, hardening
+
+## Architecture
+
+- [Overview](https://docs.neullabs.com/m9m/architecture/)
+- [Workflow Engine](https://docs.neullabs.com/m9m/architecture/engine/)
+- [Job Queue](https://docs.neullabs.com/m9m/architecture/queue/)
+
+## Troubleshooting
+
+- [Common Issues](https://docs.neullabs.com/m9m/troubleshooting/)
+- [Reference FAQ](https://docs.neullabs.com/m9m/troubleshooting/faq/)
+
+## SDKs and integrations
+
+- npm: https://www.npmjs.com/package/m9m-cli
+- PyPI: https://pypi.org/project/m9m-cli/
+- Go: https://pkg.go.dev/github.com/neul-labs/m9m
+- MCP server (Claude Code, Cursor): https://github.com/neul-labs/m9m/blob/main/docs/mcp/README.md
+- Docker (GHCR): https://github.com/neul-labs/m9m/pkgs/container/m9m

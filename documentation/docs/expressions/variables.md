@@ -1,3 +1,9 @@
+---
+title: "Expression Variables"
+description: "All variables available in expressions."
+keywords: "m9m expressions, n8n expression syntax, workflow expressions, variables, functions"
+---
+
 # Expression Variables
 
 All variables available in expressions.

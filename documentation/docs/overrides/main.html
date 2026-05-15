@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{# m9m: SEO + AI-search meta and JSON-LD structured data.
+   - OpenGraph + Twitter Card meta tags use page.meta.description / page.meta.title when set in
+     frontmatter, falling back to config.site_description / page.title.
+   - SoftwareApplication JSON-LD is emitted on every page.
+   - FAQPage JSON-LD is emitted on faq.md (page.meta.faq_jsonld == true), letting Google
+     and AI assistants extract Q&A pairs directly.
+#}
+
+{% block extrahead %}
+  {%- set page_title = page.meta.title if page.meta and page.meta.title else page.title %}
+  {%- set page_description = page.meta.description if page.meta and page.meta.description else config.site_description %}
+  {%- set page_keywords = page.meta.keywords if page.meta and page.meta.keywords else "n8n alternative, workflow automation, Go, MCP server, AI agents, Claude Code, workflow engine, iPaaS" %}
+  {%- set page_url = page.canonical_url if page.canonical_url else config.site_url %}
+  {%- set og_image = config.extra.og_image if config.extra and config.extra.og_image else (config.site_url ~ "/assets/og.png") %}
+
+  <meta name="description" content="{{ page_description }}">
+  <meta name="keywords" content="{{ page_keywords }}">
+  <meta name="author" content="{{ config.site_author }}">
+  <link rel="canonical" href="{{ page_url }}">
+
+  {# OpenGraph #}
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="{{ config.site_name }}">
+  <meta property="og:title" content="{{ page_title }}">
+  <meta property="og:description" content="{{ page_description }}">
+  <meta property="og:url" content="{{ page_url }}">
+  <meta property="og:image" content="{{ og_image }}">
+
+  {# Twitter Card #}
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ page_title }}">
+  <meta name="twitter:description" content="{{ page_description }}">
+  <meta name="twitter:image" content="{{ og_image }}">
+
+  {# AI-crawler hints: opt-in to indexing #}
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
+
+  {# SoftwareApplication JSON-LD — emitted on every page so any deep link still surfaces
+     the canonical product metadata to crawlers and LLMs. #}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "m9m",
+    "alternateName": ["m9m workflow automation", "m9m-cli"],
+    "description": "The n8n alternative without the bugs — a drop-in workflow automation engine in Go. Runs n8n workflows unchanged, 5–10× faster, 70% lower memory.",
+    "applicationCategory": "DeveloperApplication",
+    "applicationSubCategory": "Workflow Automation",
+    "operatingSystem": "macOS, Linux, Windows",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "license": "https://opensource.org/licenses/MIT",
+    "codeRepository": "https://github.com/neul-labs/m9m",
+    "url": "{{ config.site_url }}",
+    "downloadUrl": "https://github.com/neul-labs/m9m/releases",
+    "softwareHelp": "{{ config.site_url }}",
+    "publisher": {
+      "@type": "Organization",
+      "name": "Neul Labs",
+      "url": "https://github.com/neul-labs"
+    },
+    "keywords": "n8n alternative, workflow automation, Go, MCP server, AI agents, Claude Code, iPaaS"
+  }
+  </script>
+
+  {# FAQPage JSON-LD — opt-in via page.meta.faq_jsonld: true in frontmatter (set on faq.md).
+     We keep the raw Q&A pairs in page.meta.faq_pairs so the LLM-friendly extraction is
+     authored once and used in both the visible page and structured data. #}
+  {%- if page.meta and page.meta.faq_jsonld %}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {%- for pair in page.meta.faq_pairs %}
+      {
+        "@type": "Question",
+        "name": {{ pair.q | tojson }},
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": {{ pair.a | tojson }}
+        }
+      }{% if not loop.last %},{% endif %}
+      {%- endfor %}
+    ]
+  }
+  </script>
+  {%- endif %}
+{% endblock %}

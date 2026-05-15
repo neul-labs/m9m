@@ -1,6 +1,6 @@
 # m9m Deployment Guide
 
-Deploy m9m - the Agent-Native Workflow Automation Platform - with one click.
+Deploy **m9m — the n8n alternative without the bugs** — with one click. Drop-in n8n alternative in Go: 5–10× faster, 70% lower memory, deterministic execution, no Node.js required.
 
 ## One-Click Deploy
 

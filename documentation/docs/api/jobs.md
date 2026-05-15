@@ -1,3 +1,9 @@
+---
+title: "Jobs API"
+description: "API endpoints for managing the job queue."
+keywords: "m9m API, REST API, workflow API, n8n API compatibility"
+---
+
 # Jobs API
 
 API endpoints for managing the job queue.

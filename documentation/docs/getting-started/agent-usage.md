@@ -1,3 +1,9 @@
+---
+title: "Agent Usage Guide"
+description: "This guide shows how an AI agent can use m9m as an orchestration backend."
+keywords: "m9m, n8n alternative, workflow automation, Go, MCP server, AI agents, Claude Code, workflow engine, iPaaS"
+---
+
 # Agent Usage Guide
 
 This guide shows how an AI agent can use m9m as an orchestration backend.

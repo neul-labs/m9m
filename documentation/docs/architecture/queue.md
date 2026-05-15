@@ -1,3 +1,9 @@
+---
+title: "Job Queue System"
+description: "Understanding the job queue architecture."
+keywords: "m9m architecture, workflow engine, job queue, Go runtime"
+---
+
 # Job Queue System
 
 Understanding the job queue architecture.

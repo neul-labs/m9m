@@ -1,3 +1,9 @@
+---
+title: "Security Configuration"
+description: "Configure authentication, authorization, and security settings."
+keywords: "m9m configuration, environment variables, server config, database config"
+---
+
 # Security Configuration
 
 Configure authentication, authorization, and security settings.

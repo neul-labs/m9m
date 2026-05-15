@@ -1,3 +1,9 @@
+---
+title: "Workflow Examples"
+description: "Practical workflow examples for common use cases."
+keywords: "m9m workflows, n8n workflows, workflow examples, data flow"
+---
+
 # Workflow Examples
 
 Practical workflow examples for common use cases.

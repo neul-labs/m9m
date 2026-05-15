@@ -1,3 +1,9 @@
+---
+title: "HTTP Node"
+description: "The HTTP Request node makes HTTP calls to REST APIs and web services."
+keywords: "m9m nodes, n8n nodes, workflow nodes, HTTP, database, AI, messaging, integrations"
+---
+
 # HTTP Node
 
 The HTTP Request node makes HTTP calls to REST APIs and web services.

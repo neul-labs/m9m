@@ -1,3 +1,9 @@
+---
+title: "serve Command"
+description: "Start the m9m server with REST API and optional web UI."
+keywords: "m9m CLI, command line, m9m serve, m9m exec, workflow CLI"
+---
+
 # serve Command
 
 Start the m9m server with REST API and optional web UI.

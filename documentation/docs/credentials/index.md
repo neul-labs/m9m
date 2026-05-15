@@ -1,3 +1,9 @@
+---
+title: "Credentials Overview"
+description: "Securely store and manage authentication credentials for nodes."
+keywords: "m9m credentials, secret management, API keys, workflow credentials"
+---
+
 # Credentials Overview
 
 Securely store and manage authentication credentials for nodes.

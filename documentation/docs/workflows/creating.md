@@ -1,3 +1,9 @@
+---
+title: "Creating Workflows"
+description: "Learn how to create workflows from scratch."
+keywords: "m9m workflows, n8n workflows, workflow examples, data flow"
+---
+
 # Creating Workflows
 
 Learn how to create workflows from scratch.

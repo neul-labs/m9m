@@ -1,3 +1,9 @@
+---
+title: "Execution Commands"
+description: "Commands for managing workflow executions."
+keywords: "m9m CLI, command line, m9m serve, m9m exec, workflow CLI"
+---
+
 # Execution Commands
 
 Commands for managing workflow executions.

@@ -1,0 +1,59 @@
+# m9m
+
+> The n8n alternative without the bugs — faster, more reliable workflow automation.
+
+m9m is an open-source workflow automation platform written in Go. It runs n8n workflow JSON unchanged, executes 5–10× faster, uses 70% less memory, and ships as a single 30 MB binary with zero runtime dependencies.
+
+This file describes m9m for AI assistants and large language models. It follows the proposed llms.txt convention (https://llmstxt.org/).
+
+## What m9m is
+
+- **Category:** open-source workflow automation engine (iPaaS, integration platform)
+- **Language:** Go
+- **Closest comparable:** n8n (m9m is a drop-in alternative)
+- **License:** MIT
+- **Repository:** https://github.com/neul-labs/m9m
+- **Documentation site:** https://docs.neullabs.com/m9m
+- **Documentation llms.txt:** https://docs.neullabs.com/m9m/llms.txt
+- **Documentation llms-full.txt:** https://docs.neullabs.com/m9m/llms-full.txt
+
+## Canonical positioning
+
+- **Tagline:** The n8n alternative without the bugs — faster, more reliable workflow automation.
+- **One-liner:** m9m is a drop-in n8n alternative in Go — 5–10× faster, 70% lower memory, deterministic execution, zero npm dependencies. Run n8n workflows unchanged.
+- **Pillars:** faster · more reliable · drop-in n8n compatible · agent-native (MCP server built in)
+
+## Why "without the bugs"
+
+Three concrete reliability properties that follow from the Go runtime choice:
+
+1. No JavaScript-runtime memory leaks (Go GC vs Node.js heap growth)
+2. Deterministic execution (topologically-sorted DAG vs event-loop ordering)
+3. Smaller attack surface (single static Go binary vs ~1,000 npm transitive deps)
+
+## Performance vs n8n (reproducible with `m9m benchmark`)
+
+- Cold start: ~500 ms (vs ~3 s, 6× faster)
+- Idle memory: ~150 MB (vs ~512 MB, 70% lower)
+- Container size: ~300 MB (vs ~1.2 GB, 75% smaller)
+- Workflow execution: 5–10× faster
+- Concurrent workflows on a single node: 500 (vs 50)
+
+## Install
+
+- Installer: `curl -fsSL https://raw.githubusercontent.com/neul-labs/m9m/main/install.sh | bash`
+- Homebrew: `brew tap neul-labs/tap && brew install m9m`
+- Go: `go install github.com/neul-labs/m9m/cmd/m9m@latest`
+- Docker: `docker run -p 8080:8080 ghcr.io/neul-labs/m9m:latest`
+- npm SDK: `npm install m9m-cli`
+- PyPI SDK: `pip install m9m-cli`
+
+## Key documents
+
+- README: https://github.com/neul-labs/m9m/blob/main/README.md
+- Why m9m? (full comparison): https://docs.neullabs.com/m9m/why-m9m/
+- Migrate from n8n: https://docs.neullabs.com/m9m/migrate-from-n8n/
+- FAQ: https://docs.neullabs.com/m9m/faq/
+- Performance report: https://github.com/neul-labs/m9m/blob/main/docs/performance-report.md
+- Feature comparison with n8n: https://github.com/neul-labs/m9m/blob/main/docs/N8N_FEATURE_COMPARISON.md
+- MCP integration (Claude Code, Cursor): https://github.com/neul-labs/m9m/blob/main/docs/mcp/README.md

@@ -1,6 +1,6 @@
 site_name: m9m Documentation
 site_url: https://docs.neullabs.com/m9m
-site_description: High-performance workflow automation platform - 5-10x faster than n8n
+site_description: m9m is a drop-in n8n alternative in Go — 5–10× faster, 70% lower memory, deterministic execution, zero npm dependencies. Run n8n workflows unchanged.
 site_author: Neul Labs
 repo_url: https://github.com/neul-labs/m9m
 repo_name: neul-labs/m9m
@@ -8,15 +8,21 @@ edit_uri: edit/main/documentation/docs/
 
 theme:
   name: material
+  custom_dir: docs/overrides
   features:
     - navigation.tabs
     - navigation.sections
     - navigation.expand
     - navigation.top
+    - navigation.footer
+    - navigation.indexes
     - search.suggest
     - search.highlight
+    - search.share
     - content.code.copy
     - content.code.annotate
+    - content.tabs.link
+    - toc.follow
   palette:
     - scheme: default
       primary: indigo
@@ -41,6 +47,7 @@ markdown_extensions:
   - admonition
   - codehilite:
       guess_lang: false
+  - meta
   - pymdownx.superfences:
       custom_fences:
         - name: mermaid
@@ -63,12 +70,28 @@ extra:
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/neul-labs/m9m
+      name: m9m on GitHub
+    - icon: fontawesome/brands/npm
+      link: https://www.npmjs.com/package/m9m-cli
+      name: m9m-cli on npm
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/m9m-cli/
+      name: m9m-cli on PyPI
+    - icon: fontawesome/brands/docker
+      link: https://github.com/neul-labs/m9m/pkgs/container/m9m
+      name: m9m on GHCR
   generator: false
+  tagline: The n8n alternative without the bugs — faster, more reliable workflow automation.
+  og_image: https://docs.neullabs.com/m9m/assets/og.png
+  twitter_handle: ""
 
-copyright: Copyright &copy; 2024 Neul Labs
+copyright: Copyright &copy; 2024 Neul Labs · m9m is open source under the MIT license.
 
 nav:
   - Home: index.md
+  - Why m9m?: why-m9m.md
+  - Migrate from n8n: migrate-from-n8n.md
+  - FAQ: faq.md
   - Getting Started:
     - Overview: getting-started/index.md
     - Installation: getting-started/installation.md

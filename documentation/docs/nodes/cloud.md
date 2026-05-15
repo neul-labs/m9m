@@ -1,3 +1,9 @@
+---
+title: "Cloud Storage Nodes"
+description: "Cloud storage nodes interact with object storage services from major cloud providers."
+keywords: "m9m nodes, n8n nodes, workflow nodes, HTTP, database, AI, messaging, integrations"
+---
+
 # Cloud Storage Nodes
 
 Cloud storage nodes interact with object storage services from major cloud providers.

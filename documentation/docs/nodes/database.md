@@ -1,3 +1,9 @@
+---
+title: "Database Nodes"
+description: "Database nodes allow workflows to interact with relational databases."
+keywords: "m9m nodes, n8n nodes, workflow nodes, HTTP, database, AI, messaging, integrations"
+---
+
 # Database Nodes
 
 Database nodes allow workflows to interact with relational databases.

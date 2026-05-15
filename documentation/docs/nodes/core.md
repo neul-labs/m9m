@@ -1,3 +1,9 @@
+---
+title: "Core Nodes"
+description: "Core nodes provide fundamental workflow control functionality."
+keywords: "m9m nodes, n8n nodes, workflow nodes, HTTP, database, AI, messaging, integrations"
+---
+
 # Core Nodes
 
 Core nodes provide fundamental workflow control functionality.

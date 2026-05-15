@@ -1,6 +1,6 @@
 # m9m Example Workflows
 
-This directory contains a comprehensive collection of example workflows demonstrating m9m capabilities and best practices.
+A collection of example workflows for **m9m — the n8n alternative without the bugs**. Every example here also runs unchanged on n8n; they're the integration patterns common to both platforms, executing 5–10× faster on m9m.
 
 ## Workflow Categories
 

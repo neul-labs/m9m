@@ -1,3 +1,9 @@
+---
+title: "Frequently Asked Questions"
+description: "Common questions about m9m."
+keywords: "m9m troubleshooting, FAQ, common issues, debugging"
+---
+
 # Frequently Asked Questions
 
 Common questions about m9m.

@@ -1,3 +1,9 @@
+---
+title: "Docker Deployment"
+description: "Deploy m9m using Docker."
+keywords: "m9m deployment, Docker, Kubernetes, production workflow automation"
+---
+
 # Docker Deployment
 
 Deploy m9m using Docker.

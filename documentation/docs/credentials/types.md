@@ -1,3 +1,9 @@
+---
+title: "Credential Types"
+description: "All supported credential types and their configuration."
+keywords: "m9m credentials, secret management, API keys, workflow credentials"
+---
+
 # Credential Types
 
 All supported credential types and their configuration.

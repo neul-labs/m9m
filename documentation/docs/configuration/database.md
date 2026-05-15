@@ -1,3 +1,9 @@
+---
+title: "Database Configuration"
+description: "Configure the storage backend for workflows, executions, and credentials."
+keywords: "m9m configuration, environment variables, server config, database config"
+---
+
 # Database Configuration
 
 Configure the storage backend for workflows, executions, and credentials.

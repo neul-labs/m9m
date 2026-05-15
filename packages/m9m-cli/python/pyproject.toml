@@ -1,27 +1,64 @@
 [project]
 name = "m9m-cli"
 version = "1.0.0"
-description = "Python bindings for the m9m workflow automation engine"
+description = "Drop-in n8n alternative in Go — faster, more reliable, no Node.js required. Run n8n workflows unchanged."
 readme = "README.md"
 requires-python = ">=3.8"
+license = { text = "MIT" }
 authors = [
-    { name = "m9m Team", email = "team@m9m.dev" }
+    { name = "Neul Labs", email = "team@neullabs.com" }
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "Intended Audience :: Information Technology",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Go",
     "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: System :: Distributed Computing",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Office/Business :: Scheduling",
+    "Typing :: Typed",
 ]
-keywords = ["workflow", "automation", "m9m", "n8n"]
+keywords = [
+    "workflow",
+    "workflow-automation",
+    "automation",
+    "n8n",
+    "n8n-alternative",
+    "n8n-replacement",
+    "low-code",
+    "ipaas",
+    "integration-platform",
+    "mcp",
+    "mcp-server",
+    "ai-agents",
+    "claude-code",
+    "webhook",
+    "cron",
+    "scheduler",
+    "workflow-engine",
+    "m9m",
+]
 dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/neul-labs/m9m"
+Documentation = "https://docs.neullabs.com/m9m"
+Repository = "https://github.com/neul-labs/m9m"
+Issues = "https://github.com/neul-labs/m9m/issues"
+Changelog = "https://github.com/neul-labs/m9m/releases"
 
 [project.optional-dependencies]
 dev = [

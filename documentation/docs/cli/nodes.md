@@ -1,3 +1,9 @@
+---
+title: "Node Commands"
+description: "Commands for exploring and testing available node types."
+keywords: "m9m CLI, command line, m9m serve, m9m exec, workflow CLI"
+---
+
 # Node Commands
 
 Commands for exploring and testing available node types.

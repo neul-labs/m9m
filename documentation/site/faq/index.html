@@ -1,0 +1,4239 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Answers to common questions about m9m — n8n compatibility, performance vs n8n, reliability, MCP/Claude Code integration, deployment, licensing.">
+      
+      
+        <meta name="author" content="Neul Labs">
+      
+      
+        <link rel="canonical" href="https://docs.neullabs.com/m9m/faq/">
+      
+      
+        <link rel="prev" href="../migrate-from-n8n/">
+      
+      
+        <link rel="next" href="../getting-started/">
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.49">
+    
+    
+      
+        <title>m9m FAQ — frequently asked questions - m9m Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.6f8fc17f.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+
+  <meta name="description" content="Answers to common questions about m9m — n8n compatibility, performance vs n8n, reliability, MCP/Claude Code integration, deployment, licensing.">
+  <meta name="keywords" content="m9m faq, n8n alternative faq, n8n vs m9m, workflow automation faq, m9m performance, m9m reliability, m9m mcp, m9m claude code">
+  <meta name="author" content="Neul Labs">
+  <link rel="canonical" href="https://docs.neullabs.com/m9m/faq/">
+
+  
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="m9m Documentation">
+  <meta property="og:title" content="m9m FAQ — frequently asked questions">
+  <meta property="og:description" content="Answers to common questions about m9m — n8n compatibility, performance vs n8n, reliability, MCP/Claude Code integration, deployment, licensing.">
+  <meta property="og:url" content="https://docs.neullabs.com/m9m/faq/">
+  <meta property="og:image" content="https://docs.neullabs.com/m9m/assets/og.png">
+
+  
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="m9m FAQ — frequently asked questions">
+  <meta name="twitter:description" content="Answers to common questions about m9m — n8n compatibility, performance vs n8n, reliability, MCP/Claude Code integration, deployment, licensing.">
+  <meta name="twitter:image" content="https://docs.neullabs.com/m9m/assets/og.png">
+
+  
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
+
+  
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "m9m",
+    "alternateName": ["m9m workflow automation", "m9m-cli"],
+    "description": "The n8n alternative without the bugs — a drop-in workflow automation engine in Go. Runs n8n workflows unchanged, 5–10× faster, 70% lower memory.",
+    "applicationCategory": "DeveloperApplication",
+    "applicationSubCategory": "Workflow Automation",
+    "operatingSystem": "macOS, Linux, Windows",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "license": "https://opensource.org/licenses/MIT",
+    "codeRepository": "https://github.com/neul-labs/m9m",
+    "url": "https://docs.neullabs.com/m9m/",
+    "downloadUrl": "https://github.com/neul-labs/m9m/releases",
+    "softwareHelp": "https://docs.neullabs.com/m9m/",
+    "publisher": {
+      "@type": "Organization",
+      "name": "Neul Labs",
+      "url": "https://github.com/neul-labs"
+    },
+    "keywords": "n8n alternative, workflow automation, Go, MCP server, AI agents, Claude Code, iPaaS"
+  }
+  </script>
+
+  
+
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#frequently-asked-questions" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="m9m Documentation" class="md-header__button md-logo" aria-label="m9m Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            m9m Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              m9m FAQ — frequently asked questions
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/neul-labs/m9m" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    neul-labs/m9m
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../why-m9m/" class="md-tabs__link">
+        
+  
+    
+  
+  Why m9m?
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../migrate-from-n8n/" class="md-tabs__link">
+        
+  
+    
+  
+  Migrate from n8n
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
+        
+  
+    
+  
+  FAQ
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../getting-started/" class="md-tabs__link">
+          
+  
+    
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../configuration/" class="md-tabs__link">
+          
+  
+    
+  
+  Configuration
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../cli/" class="md-tabs__link">
+          
+  
+    
+  
+  CLI Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../api/" class="md-tabs__link">
+          
+  
+    
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../nodes/" class="md-tabs__link">
+          
+  
+    
+  
+  Nodes
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../workflows/" class="md-tabs__link">
+          
+  
+    
+  
+  Workflows
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../expressions/" class="md-tabs__link">
+          
+  
+    
+  
+  Expressions
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../credentials/" class="md-tabs__link">
+          
+  
+    
+  
+  Credentials
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../scheduling/" class="md-tabs__link">
+          
+  
+    
+  
+  Scheduling
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../webhooks/" class="md-tabs__link">
+          
+  
+    
+  
+  Webhooks
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../deployment/" class="md-tabs__link">
+          
+  
+    
+  
+  Deployment
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../architecture/" class="md-tabs__link">
+          
+  
+    
+  
+  Architecture
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../troubleshooting/" class="md-tabs__link">
+          
+  
+    
+  
+  Troubleshooting
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="m9m Documentation" class="md-nav__button md-logo" aria-label="m9m Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    m9m Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/neul-labs/m9m" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    neul-labs/m9m
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../why-m9m/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Why m9m?
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../migrate-from-n8n/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Migrate from n8n
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    FAQ
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    FAQ
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#general" class="md-nav__link">
+    <span class="md-ellipsis">
+      General
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="General">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-is-m9m" class="md-nav__link">
+    <span class="md-ellipsis">
+      What is m9m?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#is-m9m-a-drop-in-replacement-for-n8n" class="md-nav__link">
+    <span class="md-ellipsis">
+      Is m9m a drop-in replacement for n8n?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#is-m9m-free-and-open-source" class="md-nav__link">
+    <span class="md-ellipsis">
+      Is m9m free and open source?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#who-builds-m9m" class="md-nav__link">
+    <span class="md-ellipsis">
+      Who builds m9m?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-does-m9m-stand-for" class="md-nav__link">
+    <span class="md-ellipsis">
+      What does "m9m" stand for?
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#performance" class="md-nav__link">
+    <span class="md-ellipsis">
+      Performance
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Performance">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-much-faster-is-m9m-than-n8n" class="md-nav__link">
+    <span class="md-ellipsis">
+      How much faster is m9m than n8n?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-is-m9m-faster-than-n8n" class="md-nav__link">
+    <span class="md-ellipsis">
+      Why is m9m faster than n8n?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-is-510-faster-measured" class="md-nav__link">
+    <span class="md-ellipsis">
+      How is "5–10× faster" measured?
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reliability" class="md-nav__link">
+    <span class="md-ellipsis">
+      Reliability
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Reliability">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#why-do-you-say-without-the-bugs" class="md-nav__link">
+    <span class="md-ellipsis">
+      Why do you say "without the bugs"?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#is-m9m-production-ready" class="md-nav__link">
+    <span class="md-ellipsis">
+      Is m9m production-ready?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#does-m9m-have-automated-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      Does m9m have automated tests?
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#n8n-compatibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      n8n compatibility
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="n8n compatibility">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#can-i-import-existing-n8n-workflows" class="md-nav__link">
+    <span class="md-ellipsis">
+      Can I import existing n8n workflows?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#which-n8n-nodes-are-supported" class="md-nav__link">
+    <span class="md-ellipsis">
+      Which n8n nodes are supported?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#do-n8n-expressions-work" class="md-nav__link">
+    <span class="md-ellipsis">
+      Do n8n expressions work?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-about-community-n8n-nodes-n8n-nodes-npm-packages" class="md-nav__link">
+    <span class="md-ellipsis">
+      What about community n8n nodes (n8n-nodes-* npm packages)?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-about-n8n-cloud-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      What about n8n Cloud features?
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ai-agents-and-mcp" class="md-nav__link">
+    <span class="md-ellipsis">
+      AI agents and MCP
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="AI agents and MCP">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#does-m9m-work-with-claude-code-cursor-and-other-ai-coding-agents" class="md-nav__link">
+    <span class="md-ellipsis">
+      Does m9m work with Claude Code, Cursor, and other AI coding agents?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#can-i-run-ai-agents-inside-a-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      Can I run AI agents inside a workflow?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#which-llm-providers-are-supported" class="md-nav__link">
+    <span class="md-ellipsis">
+      Which LLM providers are supported?
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deployment" class="md-nav__link">
+    <span class="md-ellipsis">
+      Deployment
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Deployment">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#where-can-m9m-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      Where can m9m run?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#does-m9m-need-a-database" class="md-nav__link">
+    <span class="md-ellipsis">
+      Does m9m need a database?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#can-i-run-m9m-in-kubernetes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Can I run m9m in Kubernetes?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-about-docker" class="md-nav__link">
+    <span class="md-ellipsis">
+      What about Docker?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#does-m9m-run-on-windows" class="md-nav__link">
+    <span class="md-ellipsis">
+      Does m9m run on Windows?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-do-i-monitor-m9m-in-production" class="md-nav__link">
+    <span class="md-ellipsis">
+      How do I monitor m9m in production?
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sdks" class="md-nav__link">
+    <span class="md-ellipsis">
+      SDKs
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="SDKs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-do-i-embed-m9m-in-a-nodejs-app" class="md-nav__link">
+    <span class="md-ellipsis">
+      How do I embed m9m in a Node.js app?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-do-i-embed-m9m-in-a-python-app" class="md-nav__link">
+    <span class="md-ellipsis">
+      How do I embed m9m in a Python app?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-do-i-embed-m9m-in-a-go-app" class="md-nav__link">
+    <span class="md-ellipsis">
+      How do I embed m9m in a Go app?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#do-the-sdks-bundle-a-nodejs-or-python-runtime" class="md-nav__link">
+    <span class="md-ellipsis">
+      Do the SDKs bundle a Node.js or Python runtime?
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#comparisons" class="md-nav__link">
+    <span class="md-ellipsis">
+      Comparisons
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Comparisons">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-does-m9m-compare-to-zapier-or-make" class="md-nav__link">
+    <span class="md-ellipsis">
+      How does m9m compare to Zapier or Make?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-does-m9m-compare-to-apache-airflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      How does m9m compare to Apache Airflow?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-does-m9m-compare-to-temporal" class="md-nav__link">
+    <span class="md-ellipsis">
+      How does m9m compare to Temporal?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-does-m9m-compare-to-github-actions" class="md-nav__link">
+    <span class="md-ellipsis">
+      How does m9m compare to GitHub Actions?
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#licensing-and-commercial-use" class="md-nav__link">
+    <span class="md-ellipsis">
+      Licensing and commercial use
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Licensing and commercial use">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#can-i-use-m9m-commercially" class="md-nav__link">
+    <span class="md-ellipsis">
+      Can I use m9m commercially?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#can-i-modify-the-source" class="md-nav__link">
+    <span class="md-ellipsis">
+      Can I modify the source?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#is-there-a-paid-tier-with-extra-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      Is there a paid tier with extra features?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#is-there-commercial-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      Is there commercial support?
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      Troubleshooting
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Troubleshooting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#where-do-i-report-bugs" class="md-nav__link">
+    <span class="md-ellipsis">
+      Where do I report bugs?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#where-do-i-ask-questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Where do I ask questions?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-do-i-see-what-m9m-is-doing" class="md-nav__link">
+    <span class="md-ellipsis">
+      How do I see what m9m is doing?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#my-workflow-fails-with-node-type-not-registered-what-do-i-do" class="md-nav__link">
+    <span class="md-ellipsis">
+      My workflow fails with "node type not registered" — what do I do?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wheres-the-data-stored" class="md-nav__link">
+    <span class="md-ellipsis">
+      Where's the data stored?
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../getting-started/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Getting Started
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Getting Started
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/installation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Installation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/first-workflow/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    First Workflow
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/concepts/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Core Concepts
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../configuration/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Configuration
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            Configuration
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuration/server/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Server
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuration/database/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Database
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuration/queue/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Queue
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuration/security/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Security
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuration/environment/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Environment Variables
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../cli/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    CLI Reference
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_7" id="__nav_7_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            CLI Reference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli/serve/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    serve
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli/workflows/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Workflow Commands
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli/executions/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Execution Commands
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli/nodes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Node Commands
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli/workspace/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Workspace Commands
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../api/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    API Reference
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_8" id="__nav_8_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            API Reference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/authentication/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Authentication
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/workflows/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Workflows
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/executions/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Executions
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/jobs/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Jobs
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/schedules/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Schedules
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/credentials/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Credentials
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/webhooks/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Webhooks
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_9" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../nodes/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Nodes
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_9" id="__nav_9_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            Nodes
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/core/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Core
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/transform/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Transform
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/http/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    HTTP
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/triggers/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Triggers
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/database/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Database
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/messaging/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Messaging
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/ai/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AI & LLM
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/cli/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    CLI Execution
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/cloud/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Cloud Storage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/vcs/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Version Control
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/email/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Email
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/file/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    File Operations
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_10" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../workflows/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Workflows
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_10" id="__nav_10_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            Workflows
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../workflows/creating/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Creating Workflows
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../workflows/executing/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Executing Workflows
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../workflows/data-flow/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Data Flow
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../workflows/examples/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Examples
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_11" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../expressions/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Expressions
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_11" id="__nav_11_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            Expressions
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../expressions/variables/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Variables
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../expressions/functions/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Functions
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_12" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../credentials/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Credentials
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_12" id="__nav_12_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            Credentials
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../credentials/types/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Credential Types
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../scheduling/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Scheduling
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13" id="__nav_13_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            Scheduling
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../scheduling/cron/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Cron Expressions
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_14" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../webhooks/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Webhooks
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_14" id="__nav_14_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14">
+            <span class="md-nav__icon md-icon"></span>
+            Webhooks
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../webhooks/authentication/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Authentication
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_15" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../deployment/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Deployment
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_15" id="__nav_15_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_15_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_15">
+            <span class="md-nav__icon md-icon"></span>
+            Deployment
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../deployment/docker/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Docker
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../deployment/kubernetes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Kubernetes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../deployment/production/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Production
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_16" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../architecture/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Architecture
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_16" id="__nav_16_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_16_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_16">
+            <span class="md-nav__icon md-icon"></span>
+            Architecture
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/engine/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Workflow Engine
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/queue/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Job Queue
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_17" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../troubleshooting/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Troubleshooting
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_17" id="__nav_17_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_17_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_17">
+            <span class="md-nav__icon md-icon"></span>
+            Troubleshooting
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../troubleshooting/faq/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    FAQ
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#general" class="md-nav__link">
+    <span class="md-ellipsis">
+      General
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="General">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-is-m9m" class="md-nav__link">
+    <span class="md-ellipsis">
+      What is m9m?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#is-m9m-a-drop-in-replacement-for-n8n" class="md-nav__link">
+    <span class="md-ellipsis">
+      Is m9m a drop-in replacement for n8n?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#is-m9m-free-and-open-source" class="md-nav__link">
+    <span class="md-ellipsis">
+      Is m9m free and open source?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#who-builds-m9m" class="md-nav__link">
+    <span class="md-ellipsis">
+      Who builds m9m?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-does-m9m-stand-for" class="md-nav__link">
+    <span class="md-ellipsis">
+      What does "m9m" stand for?
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#performance" class="md-nav__link">
+    <span class="md-ellipsis">
+      Performance
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Performance">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-much-faster-is-m9m-than-n8n" class="md-nav__link">
+    <span class="md-ellipsis">
+      How much faster is m9m than n8n?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-is-m9m-faster-than-n8n" class="md-nav__link">
+    <span class="md-ellipsis">
+      Why is m9m faster than n8n?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-is-510-faster-measured" class="md-nav__link">
+    <span class="md-ellipsis">
+      How is "5–10× faster" measured?
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reliability" class="md-nav__link">
+    <span class="md-ellipsis">
+      Reliability
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Reliability">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#why-do-you-say-without-the-bugs" class="md-nav__link">
+    <span class="md-ellipsis">
+      Why do you say "without the bugs"?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#is-m9m-production-ready" class="md-nav__link">
+    <span class="md-ellipsis">
+      Is m9m production-ready?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#does-m9m-have-automated-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      Does m9m have automated tests?
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#n8n-compatibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      n8n compatibility
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="n8n compatibility">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#can-i-import-existing-n8n-workflows" class="md-nav__link">
+    <span class="md-ellipsis">
+      Can I import existing n8n workflows?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#which-n8n-nodes-are-supported" class="md-nav__link">
+    <span class="md-ellipsis">
+      Which n8n nodes are supported?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#do-n8n-expressions-work" class="md-nav__link">
+    <span class="md-ellipsis">
+      Do n8n expressions work?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-about-community-n8n-nodes-n8n-nodes-npm-packages" class="md-nav__link">
+    <span class="md-ellipsis">
+      What about community n8n nodes (n8n-nodes-* npm packages)?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-about-n8n-cloud-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      What about n8n Cloud features?
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ai-agents-and-mcp" class="md-nav__link">
+    <span class="md-ellipsis">
+      AI agents and MCP
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="AI agents and MCP">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#does-m9m-work-with-claude-code-cursor-and-other-ai-coding-agents" class="md-nav__link">
+    <span class="md-ellipsis">
+      Does m9m work with Claude Code, Cursor, and other AI coding agents?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#can-i-run-ai-agents-inside-a-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      Can I run AI agents inside a workflow?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#which-llm-providers-are-supported" class="md-nav__link">
+    <span class="md-ellipsis">
+      Which LLM providers are supported?
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deployment" class="md-nav__link">
+    <span class="md-ellipsis">
+      Deployment
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Deployment">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#where-can-m9m-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      Where can m9m run?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#does-m9m-need-a-database" class="md-nav__link">
+    <span class="md-ellipsis">
+      Does m9m need a database?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#can-i-run-m9m-in-kubernetes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Can I run m9m in Kubernetes?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-about-docker" class="md-nav__link">
+    <span class="md-ellipsis">
+      What about Docker?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#does-m9m-run-on-windows" class="md-nav__link">
+    <span class="md-ellipsis">
+      Does m9m run on Windows?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-do-i-monitor-m9m-in-production" class="md-nav__link">
+    <span class="md-ellipsis">
+      How do I monitor m9m in production?
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sdks" class="md-nav__link">
+    <span class="md-ellipsis">
+      SDKs
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="SDKs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-do-i-embed-m9m-in-a-nodejs-app" class="md-nav__link">
+    <span class="md-ellipsis">
+      How do I embed m9m in a Node.js app?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-do-i-embed-m9m-in-a-python-app" class="md-nav__link">
+    <span class="md-ellipsis">
+      How do I embed m9m in a Python app?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-do-i-embed-m9m-in-a-go-app" class="md-nav__link">
+    <span class="md-ellipsis">
+      How do I embed m9m in a Go app?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#do-the-sdks-bundle-a-nodejs-or-python-runtime" class="md-nav__link">
+    <span class="md-ellipsis">
+      Do the SDKs bundle a Node.js or Python runtime?
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#comparisons" class="md-nav__link">
+    <span class="md-ellipsis">
+      Comparisons
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Comparisons">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-does-m9m-compare-to-zapier-or-make" class="md-nav__link">
+    <span class="md-ellipsis">
+      How does m9m compare to Zapier or Make?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-does-m9m-compare-to-apache-airflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      How does m9m compare to Apache Airflow?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-does-m9m-compare-to-temporal" class="md-nav__link">
+    <span class="md-ellipsis">
+      How does m9m compare to Temporal?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-does-m9m-compare-to-github-actions" class="md-nav__link">
+    <span class="md-ellipsis">
+      How does m9m compare to GitHub Actions?
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#licensing-and-commercial-use" class="md-nav__link">
+    <span class="md-ellipsis">
+      Licensing and commercial use
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Licensing and commercial use">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#can-i-use-m9m-commercially" class="md-nav__link">
+    <span class="md-ellipsis">
+      Can I use m9m commercially?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#can-i-modify-the-source" class="md-nav__link">
+    <span class="md-ellipsis">
+      Can I modify the source?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#is-there-a-paid-tier-with-extra-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      Is there a paid tier with extra features?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#is-there-commercial-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      Is there commercial support?
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      Troubleshooting
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Troubleshooting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#where-do-i-report-bugs" class="md-nav__link">
+    <span class="md-ellipsis">
+      Where do I report bugs?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#where-do-i-ask-questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Where do I ask questions?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-do-i-see-what-m9m-is-doing" class="md-nav__link">
+    <span class="md-ellipsis">
+      How do I see what m9m is doing?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#my-workflow-fails-with-node-type-not-registered-what-do-i-do" class="md-nav__link">
+    <span class="md-ellipsis">
+      My workflow fails with "node type not registered" — what do I do?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wheres-the-data-stored" class="md-nav__link">
+    <span class="md-ellipsis">
+      Where's the data stored?
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is m9m?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "m9m is an open-source workflow automation platform written in Go. It runs n8n workflow JSON unchanged but executes 5–10× faster, uses 70% less memory, and ships as a single 30 MB binary with zero runtime dependencies."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is m9m a drop-in replacement for n8n?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "For workflow execution: yes. m9m runs n8n workflow JSON, expression syntax, and credentials unchanged across 40+ built-in node types. Community nodes published as n8n-nodes-* npm packages and n8n Cloud–specific features are not yet supported."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is m9m free and open source?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. MIT-licensed. No fair-use clauses, no source-available restrictions, no commercial-use carveouts."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How much faster is m9m than n8n?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "On the same hardware: cold start ~500 ms vs ~3 s (6× faster), idle memory ~150 MB vs ~512 MB (70% lower), container size ~300 MB vs ~1.2 GB (75% smaller), workflow execution 5–10× faster, concurrent workflows 500 vs 50. Reproducible with m9m benchmark."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why is m9m faster than n8n?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Three reasons: Go is compiled and statically linked (no V8 warm-up, no JIT de-optimisation); goroutines on a real thread pool replace the single Node.js event loop so concurrent workflows scale; and there's no require() overhead, no node_modules walk, no npm install on the server."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why do you say 'without the bugs'?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Three concrete reliability properties that come from the Go runtime: (1) no JavaScript-runtime memory leaks because Go's garbage collector eliminates long-running heap growth; (2) deterministic execution because the workflow runs as a topologically-sorted DAG instead of on an event loop; (3) a smaller attack surface because m9m is a single statically-linked binary without ~1,000 npm transitive dependencies."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is m9m production-ready?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Single static binary, Prometheus metrics, OpenTelemetry tracing, Git-based workflow versioning, audit logs, and multi-workspace support all ship in the open-source build — not gated behind a paid tier."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I import existing n8n workflows?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Export the workflow JSON from n8n and run 'm9m exec workflow.json'. No conversion step. Credentials use the same format."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Which n8n nodes are supported?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "40+ built-in node types covering HTTP, databases (PostgreSQL, MySQL, SQLite, MongoDB, Redis, Elasticsearch), AI (OpenAI, Anthropic), messaging (Slack, Discord, Twilio, Teams), email (SMTP, SendGrid), cloud storage (S3, GCS, Azure Blob), version control (GitHub, GitLab), productivity (Notion, Stripe, Google Sheets), file I/O, webhooks, cron, Code, Function, Set, Filter, Merge, JSON, If, Loop."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What about community n8n nodes?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Community nodes published as n8n-nodes-* npm packages are not supported today. They are Node.js packages with arbitrary npm imports; m9m doesn't load arbitrary npm at runtime by design. If a community node is important, file an issue or contribute a native equivalent."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does m9m work with Claude Code, Cursor, and other AI coding agents?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, natively. m9m ships a built-in MCP (Model Context Protocol) server with 37 tools for workflow orchestration. Agents can list, create, execute, and inspect workflows directly."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I run AI agents inside a workflow?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. The cliExecute node runs Claude Code, Codex, Aider, or any CLI agent in a sandboxed environment using bubblewrap on Linux, namespace isolation, and resource limits."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Where can m9m run?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "macOS (Intel + Apple Silicon), Linux (AMD64 + ARM64), Windows (AMD64). Prebuilt binaries for all platforms on every GitHub release."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does m9m need a database?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "For development: no — it uses SQLite by default. For production: PostgreSQL is recommended."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How does m9m compare to Zapier or Make?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Zapier and Make are hosted SaaS platforms; m9m is self-hosted open-source software you run on your own infrastructure. The right comparison is to n8n, Airflow, or Temporal — and m9m is faster than all three for the integration-automation use case."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How does m9m compare to Apache Airflow or Temporal?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Airflow is a Python DAG scheduler aimed at data engineering pipelines. Temporal is a durable workflow engine for long-running code-defined workflows. m9m is aimed at integration automation (API calls, webhooks, business workflows) with an n8n-compatible JSON interface."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I use m9m commercially?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. MIT license. Use it in commercial products, host it for clients, embed it in proprietary software — no restrictions."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is there a paid tier with extra features?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. All features ship in the open-source build — Prometheus metrics, audit logs, multi-workspace, Git versioning, all of it. No 'enterprise edition' gating."
+      }
+    }
+  ]
+}
+</script>
+
+<h1 id="frequently-asked-questions">Frequently asked questions<a class="headerlink" href="#frequently-asked-questions" title="Permanent link">&para;</a></h1>
+<h2 id="general">General<a class="headerlink" href="#general" title="Permanent link">&para;</a></h2>
+<h3 id="what-is-m9m">What is m9m?<a class="headerlink" href="#what-is-m9m" title="Permanent link">&para;</a></h3>
+<p>m9m is an open-source workflow automation platform written in Go. It runs <a href="https://n8n.io">n8n</a> workflow JSON unchanged but executes 5–10× faster, uses 70% less memory, and ships as a single 30 MB binary with zero runtime dependencies.</p>
+<h3 id="is-m9m-a-drop-in-replacement-for-n8n">Is m9m a drop-in replacement for n8n?<a class="headerlink" href="#is-m9m-a-drop-in-replacement-for-n8n" title="Permanent link">&para;</a></h3>
+<p>For workflow <em>execution</em>: yes. m9m runs n8n workflow JSON, expression syntax, and credentials unchanged across 40+ built-in node types. Community nodes published as <code>n8n-nodes-*</code> npm packages and n8n Cloud–specific features are not yet supported. See the <a href="../migrate-from-n8n/">migration guide</a>.</p>
+<h3 id="is-m9m-free-and-open-source">Is m9m free and open source?<a class="headerlink" href="#is-m9m-free-and-open-source" title="Permanent link">&para;</a></h3>
+<p>Yes. MIT-licensed. No "fair-use" clauses, no source-available restrictions, no commercial-use carveouts. The full source is at <a href="https://github.com/neul-labs/m9m">github.com/neul-labs/m9m</a>.</p>
+<h3 id="who-builds-m9m">Who builds m9m?<a class="headerlink" href="#who-builds-m9m" title="Permanent link">&para;</a></h3>
+<p><a href="https://github.com/neul-labs">Neul Labs</a> and an open-source community of contributors. Bug reports, PRs, and design proposals are all welcome on <a href="https://github.com/neul-labs/m9m">GitHub</a>.</p>
+<h3 id="what-does-m9m-stand-for">What does "m9m" stand for?<a class="headerlink" href="#what-does-m9m-stand-for" title="Permanent link">&para;</a></h3>
+<p>It's just a name. Pronounced "em-nine-em."</p>
+<hr />
+<h2 id="performance">Performance<a class="headerlink" href="#performance" title="Permanent link">&para;</a></h2>
+<h3 id="how-much-faster-is-m9m-than-n8n">How much faster is m9m than n8n?<a class="headerlink" href="#how-much-faster-is-m9m-than-n8n" title="Permanent link">&para;</a></h3>
+<p>On the same hardware, in our benchmarks:</p>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>m9m</th>
+<th>n8n</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cold start</td>
+<td>~500 ms</td>
+<td>~3 s</td>
+</tr>
+<tr>
+<td>Idle memory</td>
+<td>~150 MB</td>
+<td>~512 MB</td>
+</tr>
+<tr>
+<td>Container size</td>
+<td>~300 MB</td>
+<td>~1.2 GB</td>
+</tr>
+<tr>
+<td>Workflow execution</td>
+<td>Baseline</td>
+<td>5–10× slower</td>
+</tr>
+<tr>
+<td>Concurrent workflows</td>
+<td>500</td>
+<td>50</td>
+</tr>
+</tbody>
+</table>
+<p>Reproducible with <code>m9m benchmark</code>. Full methodology in the <a href="https://github.com/neul-labs/m9m/blob/main/docs/performance-report.md">performance report</a>.</p>
+<h3 id="why-is-m9m-faster-than-n8n">Why is m9m faster than n8n?<a class="headerlink" href="#why-is-m9m-faster-than-n8n" title="Permanent link">&para;</a></h3>
+<p>Three reasons: (1) Go is compiled and statically linked — no V8 warm-up, no JIT de-optimisation; (2) goroutines on a real thread pool replace the single Node.js event loop, so concurrent workflows scale; (3) no <code>require()</code> overhead, no <code>node_modules/</code> walk, no npm install on the server.</p>
+<h3 id="how-is-510-faster-measured">How is "5–10× faster" measured?<a class="headerlink" href="#how-is-510-faster-measured" title="Permanent link">&para;</a></h3>
+<p>End-to-end workflow execution time, same workflow JSON, same hardware, same inputs. The 5× / 10× spread reflects workflow shape: HTTP-bound workflows see less speedup (network dominates), CPU-bound transforms see more.</p>
+<hr />
+<h2 id="reliability">Reliability<a class="headerlink" href="#reliability" title="Permanent link">&para;</a></h2>
+<h3 id="why-do-you-say-without-the-bugs">Why do you say "without the bugs"?<a class="headerlink" href="#why-do-you-say-without-the-bugs" title="Permanent link">&para;</a></h3>
+<p>Three concrete properties that come from the Go runtime, not from us being smarter:</p>
+<ol>
+<li><strong>No JavaScript-runtime memory leaks.</strong> Go's garbage collector + value semantics eliminate the long-running heap growth that's documented in n8n deployments and often requires nightly process restarts.</li>
+<li><strong>Deterministic execution.</strong> Same input → same output. No event-loop ordering surprises across runs.</li>
+<li><strong>Smaller attack surface.</strong> Single statically-linked binary, no transitive npm dependencies in the runtime path. CVEs in n8n's ~1,000-package dep tree don't apply.</li>
+</ol>
+<p>It's a claim about runtime properties, not about bug count. See <a href="../why-m9m/#reliability-why-we-say-without-the-bugs">Why m9m?</a> for the long version.</p>
+<h3 id="is-m9m-production-ready">Is m9m production-ready?<a class="headerlink" href="#is-m9m-production-ready" title="Permanent link">&para;</a></h3>
+<p>Yes. Single static binary, Prometheus metrics, OpenTelemetry tracing, Git-based workflow versioning, audit logs, and multi-workspace support are all built in — not gated behind a paid tier. Production deployment guide: <a href="../deployment/">Deployment</a>.</p>
+<h3 id="does-m9m-have-automated-tests">Does m9m have automated tests?<a class="headerlink" href="#does-m9m-have-automated-tests" title="Permanent link">&para;</a></h3>
+<p>Yes — ~46 internal Go packages with tests, all passing on every commit. Plus a smoke-test suite (<code>make smoke-test</code>) that runs eight end-to-end workflow scenarios against a real binary.</p>
+<hr />
+<h2 id="n8n-compatibility">n8n compatibility<a class="headerlink" href="#n8n-compatibility" title="Permanent link">&para;</a></h2>
+<h3 id="can-i-import-existing-n8n-workflows">Can I import existing n8n workflows?<a class="headerlink" href="#can-i-import-existing-n8n-workflows" title="Permanent link">&para;</a></h3>
+<p>Yes. Export the workflow JSON from n8n and run <code>m9m exec workflow.json</code>. No conversion step. Credentials use the same format. Full walkthrough: <a href="../migrate-from-n8n/">Migrate from n8n</a>.</p>
+<h3 id="which-n8n-nodes-are-supported">Which n8n nodes are supported?<a class="headerlink" href="#which-n8n-nodes-are-supported" title="Permanent link">&para;</a></h3>
+<p>40+ built-in node types covering HTTP, databases (PostgreSQL, MySQL, SQLite, MongoDB, Redis, Elasticsearch), AI (OpenAI, Anthropic), messaging (Slack, Discord, Twilio, Teams), email (SMTP, SendGrid), cloud storage (S3, GCS, Azure Blob), version control (GitHub, GitLab), productivity (Notion, Stripe, Google Sheets), file I/O, webhooks, cron, Code, Function, Set, Filter, Merge, JSON, If, Loop. Run <code>m9m node list</code> for the full catalog. Full matrix: <a href="https://github.com/neul-labs/m9m/blob/main/docs/N8N_FEATURE_COMPARISON.md">N8N_FEATURE_COMPARISON.md</a>.</p>
+<h3 id="do-n8n-expressions-work">Do n8n expressions work?<a class="headerlink" href="#do-n8n-expressions-work" title="Permanent link">&para;</a></h3>
+<p>Yes. The full expression syntax is supported: <code>{{ $json.field }}</code>, <code>{{ $node["name"].data }}</code>, <code>={{ ... }}</code> for computed values, built-in functions, and helper objects (<code>$now</code>, <code>$workflow</code>, <code>$execution</code>, etc.).</p>
+<h3 id="what-about-community-n8n-nodes-n8n-nodes-npm-packages">What about community n8n nodes (<code>n8n-nodes-*</code> npm packages)?<a class="headerlink" href="#what-about-community-n8n-nodes-n8n-nodes-npm-packages" title="Permanent link">&para;</a></h3>
+<p>Not supported today. They're Node.js packages with arbitrary npm imports; m9m doesn't load arbitrary npm at runtime by design. If a community node is important to you, file an issue or contribute a native equivalent.</p>
+<h3 id="what-about-n8n-cloud-features">What about n8n Cloud features?<a class="headerlink" href="#what-about-n8n-cloud-features" title="Permanent link">&para;</a></h3>
+<p>n8n Cloud–specific features (hosted credentials, Cloud webhooks, etc.) aren't supported. m9m is self-hosted.</p>
+<hr />
+<h2 id="ai-agents-and-mcp">AI agents and MCP<a class="headerlink" href="#ai-agents-and-mcp" title="Permanent link">&para;</a></h2>
+<h3 id="does-m9m-work-with-claude-code-cursor-and-other-ai-coding-agents">Does m9m work with Claude Code, Cursor, and other AI coding agents?<a class="headerlink" href="#does-m9m-work-with-claude-code-cursor-and-other-ai-coding-agents" title="Permanent link">&para;</a></h3>
+<p>Yes, natively. m9m ships a built-in MCP (Model Context Protocol) server with 37 tools for workflow orchestration. Agents can list, create, execute, and inspect workflows directly. See <a href="https://github.com/neul-labs/m9m/blob/main/docs/mcp/README.md">the MCP integration guide</a>.</p>
+<h3 id="can-i-run-ai-agents-inside-a-workflow">Can I run AI agents <em>inside</em> a workflow?<a class="headerlink" href="#can-i-run-ai-agents-inside-a-workflow" title="Permanent link">&para;</a></h3>
+<p>Yes. The <code>cliExecute</code> node runs Claude Code, Codex, Aider, or any CLI agent in a sandboxed environment (bubblewrap on Linux, namespace isolation, resource limits). See <a href="../nodes/cli/">Nodes › CLI Execution</a>.</p>
+<h3 id="which-llm-providers-are-supported">Which LLM providers are supported?<a class="headerlink" href="#which-llm-providers-are-supported" title="Permanent link">&para;</a></h3>
+<p>First-class nodes for OpenAI (GPT-4 and o-series) and Anthropic Claude. LiteLLM, Groq, Ollama, and other providers via HTTP Request. Roadmap includes additional native providers.</p>
+<hr />
+<h2 id="deployment">Deployment<a class="headerlink" href="#deployment" title="Permanent link">&para;</a></h2>
+<h3 id="where-can-m9m-run">Where can m9m run?<a class="headerlink" href="#where-can-m9m-run" title="Permanent link">&para;</a></h3>
+<p>macOS (Intel + Apple Silicon), Linux (AMD64 + ARM64), Windows (AMD64). Prebuilt binaries for all platforms on every <a href="https://github.com/neul-labs/m9m/releases">GitHub release</a>.</p>
+<h3 id="does-m9m-need-a-database">Does m9m need a database?<a class="headerlink" href="#does-m9m-need-a-database" title="Permanent link">&para;</a></h3>
+<p>For dev: no — it uses SQLite by default. For production: PostgreSQL is recommended. Configuration: <a href="../configuration/database/">database</a>.</p>
+<h3 id="can-i-run-m9m-in-kubernetes">Can I run m9m in Kubernetes?<a class="headerlink" href="#can-i-run-m9m-in-kubernetes" title="Permanent link">&para;</a></h3>
+<p>Yes. Helm chart and example manifests in <a href="https://github.com/neul-labs/m9m/tree/main/deploy">deploy/</a>. Production guide: <a href="../deployment/kubernetes/">Deployment › Kubernetes</a>.</p>
+<h3 id="what-about-docker">What about Docker?<a class="headerlink" href="#what-about-docker" title="Permanent link">&para;</a></h3>
+<p><code>ghcr.io/neul-labs/m9m:latest</code> (releases, multi-arch) or <code>neul-labs/m9m:latest</code> (Docker Hub, CI builds). See <a href="../deployment/docker/">Deployment › Docker</a>.</p>
+<h3 id="does-m9m-run-on-windows">Does m9m run on Windows?<a class="headerlink" href="#does-m9m-run-on-windows" title="Permanent link">&para;</a></h3>
+<p>Yes. Prebuilt Windows AMD64 binaries on every release.</p>
+<h3 id="how-do-i-monitor-m9m-in-production">How do I monitor m9m in production?<a class="headerlink" href="#how-do-i-monitor-m9m-in-production" title="Permanent link">&para;</a></h3>
+<p>Prometheus metrics on <code>/metrics</code> (port 9090 by default) and OpenTelemetry tracing. Both ship out of the box. See <a href="../configuration/server/">Configuration › Server</a>.</p>
+<hr />
+<h2 id="sdks">SDKs<a class="headerlink" href="#sdks" title="Permanent link">&para;</a></h2>
+<h3 id="how-do-i-embed-m9m-in-a-nodejs-app">How do I embed m9m in a Node.js app?<a class="headerlink" href="#how-do-i-embed-m9m-in-a-nodejs-app" title="Permanent link">&para;</a></h3>
+<p><code>npm install m9m-cli</code> — see the <a href="https://www.npmjs.com/package/m9m-cli">npm package</a>.</p>
+<h3 id="how-do-i-embed-m9m-in-a-python-app">How do I embed m9m in a Python app?<a class="headerlink" href="#how-do-i-embed-m9m-in-a-python-app" title="Permanent link">&para;</a></h3>
+<p><code>pip install m9m-cli</code> — see the <a href="https://pypi.org/project/m9m-cli/">PyPI package</a>.</p>
+<h3 id="how-do-i-embed-m9m-in-a-go-app">How do I embed m9m in a Go app?<a class="headerlink" href="#how-do-i-embed-m9m-in-a-go-app" title="Permanent link">&para;</a></h3>
+<p>Import <code>github.com/neul-labs/m9m</code> directly. See the <a href="https://pkg.go.dev/github.com/neul-labs/m9m">Go reference</a>.</p>
+<h3 id="do-the-sdks-bundle-a-nodejs-or-python-runtime">Do the SDKs bundle a Node.js or Python runtime?<a class="headerlink" href="#do-the-sdks-bundle-a-nodejs-or-python-runtime" title="Permanent link">&para;</a></h3>
+<p>No. The SDKs are thin clients that auto-download the platform-native <code>m9m</code> Go binary and call it. Your app keeps its own runtime; m9m runs in a separate process.</p>
+<hr />
+<h2 id="comparisons">Comparisons<a class="headerlink" href="#comparisons" title="Permanent link">&para;</a></h2>
+<h3 id="how-does-m9m-compare-to-zapier-or-make">How does m9m compare to Zapier or Make?<a class="headerlink" href="#how-does-m9m-compare-to-zapier-or-make" title="Permanent link">&para;</a></h3>
+<p>Zapier and Make are hosted SaaS platforms; m9m is self-hosted open-source software you run on your own infrastructure. The right comparison is to n8n, Airflow, or Temporal — and m9m is faster than all three for the integration-automation use case.</p>
+<h3 id="how-does-m9m-compare-to-apache-airflow">How does m9m compare to Apache Airflow?<a class="headerlink" href="#how-does-m9m-compare-to-apache-airflow" title="Permanent link">&para;</a></h3>
+<p>Different shape. Airflow is a Python-based DAG scheduler aimed at data engineering pipelines (Spark jobs, dbt runs, batch ETL). m9m is aimed at integration automation (API calls, webhooks, business workflows) with an n8n-compatible interface. Both can run workflows on schedules, but their out-of-the-box node libraries don't overlap much.</p>
+<h3 id="how-does-m9m-compare-to-temporal">How does m9m compare to Temporal?<a class="headerlink" href="#how-does-m9m-compare-to-temporal" title="Permanent link">&para;</a></h3>
+<p>Different shape. Temporal is a durable workflow engine where you write workflows as code (Go / TypeScript / Python / Java) and the platform handles retries, state, and durability over long time horizons (days, months). m9m runs n8n-style declarative workflow JSON and is optimised for shorter-running automation, not multi-day human-in-the-loop processes.</p>
+<h3 id="how-does-m9m-compare-to-github-actions">How does m9m compare to GitHub Actions?<a class="headerlink" href="#how-does-m9m-compare-to-github-actions" title="Permanent link">&para;</a></h3>
+<p>GitHub Actions runs CI/CD workflows tied to your repository. m9m runs general-purpose automation independent of any VCS. You can use both — m9m has GitHub and GitLab nodes for cross-pollination.</p>
+<hr />
+<h2 id="licensing-and-commercial-use">Licensing and commercial use<a class="headerlink" href="#licensing-and-commercial-use" title="Permanent link">&para;</a></h2>
+<h3 id="can-i-use-m9m-commercially">Can I use m9m commercially?<a class="headerlink" href="#can-i-use-m9m-commercially" title="Permanent link">&para;</a></h3>
+<p>Yes. MIT license. Use it in commercial products, host it for clients, embed it in proprietary software — no restrictions.</p>
+<h3 id="can-i-modify-the-source">Can I modify the source?<a class="headerlink" href="#can-i-modify-the-source" title="Permanent link">&para;</a></h3>
+<p>Yes. MIT license. Just retain the copyright notice in distributed source.</p>
+<h3 id="is-there-a-paid-tier-with-extra-features">Is there a paid tier with extra features?<a class="headerlink" href="#is-there-a-paid-tier-with-extra-features" title="Permanent link">&para;</a></h3>
+<p>No. All features ship in the open-source build — Prometheus metrics, audit logs, multi-workspace, Git versioning, all of it. No "enterprise edition" gating.</p>
+<h3 id="is-there-commercial-support">Is there commercial support?<a class="headerlink" href="#is-there-commercial-support" title="Permanent link">&para;</a></h3>
+<p>Reach out to <a href="https://github.com/neul-labs">Neul Labs</a> for commercial support arrangements.</p>
+<hr />
+<h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
+<h3 id="where-do-i-report-bugs">Where do I report bugs?<a class="headerlink" href="#where-do-i-report-bugs" title="Permanent link">&para;</a></h3>
+<p><a href="https://github.com/neul-labs/m9m/issues">GitHub Issues</a>.</p>
+<h3 id="where-do-i-ask-questions">Where do I ask questions?<a class="headerlink" href="#where-do-i-ask-questions" title="Permanent link">&para;</a></h3>
+<p><a href="https://github.com/neul-labs/m9m/discussions">GitHub Discussions</a>.</p>
+<h3 id="how-do-i-see-what-m9m-is-doing">How do I see what m9m is doing?<a class="headerlink" href="#how-do-i-see-what-m9m-is-doing" title="Permanent link">&para;</a></h3>
+<p><code>m9m exec workflow.json --debug</code> enables verbose logging. For a running server, set <code>M9M_LOG_LEVEL=debug</code>.</p>
+<h3 id="my-workflow-fails-with-node-type-not-registered-what-do-i-do">My workflow fails with "node type not registered" — what do I do?<a class="headerlink" href="#my-workflow-fails-with-node-type-not-registered-what-do-i-do" title="Permanent link">&para;</a></h3>
+<p>Run <code>m9m node list</code> to see what's available. The error usually means the workflow uses a community node (<code>n8n-nodes-*</code>) that isn't part of the built-in catalog.</p>
+<h3 id="wheres-the-data-stored">Where's the data stored?<a class="headerlink" href="#wheres-the-data-stored" title="Permanent link">&para;</a></h3>
+<p><code>~/.m9m/data/</code> by default. SQLite by default; PostgreSQL configurable. Override with <code>M9M_DATA_DIR</code>.</p>
+
+
+
+
+
+
+
+  
+  
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../migrate-from-n8n/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Migrate from n8n">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Migrate from n8n
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../getting-started/" class="md-footer__link md-footer__link--next" aria-label="Next: Overview">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Overview
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2024 Neul Labs · m9m is open source under the MIT license.
+    </div>
+  
+  
+</div>
+      
+        <div class="md-social">
+  
+    
+    
+    
+    
+    <a href="https://github.com/neul-labs/m9m" target="_blank" rel="noopener" title="m9m on GitHub" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="https://www.npmjs.com/package/m9m-cli" target="_blank" rel="noopener" title="m9m-cli on npm" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.7.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M288 288h-32v-64h32zm288-128v192H288v32H160v-32H0V160zm-416 32H32v128h64v-96h32v96h32zm160 0H192v160h64v-32h64zm224 0H352v128h64v-96h32v96h32v-96h32v96h32z"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="https://pypi.org/project/m9m-cli/" target="_blank" rel="noopener" title="m9m-cli on PyPI" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6M286.2 404c11.1 0 20.1 9.1 20.1 20.3 0 11.3-9 20.4-20.1 20.4-11 0-20.1-9.2-20.1-20.4.1-11.3 9.1-20.3 20.1-20.3M167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4m-6.7-142.6c-11.1 0-20.1-9.1-20.1-20.3.1-11.3 9-20.4 20.1-20.4 11 0 20.1 9.2 20.1 20.4s-9 20.3-20.1 20.3"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="https://github.com/neul-labs/m9m/pkgs/container/m9m" target="_blank" rel="noopener" title="m9m on GHCR" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.7.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M349.9 236.3h-66.1v-59.4h66.1zm0-204.3h-66.1v60.7h66.1zm78.2 144.8H362v59.4h66.1zm-156.3-72.1h-66.1v60.1h66.1zm78.1 0h-66.1v60.1h66.1zm276.8 100c-14.4-9.7-47.6-13.2-73.1-8.4-3.3-24-16.7-44.9-41.1-63.7l-14-9.3-9.3 14c-18.4 27.8-23.4 73.6-3.7 103.8-8.7 4.7-25.8 11.1-48.4 10.7H2.4c-8.7 50.8 5.8 116.8 44 162.1 37.1 43.9 92.7 66.2 165.4 66.2 157.4 0 273.9-72.5 328.4-204.2 21.4.4 67.6.1 91.3-45.2 1.5-2.5 6.6-13.2 8.5-17.1zm-511.1-27.9h-66v59.4h66.1v-59.4zm78.1 0h-66.1v59.4h66.1zm78.1 0h-66.1v59.4h66.1zm-78.1-72.1h-66.1v60.1h66.1z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "navigation.footer", "navigation.indexes", "search.suggest", "search.highlight", "search.share", "content.code.copy", "content.code.annotate", "content.tabs.link", "toc.follow"], "search": "../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.88dd0f4e.min.js"></script>
+      
+    
+  </body>
+</html>

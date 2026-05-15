@@ -1,3 +1,9 @@
+---
+title: "Configuration Overview"
+description: "m9m can be configured through configuration files, environment variables, and command-line flags."
+keywords: "m9m configuration, environment variables, server config, database config"
+---
+
 # Configuration Overview
 
 m9m can be configured through configuration files, environment variables, and command-line flags.

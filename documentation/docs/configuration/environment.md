@@ -1,3 +1,9 @@
+---
+title: "Environment Variables"
+description: "All configuration options can be set via environment variables."
+keywords: "m9m configuration, environment variables, server config, database config"
+---
+
 # Environment Variables
 
 All configuration options can be set via environment variables.

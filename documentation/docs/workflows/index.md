@@ -1,3 +1,9 @@
+---
+title: "Workflows Overview"
+description: "Workflows are the core of m9m - automated processes that connect nodes to accomplish tasks."
+keywords: "m9m workflows, n8n workflows, workflow examples, data flow"
+---
+
 # Workflows Overview
 
 Workflows are the core of m9m - automated processes that connect nodes to accomplish tasks.

@@ -1,3 +1,9 @@
+---
+title: "Credentials API"
+description: "API endpoints for managing credentials securely."
+keywords: "m9m API, REST API, workflow API, n8n API compatibility"
+---
+
 # Credentials API
 
 API endpoints for managing credentials securely.

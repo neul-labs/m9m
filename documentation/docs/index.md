@@ -1,55 +1,56 @@
-# m9m Documentation
+---
+title: m9m — The n8n alternative without the bugs
+description: m9m is a drop-in n8n alternative in Go. 5–10× faster, 70% lower memory, deterministic execution, zero npm dependencies. Run n8n workflows unchanged.
+keywords: n8n alternative, n8n replacement, workflow automation, Go, MCP server, AI agents, Claude Code, workflow engine, iPaaS
+---
 
-## Workflow Automation at Ludicrous Speed
+# m9m
 
-m9m is a high-performance workflow automation platform built in Go. It provides **95% backend feature parity with n8n** while delivering **5-10x faster execution** and **70% lower memory usage**.
+**The n8n alternative without the bugs — faster, more reliable workflow automation.**
 
-## Why m9m?
+m9m is an open-source workflow automation platform written in Go. It runs n8n workflow JSON unchanged, executes 5–10× faster, uses 70% less memory, and ships as a single 30 MB binary with zero runtime dependencies. No Node.js, no npm tree, no event-loop stalls.
 
-| Metric | m9m | n8n | Improvement |
-|--------|-----|-----|-------------|
-| Execution Speed | ~100ms avg | ~500ms avg | **5-10x faster** |
-| Memory Usage | ~150MB | ~512MB | **70% lower** |
-| Container Size | ~300MB | ~1.2GB | **75% smaller** |
-| Startup Time | ~500ms | ~3s | **6x faster** |
+## Why m9m? (vs n8n)
 
-## Key Features
+| | m9m | n8n |
+|---|---|---|
+| **Cold start** | ~500 ms | ~3 s |
+| **Memory (idle)** | ~150 MB | ~512 MB |
+| **Container size** | ~300 MB | ~1.2 GB |
+| **Workflow execution** | Baseline | 5–10× slower |
+| **Concurrent workflows** | 500 | 50 |
+| **Runtime** | Single static Go binary | Node.js + ~1,000 npm packages |
+| **Deterministic execution** | Yes | No (event-loop ordering) |
+| **n8n workflow JSON** | Runs unchanged | Native |
+| **MCP server for Claude Code** | Built in (37 tools) | Not available |
+| **License** | MIT | Sustainable Use License |
 
-- **n8n Compatible** - Run existing n8n workflows without modification
-- **CLI Agent Orchestration** - Run AI coding agents (Claude Code, Codex, Aider) in secure sandboxes
-- **35+ Node Types** - HTTP, databases, AI/LLM, cloud storage, messaging, CLI execution, and more
-- **Agent Integration Guide** - Step-by-step MCP and REST orchestration patterns: [Getting Started > Agent Usage](getting-started/agent-usage.md)
-- **Linux Sandboxing** - Bubblewrap-based isolation for secure command execution
-- **Expression Engine** - Full n8n expression syntax support
-- **Multiple Storage Backends** - SQLite, PostgreSQL, or in-memory
-- **Job Queue** - Persistent job queue with SQLite or in-memory options
-- **REST API** - Complete API for workflow management
-- **CLI Tool** - Powerful command-line interface
-- **Cloud Native** - Built for containers and bare-metal deployment
+[Full comparison and benchmark methodology →](why-m9m.md)
 
-## Quick Start
+## 30-second quickstart
 
 ```bash
-# Install m9m (official single-binary path)
+# 1. Install
 curl -fsSL https://raw.githubusercontent.com/neul-labs/m9m/main/install.sh | bash
 
-# Start the server
+# 2. Start the server
 m9m serve
 
-# Or run with Docker (optional)
-docker run -p 8080:8080 ghcr.io/neul-labs/m9m:latest
+# 3. Run the bundled demo
+m9m demo
 ```
 
-The server starts at `http://localhost:8080` with:
+The server starts at `http://localhost:8080`:
 
-- **Web UI**: `http://localhost:8080`
-- **API**: `http://localhost:8080/api/v1`
-- **Health**: `http://localhost:8080/health`
+- **Web UI** — `http://localhost:8080`
+- **API** — `http://localhost:8080/api/v1`
+- **Health check** — `http://localhost:8080/health`
 
-## Create Your First Workflow
+[Full installation guide →](getting-started/installation.md)
+
+## Run your first workflow
 
 ```bash
-# Create a simple workflow
 cat > hello-world.json << 'EOF'
 {
   "name": "Hello World",
@@ -81,11 +82,24 @@ cat > hello-world.json << 'EOF'
 }
 EOF
 
-# Run the workflow
-m9m run hello-world.json
+m9m exec hello-world.json
 ```
 
-## Documentation Sections
+[Step-by-step walkthrough →](getting-started/first-workflow.md)
+
+## Key features
+
+- **Drop-in n8n compatibility** — runs n8n workflow JSON, expression syntax, and credentials unchanged.
+- **40+ built-in nodes** — HTTP, databases, AI/LLM, cloud storage, messaging, CLI execution, scheduling, more.
+- **MCP server for AI agents** — 37 tools for Claude Code, Cursor, and other MCP clients. [Learn more](https://github.com/neul-labs/m9m/blob/main/docs/mcp/README.md).
+- **CLI agent sandboxing** — run Claude Code, Codex, Aider in bubblewrap-isolated environments.
+- **Expression engine** — full n8n expression syntax (`{{ $json.field }}`, `{{ $node["x"].data }}`).
+- **Storage backends** — SQLite, PostgreSQL, or in-memory.
+- **Job queue** — persistent (SQLite), in-memory, or external (Redis / RabbitMQ).
+- **Observability** — Prometheus metrics + OpenTelemetry tracing built in.
+- **REST API** — n8n-compatible surface for workflow management.
+
+## Documentation
 
 <div class="grid cards" markdown>
 
@@ -93,77 +107,64 @@ m9m run hello-world.json
 
     ---
 
-    Install m9m, create your first workflow, and learn core concepts
+    Install m9m, run your first workflow, learn core concepts.
+
+-   :material-swap-horizontal: **[Migrate from n8n](migrate-from-n8n.md)**
+
+    ---
+
+    One command to run existing n8n workflows. What's compatible, what's not.
+
+-   :material-help-circle: **[FAQ](faq.md)**
+
+    ---
+
+    Common questions about performance, compatibility, and reliability.
+
+-   :material-trending-up: **[Why m9m?](why-m9m.md)**
+
+    ---
+
+    Detailed comparison vs n8n, benchmarks, and the reliability story.
 
 -   :material-cog: **[Configuration](configuration/index.md)**
 
     ---
 
-    Configure server, database, queue, and security settings
+    Server, database, queue, security, environment variables.
 
 -   :material-console: **[CLI Reference](cli/index.md)**
 
     ---
 
-    Complete command-line interface documentation
+    Complete command-line interface documentation.
 
 -   :material-api: **[API Reference](api/index.md)**
 
     ---
 
-    REST API endpoints for workflow management
+    REST API endpoints for workflow management.
 
 -   :material-cube-outline: **[Nodes](nodes/index.md)**
 
     ---
 
-    Documentation for all 34+ available node types
-
--   :material-sitemap: **[Workflows](workflows/index.md)**
-
-    ---
-
-    Learn how to create, execute, and manage workflows
-
--   :material-function: **[Expressions](expressions/index.md)**
-
-    ---
-
-    Expression syntax, variables, and built-in functions
+    All 40+ node types — parameters, examples, output schemas.
 
 -   :material-cloud-upload: **[Deployment](deployment/index.md)**
 
     ---
 
-    Deploy with single binaries, Docker, or bare metal
+    Single-binary, Docker, Kubernetes, production.
 
 </div>
-
-## Architecture Overview
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                         m9m Server                          │
-├─────────────────────────────────────────────────────────────┤
-│  REST API  │  Web UI  │  Webhooks  │  Scheduler            │
-├─────────────────────────────────────────────────────────────┤
-│                    Workflow Engine                          │
-│  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐       │
-│  │  Nodes  │  │ Express │  │ Connect │  │ Credent │       │
-│  │ Registry│  │  Eval   │  │ Router  │  │ Manager │       │
-│  └─────────┘  └─────────┘  └─────────┘  └─────────┘       │
-├─────────────────────────────────────────────────────────────┤
-│              Job Queue (Memory / SQLite)                    │
-├─────────────────────────────────────────────────────────────┤
-│           Storage (SQLite / PostgreSQL)                     │
-└─────────────────────────────────────────────────────────────┘
-```
 
 ## License
 
 m9m is open source software licensed under the [MIT License](https://github.com/neul-labs/m9m/blob/main/LICENSE).
 
-## Support
+## Community
 
-- **GitHub Issues**: [Report bugs and request features](https://github.com/neul-labs/m9m/issues)
-- **Documentation**: [docs.neullabs.com/m9m](https://docs.neullabs.com/m9m)
+- **GitHub Issues** — [report bugs, request features](https://github.com/neul-labs/m9m/issues)
+- **GitHub Discussions** — [questions, design proposals](https://github.com/neul-labs/m9m/discussions)
+- **Release Notes** — [changelog](https://github.com/neul-labs/m9m/releases)

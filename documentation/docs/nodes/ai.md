@@ -1,3 +1,9 @@
+---
+title: "AI & LLM Nodes"
+description: "AI nodes integrate with large language models for text generation and analysis."
+keywords: "m9m nodes, n8n nodes, workflow nodes, HTTP, database, AI, messaging, integrations"
+---
+
 # AI & LLM Nodes
 
 AI nodes integrate with large language models for text generation and analysis.

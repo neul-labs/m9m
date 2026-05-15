@@ -1,3 +1,9 @@
+---
+title: "Scheduling Overview"
+description: "Automate workflow execution with time-based triggers."
+keywords: "m9m scheduling, cron, scheduled workflows, recurring jobs"
+---
+
 # Scheduling Overview
 
 Automate workflow execution with time-based triggers.

@@ -1,3 +1,9 @@
+---
+title: "Queue Configuration"
+description: "Configure the job queue for workflow execution."
+keywords: "m9m configuration, environment variables, server config, database config"
+---
+
 # Queue Configuration
 
 Configure the job queue for workflow execution.

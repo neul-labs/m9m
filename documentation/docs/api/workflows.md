@@ -1,3 +1,9 @@
+---
+title: "Workflows API"
+description: "API endpoints for managing workflows."
+keywords: "m9m API, REST API, workflow API, n8n API compatibility"
+---
+
 # Workflows API
 
 API endpoints for managing workflows.

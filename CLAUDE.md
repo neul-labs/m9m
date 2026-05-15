@@ -1,16 +1,26 @@
 # CLAUDE.md
 
-This file provides comprehensive guidance to Claude Code when working with the m9m repository - a high-performance workflow automation platform built in Go.
+This file provides comprehensive guidance to Claude Code when working with the m9m repository.
 
 ## Project Overview
 
-m9m is a cloud-native workflow automation platform that provides 95% backend feature parity with n8n while offering significant performance improvements. It's built using Go for maximum performance and minimal resource usage, targeting enterprise and developer environments.
+m9m is **the n8n alternative without the bugs — faster, more reliable workflow automation**. It's an open-source workflow automation engine in Go that runs n8n workflow JSON unchanged, executes 5–10× faster, uses 70% lower memory, and ships as a single 30 MB binary with zero runtime dependencies.
+
+The canonical positioning, taglines, and one-liners are listed below. **Use them verbatim** when authoring or updating any user-facing surface (READMEs, docs, package descriptions). The plan that established them is at `/Users/dipankarsarkar/.claude/plans/cosmic-orbiting-rabin.md`.
+
+**Canonical positioning:**
+- Tagline: `The n8n alternative without the bugs — faster, more reliable workflow automation.`
+- One-liner: `m9m is a drop-in n8n alternative in Go — 5–10× faster, 70% lower memory, deterministic execution, zero npm dependencies. Run n8n workflows unchanged.`
+- Short description (package registries): `Drop-in n8n alternative in Go — faster, more reliable, no Node.js required.`
+- Pillars: faster · more reliable · drop-in n8n compatible · agent-native (MCP server built in)
+- Reliability story: (1) no JS-runtime memory leaks, (2) deterministic execution, (3) smaller attack surface
 
 **Key Characteristics:**
 - **Performance**: 5-10x faster execution than n8n
 - **Memory Efficiency**: 70% lower memory usage (~150MB vs 512MB)
 - **Container Size**: 75% smaller containers (300MB vs 1.2GB)
 - **Startup Time**: Sub-second startup (500ms vs 3s)
+- **Reliability**: Single static Go binary, no JS heap leaks, deterministic execution, no npm transitive-dep CVE exposure
 - **Architecture**: Cloud-native, microservices-ready
 
 ## Technology Stack

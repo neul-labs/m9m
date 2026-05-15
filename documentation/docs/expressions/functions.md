@@ -1,3 +1,9 @@
+---
+title: "Expression Functions"
+description: "Built-in functions available in expressions."
+keywords: "m9m expressions, n8n expression syntax, workflow expressions, variables, functions"
+---
+
 # Expression Functions
 
 Built-in functions available in expressions.

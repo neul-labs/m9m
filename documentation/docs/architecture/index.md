@@ -1,3 +1,9 @@
+---
+title: "Architecture Overview"
+description: "Understanding m9m's architecture and design."
+keywords: "m9m architecture, workflow engine, job queue, Go runtime"
+---
+
 # Architecture Overview
 
 Understanding m9m's architecture and design.

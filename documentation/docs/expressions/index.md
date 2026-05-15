@@ -1,3 +1,9 @@
+---
+title: "Expressions Overview"
+description: "Expressions allow dynamic values in node parameters using data from previous nodes."
+keywords: "m9m expressions, n8n expression syntax, workflow expressions, variables, functions"
+---
+
 # Expressions Overview
 
 Expressions allow dynamic values in node parameters using data from previous nodes.

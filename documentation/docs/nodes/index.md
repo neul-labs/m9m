@@ -1,3 +1,9 @@
+---
+title: "Nodes Overview"
+description: "Nodes are the building blocks of m9m workflows. Each node performs a specific operation on data."
+keywords: "m9m nodes, n8n nodes, workflow nodes, HTTP, database, AI, messaging, integrations"
+---
+
 # Nodes Overview
 
 Nodes are the building blocks of m9m workflows. Each node performs a specific operation on data.

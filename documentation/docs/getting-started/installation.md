@@ -1,75 +1,75 @@
-# Installation
+---
+title: Install m9m
+description: Install m9m via Homebrew, curl, Go, Docker, npm, or pip. Prebuilt binaries for macOS, Linux, and Windows on AMD64 and ARM64.
+keywords: m9m install, n8n alternative install, workflow automation install, Homebrew, Docker, npm m9m-cli, pip m9m-cli
+---
 
-This guide covers all methods for installing m9m.
+# Install m9m
+
+m9m ships as a single statically-linked Go binary. Pick whichever install path fits your environment — they all produce the same binary.
 
 ## Requirements
 
-- **Go 1.21+** (for building from source)
-- **Docker** (optional, for container deployment)
-- **64-bit Linux, macOS, or Windows**
+- **Operating system:** macOS, Linux, or Windows
+- **Architecture:** AMD64 (x86_64) or ARM64 (aarch64)
+- **Disk:** ~30 MB for the binary, plus storage for workflows and the job queue
+- **Network:** internet access for the initial download (not needed at runtime)
 
-## Installation Methods
+## Install methods
 
-### Package Manager / Installer (Recommended)
-
-Install the latest release binary:
+### Installer script (any platform) — recommended
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/neul-labs/m9m/main/install.sh | bash
 ```
 
-### Homebrew (macOS/Linux)
+Auto-detects OS and architecture, downloads the right binary, places it on your `$PATH`. Falls back to a local Go build if no prebuilt is available for your platform.
+
+### Homebrew (macOS / Linux)
 
 ```bash
 brew tap neul-labs/tap
 brew install m9m
 ```
 
-### Python SDK
-
-```bash
-pip install m9m
-```
-
-### Node.js SDK
-
-```bash
-npm install @m9m/workflow-engine
-```
-
-### Go Install (Alternative)
-
-The simplest way to install m9m:
+### Go
 
 ```bash
 go install github.com/neul-labs/m9m/cmd/m9m@latest
 ```
 
-This installs the `m9m` binary to your `$GOPATH/bin` directory.
+Installs `m9m` to `$GOPATH/bin`. Requires Go 1.21+.
 
-### Docker (Optional)
-
-Run m9m in a container:
+### Docker — GitHub Container Registry (releases)
 
 ```bash
-# Basic usage
 docker run -p 8080:8080 ghcr.io/neul-labs/m9m:latest
+```
 
-# With persistent data
+With persistent data:
+
+```bash
 docker run -p 8080:8080 \
   -v m9m-data:/app/data \
   ghcr.io/neul-labs/m9m:latest
+```
 
-# With custom configuration
+With custom configuration:
+
+```bash
 docker run -p 8080:8080 \
   -v ./config.yaml:/app/config/config.yaml \
   -v m9m-data:/app/data \
   ghcr.io/neul-labs/m9m:latest
 ```
 
-### Docker Compose
+### Docker — Docker Hub (CI builds)
 
-Create a `docker-compose.yml`:
+```bash
+docker run -p 8080:8080 neul-labs/m9m:latest
+```
+
+### Docker Compose
 
 ```yaml
 version: '3.8'
@@ -88,36 +88,48 @@ volumes:
   m9m-data:
 ```
 
-Run with:
-
 ```bash
 docker-compose up -d
 ```
 
-### Build from Source
-
-Clone and build the project:
+### Python SDK
 
 ```bash
-# Clone repository
+pip install m9m-cli
+# or
+uv add m9m-cli
+poetry add m9m-cli
+```
+
+The `m9m-cli` package downloads the binary on first use. See the [PyPI page](https://pypi.org/project/m9m-cli/).
+
+### Node.js SDK
+
+```bash
+npm install m9m-cli
+# or
+yarn add m9m-cli
+pnpm add m9m-cli
+bun add m9m-cli
+```
+
+The `m9m-cli` package downloads the binary on `npm install`. See the [npm page](https://www.npmjs.com/package/m9m-cli).
+
+### Build from source
+
+```bash
 git clone https://github.com/neul-labs/m9m.git
 cd m9m
-
-# Install dependencies
 make deps
-
-# Build
 make build
-
-# The binary is at ./m9m
 ./m9m version
 ```
 
-### Binary Downloads
+### Prebuilt binaries
 
-Download pre-built binaries from the [GitHub Releases](https://github.com/neul-labs/m9m/releases) page.
+Download directly from [GitHub Releases](https://github.com/neul-labs/m9m/releases).
 
-=== "Linux (amd64)"
+=== "Linux AMD64"
 
     ```bash
     curl -LO https://github.com/neul-labs/m9m/releases/latest/download/m9m-linux-amd64
@@ -125,7 +137,7 @@ Download pre-built binaries from the [GitHub Releases](https://github.com/neul-l
     sudo mv m9m-linux-amd64 /usr/local/bin/m9m
     ```
 
-=== "Linux (arm64)"
+=== "Linux ARM64"
 
     ```bash
     curl -LO https://github.com/neul-labs/m9m/releases/latest/download/m9m-linux-arm64
@@ -133,7 +145,7 @@ Download pre-built binaries from the [GitHub Releases](https://github.com/neul-l
     sudo mv m9m-linux-arm64 /usr/local/bin/m9m
     ```
 
-=== "macOS (amd64)"
+=== "macOS AMD64 (Intel)"
 
     ```bash
     curl -LO https://github.com/neul-labs/m9m/releases/latest/download/m9m-darwin-amd64
@@ -141,7 +153,7 @@ Download pre-built binaries from the [GitHub Releases](https://github.com/neul-l
     sudo mv m9m-darwin-amd64 /usr/local/bin/m9m
     ```
 
-=== "macOS (arm64)"
+=== "macOS ARM64 (Apple Silicon)"
 
     ```bash
     curl -LO https://github.com/neul-labs/m9m/releases/latest/download/m9m-darwin-arm64
@@ -149,32 +161,37 @@ Download pre-built binaries from the [GitHub Releases](https://github.com/neul-l
     sudo mv m9m-darwin-arm64 /usr/local/bin/m9m
     ```
 
-## Verify Installation
+=== "Windows AMD64"
 
-Check that m9m is installed correctly:
+    ```powershell
+    Invoke-WebRequest `
+      -Uri https://github.com/neul-labs/m9m/releases/latest/download/m9m-windows-amd64.exe `
+      -OutFile m9m.exe
+    ```
+
+Each release ships SHA-256 checksums next to the binary — verify before installing in production.
+
+## Verify installation
 
 ```bash
-# Check version
 m9m version
-
-# Start the server
 m9m serve
 
-# In another terminal, check health
+# In another terminal
 curl http://localhost:8080/health
 ```
 
-## Data Directories
+## Data directories
 
-m9m stores data in the following locations by default:
+m9m stores state under `~/.m9m/` by default:
 
 | Platform | Location |
-|----------|----------|
+|---|---|
 | Linux | `~/.m9m/` |
 | macOS | `~/.m9m/` |
 | Windows | `%USERPROFILE%\.m9m\` |
 
-Directory structure:
+Layout:
 
 ```
 ~/.m9m/
@@ -182,13 +199,26 @@ Directory structure:
 │   ├── m9m.db        # Workflow storage (SQLite)
 │   └── queue.db      # Job queue (SQLite)
 ├── config/
-│   └── config.yaml   # Configuration file
+│   └── config.yaml   # Configuration
 └── logs/
-    └── m9m.log       # Log files
+    └── m9m.log       # Logs
 ```
 
-## Next Steps
+Override with `M9M_DATA_DIR`, `M9M_CONFIG_DIR`, `M9M_LOG_DIR` — see [Environment Variables](../configuration/environment.md).
+
+## Troubleshooting
+
+| Symptom | Fix |
+|---|---|
+| `command not found: m9m` after Go install | Add `$(go env GOPATH)/bin` to your `$PATH`. |
+| Postinstall download fails behind proxy (npm / pip) | Set `M9M_DOWNLOAD_BINARY=0` and stage `~/.m9m/bin/m9m` manually. |
+| Docker container exits immediately | Check that port 8080 isn't already bound: `lsof -i :8080`. |
+| `Permission denied` on Linux binary | `chmod +x` the binary; verify it's not on a `noexec` mount. |
+| Homebrew tap not found | Confirm the tap with `brew tap` and re-run `brew tap neul-labs/tap`. |
+
+## Next steps
 
 - [Create your first workflow](first-workflow.md)
+- [Migrate existing n8n workflows](../migrate-from-n8n.md)
 - [Configure m9m](../configuration/index.md)
 - [Deploy to production](../deployment/index.md)
