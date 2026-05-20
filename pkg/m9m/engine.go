@@ -11,12 +11,29 @@ import (
 // Engine wraps the internal workflow engine with a public API.
 type Engine struct {
 	internal engine.WorkflowEngine
+
+	// Extension implementations. Always non-nil after construction; default
+	// to the OSS-provided no-op variants. Embedders override via the
+	// With{Billing,Snapshot,Blob,Quota,Observability} options.
+	billing       billingProvider
+	snapshot      snapshotSink
+	blob          blobStore
+	quota         quotaEnforcer
+	observability observabilityEmitter
 }
 
-// New creates a new workflow engine with default settings.
+// New creates a new workflow engine with default settings. All extension
+// points are wired to their OSS-default no-op implementations; embedders
+// override with WithBilling, WithSnapshot, WithBlob, WithQuota,
+// WithObservability.
 func New() *Engine {
 	return &Engine{
-		internal: engine.NewWorkflowEngine(),
+		internal:      engine.NewWorkflowEngine(),
+		billing:       defaultBillingProvider(),
+		snapshot:      defaultSnapshotSink(),
+		blob:          defaultBlobStore(),
+		quota:         defaultQuotaEnforcer(),
+		observability: defaultObservabilityEmitter(),
 	}
 }
 
