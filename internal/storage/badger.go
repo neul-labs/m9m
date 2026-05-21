@@ -197,6 +197,7 @@ func (s *BadgerStorage) DeactivateWorkflow(id string) error {
 // Execution Operations
 
 func (s *BadgerStorage) SaveExecution(execution *model.WorkflowExecution) error {
+	execution.WorkspaceID = resolveWorkspaceID(execution.WorkspaceID)
 	if execution.StartedAt.IsZero() {
 		execution.StartedAt = time.Now()
 	}
@@ -255,6 +256,10 @@ func (s *BadgerStorage) ListExecutions(filters ExecutionFilters) ([]*model.Workf
 				}
 
 				// Apply filters
+				if filters.WorkspaceID != "" && execution.WorkspaceID != filters.WorkspaceID {
+					return nil
+				}
+
 				if filters.WorkflowID != "" && execution.WorkflowID != filters.WorkflowID {
 					return nil
 				}

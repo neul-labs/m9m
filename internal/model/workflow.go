@@ -178,6 +178,7 @@ type NodeDefinition struct {
 type WorkflowExecution struct {
 	ID          string                 `json:"id"`
 	WorkflowID  string                 `json:"workflowId"`
+	WorkspaceID string                 `json:"workspaceId,omitempty"`
 	Status      string                 `json:"status"` // running, completed, failed, cancelled
 	Mode        string                 `json:"mode"`   // manual, trigger, test
 	StartedAt   time.Time              `json:"startedAt"`

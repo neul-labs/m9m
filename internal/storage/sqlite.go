@@ -66,6 +66,7 @@ func (s *SQLiteStorage) initSchema() error {
 		CREATE TABLE IF NOT EXISTS executions (
 			id TEXT PRIMARY KEY,
 			workflow_id TEXT NOT NULL,
+			workspace_id TEXT NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000',
 			status TEXT NOT NULL,
 			mode TEXT NOT NULL,
 			started_at DATETIME NOT NULL,
@@ -105,6 +106,7 @@ func (s *SQLiteStorage) initSchema() error {
 		CREATE INDEX IF NOT EXISTS idx_workflows_workspace ON workflows(workspace_id);
 		CREATE INDEX IF NOT EXISTS idx_executions_workflow_id ON executions(workflow_id);
 		CREATE INDEX IF NOT EXISTS idx_executions_status ON executions(status);
+		CREATE INDEX IF NOT EXISTS idx_executions_workspace ON executions(workspace_id);
 	`
 
 	if _, err := s.db.Exec(schema); err != nil {
@@ -114,7 +116,11 @@ func (s *SQLiteStorage) initSchema() error {
 	// Idempotent migration for deployments that pre-date workspace_id.
 	// SQLite returns "duplicate column name" when the column already
 	// exists; that error is ignored by ensureColumn so reruns are safe.
-	return ensureColumn(s.db, "workflows", "workspace_id",
+	if err := ensureColumn(s.db, "workflows", "workspace_id",
+		"TEXT NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000'"); err != nil {
+		return err
+	}
+	return ensureColumn(s.db, "executions", "workspace_id",
 		"TEXT NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000'")
 }
 
@@ -325,6 +331,7 @@ func (s *SQLiteStorage) SaveExecution(execution *model.WorkflowExecution) error 
 	if execution.ID == "" {
 		execution.ID = generateID("exec")
 	}
+	execution.WorkspaceID = resolveWorkspaceID(execution.WorkspaceID)
 	if execution.StartedAt.IsZero() {
 		execution.StartedAt = time.Now()
 	}
@@ -337,10 +344,11 @@ func (s *SQLiteStorage) SaveExecution(execution *model.WorkflowExecution) error 
 	createdAt := time.Now()
 
 	query := `
-		INSERT INTO executions (id, workflow_id, status, mode, started_at, finished_at, data, error, created_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+		INSERT INTO executions (id, workflow_id, workspace_id, status, mode, started_at, finished_at, data, error, created_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		ON CONFLICT(id) DO UPDATE SET
 			workflow_id = excluded.workflow_id,
+			workspace_id = excluded.workspace_id,
 			status = excluded.status,
 			mode = excluded.mode,
 			started_at = excluded.started_at,
@@ -349,7 +357,7 @@ func (s *SQLiteStorage) SaveExecution(execution *model.WorkflowExecution) error 
 			error = excluded.error
 	`
 
-	_, err := s.db.Exec(query, execution.ID, execution.WorkflowID, execution.Status,
+	_, err := s.db.Exec(query, execution.ID, execution.WorkflowID, execution.WorkspaceID, execution.Status,
 		execution.Mode, execution.StartedAt, execution.FinishedAt, string(dataJSON), errorText, createdAt)
 
 	return err
@@ -357,7 +365,7 @@ func (s *SQLiteStorage) SaveExecution(execution *model.WorkflowExecution) error 
 
 func (s *SQLiteStorage) GetExecution(id string) (*model.WorkflowExecution, error) {
 	query := `
-		SELECT id, workflow_id, status, mode, started_at, finished_at, data, error
+		SELECT id, workflow_id, workspace_id, status, mode, started_at, finished_at, data, error
 		FROM executions WHERE id = ?
 	`
 
@@ -367,7 +375,7 @@ func (s *SQLiteStorage) GetExecution(id string) (*model.WorkflowExecution, error
 	var finishedAt sql.NullTime
 
 	err := s.db.QueryRow(query, id).Scan(
-		&execution.ID, &execution.WorkflowID, &execution.Status, &execution.Mode,
+		&execution.ID, &execution.WorkflowID, &execution.WorkspaceID, &execution.Status, &execution.Mode,
 		&execution.StartedAt, &finishedAt, &dataJSON, &errorText,
 	)
 
@@ -395,6 +403,11 @@ func (s *SQLiteStorage) ListExecutions(filters ExecutionFilters) ([]*model.Workf
 	var conditions []string
 	var args []interface{}
 
+	if filters.WorkspaceID != "" {
+		conditions = append(conditions, "workspace_id = ?")
+		args = append(args, filters.WorkspaceID)
+	}
+
 	if filters.WorkflowID != "" {
 		conditions = append(conditions, "workflow_id = ?")
 		args = append(args, filters.WorkflowID)
@@ -420,7 +433,7 @@ func (s *SQLiteStorage) ListExecutions(filters ExecutionFilters) ([]*model.Workf
 
 	// Get executions with pagination
 	query := fmt.Sprintf(`
-		SELECT id, workflow_id, status, mode, started_at, finished_at, data, error
+		SELECT id, workflow_id, workspace_id, status, mode, started_at, finished_at, data, error
 		FROM executions %s
 		ORDER BY started_at DESC
 		LIMIT ? OFFSET ?
@@ -442,7 +455,7 @@ func (s *SQLiteStorage) ListExecutions(filters ExecutionFilters) ([]*model.Workf
 		var finishedAt sql.NullTime
 
 		err := rows.Scan(
-			&execution.ID, &execution.WorkflowID, &execution.Status, &execution.Mode,
+			&execution.ID, &execution.WorkflowID, &execution.WorkspaceID, &execution.Status, &execution.Mode,
 			&execution.StartedAt, &finishedAt, &dataJSON, &errorText,
 		)
 		if err != nil {

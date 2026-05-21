@@ -73,10 +73,13 @@ type WorkflowFilters struct {
 
 // ExecutionFilters defines filters for listing executions
 type ExecutionFilters struct {
-	WorkflowID string
-	Status     string
-	Offset     int
-	Limit      int
+	// WorkspaceID, when set, restricts results to executions belonging to
+	// that workspace. Empty means "no workspace filter".
+	WorkspaceID string
+	WorkflowID  string
+	Status      string
+	Offset      int
+	Limit       int
 }
 
 // Credential represents a stored credential

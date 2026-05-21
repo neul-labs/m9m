@@ -202,6 +202,7 @@ func (s *MemoryStorage) SaveExecution(execution *model.WorkflowExecution) error 
 	if execution.ID == "" {
 		execution.ID = generateID("exec")
 	}
+	execution.WorkspaceID = resolveWorkspaceID(execution.WorkspaceID)
 
 	s.executions[execution.ID] = execution
 	return nil
@@ -227,6 +228,10 @@ func (s *MemoryStorage) ListExecutions(filters ExecutionFilters) ([]*model.Workf
 
 	for _, execution := range s.executions {
 		// Apply filters
+		if filters.WorkspaceID != "" && execution.WorkspaceID != filters.WorkspaceID {
+			continue
+		}
+
 		if filters.WorkflowID != "" && execution.WorkflowID != filters.WorkflowID {
 			continue
 		}

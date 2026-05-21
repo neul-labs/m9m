@@ -66,6 +66,7 @@ func (s *PostgresStorage) initSchema() error {
 		CREATE TABLE IF NOT EXISTS executions (
 			id VARCHAR(255) PRIMARY KEY,
 			workflow_id VARCHAR(255) NOT NULL,
+			workspace_id VARCHAR(255) NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000',
 			status VARCHAR(50) NOT NULL,
 			mode VARCHAR(50) NOT NULL,
 			started_at TIMESTAMP NOT NULL,
@@ -105,14 +106,19 @@ func (s *PostgresStorage) initSchema() error {
 		CREATE INDEX IF NOT EXISTS idx_workflows_workspace ON workflows(workspace_id);
 		CREATE INDEX IF NOT EXISTS idx_executions_workflow_id ON executions(workflow_id);
 		CREATE INDEX IF NOT EXISTS idx_executions_status ON executions(status);
+		CREATE INDEX IF NOT EXISTS idx_executions_workspace ON executions(workspace_id);
 	`
 
 	if _, err := s.db.Exec(schema); err != nil {
 		return err
 	}
 
-	// Idempotent migration for pre-existing tables that lack workspace_id.
-	return ensureColumn(s.db, "workflows", "workspace_id",
+	// Idempotent migrations for pre-existing tables that lack workspace_id.
+	if err := ensureColumn(s.db, "workflows", "workspace_id",
+		"VARCHAR(255) NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000'"); err != nil {
+		return err
+	}
+	return ensureColumn(s.db, "executions", "workspace_id",
 		"VARCHAR(255) NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000'")
 }
 
@@ -321,6 +327,7 @@ func (s *PostgresStorage) SaveExecution(execution *model.WorkflowExecution) erro
 	if execution.ID == "" {
 		execution.ID = generateID("exec")
 	}
+	execution.WorkspaceID = resolveWorkspaceID(execution.WorkspaceID)
 	if execution.StartedAt.IsZero() {
 		execution.StartedAt = time.Now()
 	}
@@ -333,10 +340,11 @@ func (s *PostgresStorage) SaveExecution(execution *model.WorkflowExecution) erro
 	createdAt := time.Now()
 
 	query := `
-		INSERT INTO executions (id, workflow_id, status, mode, started_at, finished_at, data, error, created_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		INSERT INTO executions (id, workflow_id, workspace_id, status, mode, started_at, finished_at, data, error, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 		ON CONFLICT (id) DO UPDATE SET
 			workflow_id = EXCLUDED.workflow_id,
+			workspace_id = EXCLUDED.workspace_id,
 			status = EXCLUDED.status,
 			mode = EXCLUDED.mode,
 			started_at = EXCLUDED.started_at,
@@ -345,7 +353,7 @@ func (s *PostgresStorage) SaveExecution(execution *model.WorkflowExecution) erro
 			error = EXCLUDED.error
 	`
 
-	_, err := s.db.Exec(query, execution.ID, execution.WorkflowID, execution.Status,
+	_, err := s.db.Exec(query, execution.ID, execution.WorkflowID, execution.WorkspaceID, execution.Status,
 		execution.Mode, execution.StartedAt, execution.FinishedAt, dataJSON, errorText, createdAt)
 
 	return err
@@ -353,7 +361,7 @@ func (s *PostgresStorage) SaveExecution(execution *model.WorkflowExecution) erro
 
 func (s *PostgresStorage) GetExecution(id string) (*model.WorkflowExecution, error) {
 	query := `
-		SELECT id, workflow_id, status, mode, started_at, finished_at, data, error
+		SELECT id, workflow_id, workspace_id, status, mode, started_at, finished_at, data, error
 		FROM executions WHERE id = $1
 	`
 
@@ -363,7 +371,7 @@ func (s *PostgresStorage) GetExecution(id string) (*model.WorkflowExecution, err
 	var finishedAt sql.NullTime
 
 	err := s.db.QueryRow(query, id).Scan(
-		&execution.ID, &execution.WorkflowID, &execution.Status, &execution.Mode,
+		&execution.ID, &execution.WorkflowID, &execution.WorkspaceID, &execution.Status, &execution.Mode,
 		&execution.StartedAt, &finishedAt, &dataJSON, &errorText,
 	)
 
@@ -392,6 +400,12 @@ func (s *PostgresStorage) ListExecutions(filters ExecutionFilters) ([]*model.Wor
 	var args []interface{}
 	argCount := 1
 
+	if filters.WorkspaceID != "" {
+		conditions = append(conditions, fmt.Sprintf("workspace_id = $%d", argCount))
+		args = append(args, filters.WorkspaceID)
+		argCount++
+	}
+
 	if filters.WorkflowID != "" {
 		conditions = append(conditions, fmt.Sprintf("workflow_id = $%d", argCount))
 		args = append(args, filters.WorkflowID)
@@ -419,7 +433,7 @@ func (s *PostgresStorage) ListExecutions(filters ExecutionFilters) ([]*model.Wor
 
 	// Get executions with pagination
 	query := fmt.Sprintf(`
-		SELECT id, workflow_id, status, mode, started_at, finished_at, data, error
+		SELECT id, workflow_id, workspace_id, status, mode, started_at, finished_at, data, error
 		FROM executions %s
 		ORDER BY started_at DESC
 		LIMIT $%d OFFSET $%d
@@ -441,7 +455,7 @@ func (s *PostgresStorage) ListExecutions(filters ExecutionFilters) ([]*model.Wor
 		var finishedAt sql.NullTime
 
 		err := rows.Scan(
-			&execution.ID, &execution.WorkflowID, &execution.Status, &execution.Mode,
+			&execution.ID, &execution.WorkflowID, &execution.WorkspaceID, &execution.Status, &execution.Mode,
 			&execution.StartedAt, &finishedAt, &dataJSON, &errorText,
 		)
 		if err != nil {

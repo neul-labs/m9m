@@ -158,3 +158,51 @@ func TestListWorkflows_ScopedByWorkspace(t *testing.T) {
 		t.Errorf("unfiltered list returned %d, want 2", len(all))
 	}
 }
+
+func TestSaveExecution_PopulatesWorkspaceID(t *testing.T) {
+	s := NewMemoryStorage()
+	exec := &model.WorkflowExecution{WorkflowID: "wf-1", Status: "running"}
+	if err := s.SaveExecution(exec); err != nil {
+		t.Fatal(err)
+	}
+	if exec.WorkspaceID != tenancy.DefaultID {
+		t.Errorf("empty WorkspaceID was not defaulted: got %q", exec.WorkspaceID)
+	}
+	got, err := s.GetExecution(exec.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.WorkspaceID != tenancy.DefaultID {
+		t.Errorf("stored execution WorkspaceID = %q", got.WorkspaceID)
+	}
+}
+
+func TestListExecutions_ScopedByWorkspace(t *testing.T) {
+	s := NewMemoryStorage()
+	wsA := tenancy.NewWorkspace("A")
+	wsB := tenancy.NewWorkspace("B")
+	_ = s.SaveWorkspace(wsA)
+	_ = s.SaveWorkspace(wsB)
+
+	execA := &model.WorkflowExecution{WorkflowID: "wf-1", Status: "completed", WorkspaceID: wsA.ID}
+	execB := &model.WorkflowExecution{WorkflowID: "wf-2", Status: "completed", WorkspaceID: wsB.ID}
+	if err := s.SaveExecution(execA); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.SaveExecution(execB); err != nil {
+		t.Fatal(err)
+	}
+
+	scopedA, _, err := s.ListExecutions(ExecutionFilters{WorkspaceID: wsA.ID, Limit: 100})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(scopedA) != 1 || scopedA[0].WorkflowID != "wf-1" {
+		t.Errorf("workspace-A executions = %v, want [wf-1]", scopedA)
+	}
+
+	all, _, _ := s.ListExecutions(ExecutionFilters{Limit: 100})
+	if len(all) != 2 {
+		t.Errorf("unfiltered execution list returned %d, want 2", len(all))
+	}
+}
