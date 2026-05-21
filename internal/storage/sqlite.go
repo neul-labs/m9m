@@ -9,6 +9,7 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/neul-labs/m9m/internal/model"
+	"github.com/neul-labs/m9m/internal/tenancy"
 )
 
 // SQLiteStorage provides SQLite-backed workflow storage
@@ -33,6 +34,12 @@ func NewSQLiteStorage(dbPath string) (*SQLiteStorage, error) {
 	// Initialize schema
 	if err := storage.initSchema(); err != nil {
 		return nil, fmt.Errorf("failed to initialize schema: %w", err)
+	}
+
+	// Bootstrap the default workspace so single-tenant self-hosted users
+	// have a workspace to attach data to with no setup.
+	if err := bootstrapDefaultWorkspace(storage); err != nil {
+		return nil, fmt.Errorf("failed to bootstrap default workspace: %w", err)
 	}
 
 	return storage, nil
@@ -80,6 +87,14 @@ func (s *SQLiteStorage) initSchema() error {
 			id TEXT PRIMARY KEY,
 			name TEXT NOT NULL UNIQUE,
 			color TEXT,
+			created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+		);
+
+		CREATE TABLE IF NOT EXISTS workspaces (
+			id TEXT PRIMARY KEY,
+			name TEXT NOT NULL,
+			organization_id TEXT,
 			created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 		);
@@ -628,6 +643,92 @@ func (s *SQLiteStorage) DeleteTag(id string) error {
 	}
 
 	return nil
+}
+
+// Workspace operations
+
+func (s *SQLiteStorage) SaveWorkspace(ws *tenancy.Workspace) error {
+	if err := ws.Validate(); err != nil {
+		return err
+	}
+	if ws.CreatedAt.IsZero() {
+		ws.CreatedAt = time.Now().UTC()
+	}
+	ws.UpdatedAt = time.Now().UTC()
+	_, err := s.db.Exec(`
+		INSERT INTO workspaces (id, name, organization_id, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?)
+		ON CONFLICT(id) DO UPDATE SET
+			name = excluded.name,
+			organization_id = excluded.organization_id,
+			updated_at = excluded.updated_at
+	`, ws.ID, ws.Name, nullableString(ws.OrganizationID), ws.CreatedAt, ws.UpdatedAt)
+	return err
+}
+
+func (s *SQLiteStorage) GetWorkspace(id string) (*tenancy.Workspace, error) {
+	var ws tenancy.Workspace
+	var orgID sql.NullString
+	err := s.db.QueryRow(`
+		SELECT id, name, organization_id, created_at, updated_at
+		FROM workspaces WHERE id = ?
+	`, id).Scan(&ws.ID, &ws.Name, &orgID, &ws.CreatedAt, &ws.UpdatedAt)
+	if err == sql.ErrNoRows {
+		return nil, fmt.Errorf("workspace not found: %s", id)
+	}
+	if err != nil {
+		return nil, err
+	}
+	if orgID.Valid {
+		ws.OrganizationID = orgID.String
+	}
+	return &ws, nil
+}
+
+func (s *SQLiteStorage) ListWorkspaces() ([]*tenancy.Workspace, error) {
+	rows, err := s.db.Query(`
+		SELECT id, name, organization_id, created_at, updated_at
+		FROM workspaces ORDER BY created_at
+	`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []*tenancy.Workspace
+	for rows.Next() {
+		var ws tenancy.Workspace
+		var orgID sql.NullString
+		if err := rows.Scan(&ws.ID, &ws.Name, &orgID, &ws.CreatedAt, &ws.UpdatedAt); err != nil {
+			continue
+		}
+		if orgID.Valid {
+			ws.OrganizationID = orgID.String
+		}
+		out = append(out, &ws)
+	}
+	return out, nil
+}
+
+func (s *SQLiteStorage) DeleteWorkspace(id string) error {
+	if id == tenancy.DefaultID {
+		return fmt.Errorf("cannot delete default workspace")
+	}
+	result, err := s.db.Exec("DELETE FROM workspaces WHERE id = ?", id)
+	if err != nil {
+		return err
+	}
+	if rows, _ := result.RowsAffected(); rows == 0 {
+		return fmt.Errorf("workspace not found: %s", id)
+	}
+	return nil
+}
+
+// nullableString turns "" into sql.NullString{Valid: false}.
+func nullableString(s string) interface{} {
+	if s == "" {
+		return nil
+	}
+	return s
 }
 
 // Raw key-value operations

@@ -4,10 +4,21 @@ import (
 	"time"
 
 	"github.com/neul-labs/m9m/internal/model"
+	"github.com/neul-labs/m9m/internal/tenancy"
 )
 
 // WorkflowStorage defines the interface for workflow persistence
 type WorkflowStorage interface {
+	// Workspace operations (server-side multi-tenancy).
+	// Every storage backend bootstraps tenancy.DefaultID on open so single-
+	// tenant self-hosted users have a workspace without any setup. Future
+	// milestones add workspace_id columns to the other tables and scope
+	// every query.
+	SaveWorkspace(workspace *tenancy.Workspace) error
+	GetWorkspace(id string) (*tenancy.Workspace, error)
+	ListWorkspaces() ([]*tenancy.Workspace, error)
+	DeleteWorkspace(id string) error
+
 	// Workflow operations
 	SaveWorkflow(workflow *model.Workflow) error
 	GetWorkflow(id string) (*model.Workflow, error)

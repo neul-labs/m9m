@@ -16,6 +16,7 @@ import (
 	"github.com/neul-labs/m9m/internal/model"
 	"github.com/neul-labs/m9m/internal/nodes/base"
 	"github.com/neul-labs/m9m/internal/storage"
+	"github.com/neul-labs/m9m/internal/tenancy"
 )
 
 // RemoteClient implements both WorkflowStorage and WorkflowEngine interfaces
@@ -255,6 +256,36 @@ func (c *RemoteClient) UpdateTag(id string, tag *storage.Tag) error {
 
 func (c *RemoteClient) DeleteTag(id string) error {
 	return c.delete(fmt.Sprintf("/api/v1/tags/%s", id))
+}
+
+// Workspace operations
+//
+// The remote API surface for workspaces is not yet defined. These stubs let
+// the RemoteClient satisfy storage.WorkflowStorage; once the workspaces
+// REST endpoints are implemented the bodies become real HTTP calls.
+
+func (c *RemoteClient) SaveWorkspace(ws *tenancy.Workspace) error {
+	return c.post("/api/v1/workspaces", ws, nil)
+}
+
+func (c *RemoteClient) GetWorkspace(id string) (*tenancy.Workspace, error) {
+	var ws tenancy.Workspace
+	if err := c.get("/api/v1/workspaces/"+id, &ws); err != nil {
+		return nil, err
+	}
+	return &ws, nil
+}
+
+func (c *RemoteClient) ListWorkspaces() ([]*tenancy.Workspace, error) {
+	var out []*tenancy.Workspace
+	if err := c.get("/api/v1/workspaces", &out); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *RemoteClient) DeleteWorkspace(id string) error {
+	return c.delete("/api/v1/workspaces/" + id)
 }
 
 // Raw key-value operations

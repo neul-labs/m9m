@@ -9,6 +9,7 @@ import (
 
 	_ "github.com/lib/pq"
 	"github.com/neul-labs/m9m/internal/model"
+	"github.com/neul-labs/m9m/internal/tenancy"
 )
 
 // PostgresStorage provides PostgreSQL-backed workflow storage
@@ -33,6 +34,12 @@ func NewPostgresStorage(connectionURL string) (*PostgresStorage, error) {
 	// Initialize schema
 	if err := storage.initSchema(); err != nil {
 		return nil, fmt.Errorf("failed to initialize schema: %w", err)
+	}
+
+	// Bootstrap the default workspace so existing data + new single-tenant
+	// deployments always have a workspace to attach to.
+	if err := bootstrapDefaultWorkspace(storage); err != nil {
+		return nil, fmt.Errorf("failed to bootstrap default workspace: %w", err)
 	}
 
 	return storage, nil
@@ -80,6 +87,14 @@ func (s *PostgresStorage) initSchema() error {
 			id VARCHAR(255) PRIMARY KEY,
 			name VARCHAR(255) NOT NULL UNIQUE,
 			color VARCHAR(50),
+			created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+			updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+		);
+
+		CREATE TABLE IF NOT EXISTS workspaces (
+			id VARCHAR(255) PRIMARY KEY,
+			name VARCHAR(255) NOT NULL,
+			organization_id VARCHAR(255),
 			created_at TIMESTAMP NOT NULL DEFAULT NOW(),
 			updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 		);
@@ -635,6 +650,88 @@ func (s *PostgresStorage) DeleteTag(id string) error {
 		return fmt.Errorf("tag not found: %s", id)
 	}
 
+	return nil
+}
+
+// Workspace operations
+
+func (s *PostgresStorage) SaveWorkspace(ws *tenancy.Workspace) error {
+	if err := ws.Validate(); err != nil {
+		return err
+	}
+	if ws.CreatedAt.IsZero() {
+		ws.CreatedAt = time.Now().UTC()
+	}
+	ws.UpdatedAt = time.Now().UTC()
+	var orgID interface{}
+	if ws.OrganizationID != "" {
+		orgID = ws.OrganizationID
+	}
+	_, err := s.db.Exec(`
+		INSERT INTO workspaces (id, name, organization_id, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5)
+		ON CONFLICT (id) DO UPDATE SET
+			name = EXCLUDED.name,
+			organization_id = EXCLUDED.organization_id,
+			updated_at = EXCLUDED.updated_at
+	`, ws.ID, ws.Name, orgID, ws.CreatedAt, ws.UpdatedAt)
+	return err
+}
+
+func (s *PostgresStorage) GetWorkspace(id string) (*tenancy.Workspace, error) {
+	var ws tenancy.Workspace
+	var orgID sql.NullString
+	err := s.db.QueryRow(`
+		SELECT id, name, organization_id, created_at, updated_at
+		FROM workspaces WHERE id = $1
+	`, id).Scan(&ws.ID, &ws.Name, &orgID, &ws.CreatedAt, &ws.UpdatedAt)
+	if err == sql.ErrNoRows {
+		return nil, fmt.Errorf("workspace not found: %s", id)
+	}
+	if err != nil {
+		return nil, err
+	}
+	if orgID.Valid {
+		ws.OrganizationID = orgID.String
+	}
+	return &ws, nil
+}
+
+func (s *PostgresStorage) ListWorkspaces() ([]*tenancy.Workspace, error) {
+	rows, err := s.db.Query(`
+		SELECT id, name, organization_id, created_at, updated_at
+		FROM workspaces ORDER BY created_at
+	`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []*tenancy.Workspace
+	for rows.Next() {
+		var ws tenancy.Workspace
+		var orgID sql.NullString
+		if err := rows.Scan(&ws.ID, &ws.Name, &orgID, &ws.CreatedAt, &ws.UpdatedAt); err != nil {
+			continue
+		}
+		if orgID.Valid {
+			ws.OrganizationID = orgID.String
+		}
+		out = append(out, &ws)
+	}
+	return out, nil
+}
+
+func (s *PostgresStorage) DeleteWorkspace(id string) error {
+	if id == tenancy.DefaultID {
+		return fmt.Errorf("cannot delete default workspace")
+	}
+	result, err := s.db.Exec("DELETE FROM workspaces WHERE id = $1", id)
+	if err != nil {
+		return err
+	}
+	if rows, _ := result.RowsAffected(); rows == 0 {
+		return fmt.Errorf("workspace not found: %s", id)
+	}
 	return nil
 }
 

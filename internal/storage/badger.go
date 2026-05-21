@@ -16,6 +16,7 @@ import (
 	"github.com/dgraph-io/badger/v4"
 	"github.com/neul-labs/m9m/internal/consensus"
 	"github.com/neul-labs/m9m/internal/model"
+	"github.com/neul-labs/m9m/internal/tenancy"
 )
 
 // BadgerStorage implements WorkflowStorage using BadgerDB with Raft replication
@@ -483,6 +484,84 @@ func (s *BadgerStorage) DeleteTag(id string) error {
 	}
 
 	return s.raft.Apply(cmd)
+}
+
+// Workspace operations
+
+func (s *BadgerStorage) SaveWorkspace(ws *tenancy.Workspace) error {
+	if err := ws.Validate(); err != nil {
+		return err
+	}
+	if ws.CreatedAt.IsZero() {
+		ws.CreatedAt = time.Now().UTC()
+	}
+	ws.UpdatedAt = time.Now().UTC()
+	data, err := json.Marshal(ws)
+	if err != nil {
+		return fmt.Errorf("failed to marshal workspace: %w", err)
+	}
+	return s.raft.Apply(consensus.RaftCommand{
+		Type:  "put",
+		Key:   "workspace:" + ws.ID,
+		Value: json.RawMessage(data),
+	})
+}
+
+func (s *BadgerStorage) GetWorkspace(id string) (*tenancy.Workspace, error) {
+	var ws tenancy.Workspace
+	err := s.db.View(func(txn *badger.Txn) error {
+		item, err := txn.Get([]byte("workspace:" + id))
+		if err != nil {
+			return err
+		}
+		return item.Value(func(val []byte) error {
+			return json.Unmarshal(val, &ws)
+		})
+	})
+	if err == badger.ErrKeyNotFound {
+		return nil, fmt.Errorf("workspace not found: %s", id)
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &ws, nil
+}
+
+func (s *BadgerStorage) ListWorkspaces() ([]*tenancy.Workspace, error) {
+	var out []*tenancy.Workspace
+	err := s.db.View(func(txn *badger.Txn) error {
+		it := txn.NewIterator(badger.DefaultIteratorOptions)
+		defer it.Close()
+		prefix := []byte("workspace:")
+		for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
+			err := it.Item().Value(func(val []byte) error {
+				var ws tenancy.Workspace
+				if err := json.Unmarshal(val, &ws); err != nil {
+					return err
+				}
+				out = append(out, &ws)
+				return nil
+			})
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (s *BadgerStorage) DeleteWorkspace(id string) error {
+	if id == tenancy.DefaultID {
+		return fmt.Errorf("cannot delete default workspace")
+	}
+	return s.raft.Apply(consensus.RaftCommand{
+		Type: "delete",
+		Key:  "workspace:" + id,
+	})
 }
 
 // Raw key-value operations

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/neul-labs/m9m/internal/model"
+	"github.com/neul-labs/m9m/internal/tenancy"
 )
 
 // MemoryStorage provides in-memory workflow storage (data will not persist)
@@ -15,19 +16,25 @@ type MemoryStorage struct {
 	executions  map[string]*model.WorkflowExecution
 	credentials map[string]*Credential
 	tags        map[string]*Tag
+	workspaces  map[string]*tenancy.Workspace
 	rawData     map[string][]byte // For webhooks and other extensibility
 	mu          sync.RWMutex
 }
 
 // NewMemoryStorage creates a new in-memory storage instance
 func NewMemoryStorage() *MemoryStorage {
-	return &MemoryStorage{
+	s := &MemoryStorage{
 		workflows:   make(map[string]*model.Workflow),
 		executions:  make(map[string]*model.WorkflowExecution),
 		credentials: make(map[string]*Credential),
 		tags:        make(map[string]*Tag),
+		workspaces:  make(map[string]*tenancy.Workspace),
 		rawData:     make(map[string][]byte),
 	}
+	// Bootstrap the default workspace. Errors here are not possible for
+	// MemoryStorage so we ignore the return.
+	_ = bootstrapDefaultWorkspace(s)
+	return s
 }
 
 // Workflow operations
@@ -396,6 +403,60 @@ func (s *MemoryStorage) DeleteTag(id string) error {
 	}
 
 	delete(s.tags, id)
+	return nil
+}
+
+// Workspace operations
+
+func (s *MemoryStorage) SaveWorkspace(ws *tenancy.Workspace) error {
+	if err := ws.Validate(); err != nil {
+		return err
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	now := time.Now().UTC()
+	if ws.CreatedAt.IsZero() {
+		ws.CreatedAt = now
+	}
+	ws.UpdatedAt = now
+	// Store a copy so callers can't mutate after Save.
+	clone := *ws
+	s.workspaces[ws.ID] = &clone
+	return nil
+}
+
+func (s *MemoryStorage) GetWorkspace(id string) (*tenancy.Workspace, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	ws, ok := s.workspaces[id]
+	if !ok {
+		return nil, fmt.Errorf("workspace not found: %s", id)
+	}
+	clone := *ws
+	return &clone, nil
+}
+
+func (s *MemoryStorage) ListWorkspaces() ([]*tenancy.Workspace, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	out := make([]*tenancy.Workspace, 0, len(s.workspaces))
+	for _, ws := range s.workspaces {
+		clone := *ws
+		out = append(out, &clone)
+	}
+	return out, nil
+}
+
+func (s *MemoryStorage) DeleteWorkspace(id string) error {
+	if id == tenancy.DefaultID {
+		return fmt.Errorf("cannot delete default workspace")
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if _, ok := s.workspaces[id]; !ok {
+		return fmt.Errorf("workspace not found: %s", id)
+	}
+	delete(s.workspaces, id)
 	return nil
 }
 
