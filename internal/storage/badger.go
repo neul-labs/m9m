@@ -46,6 +46,8 @@ func NewBadgerStorage(dataDir string, raftNode *consensus.RaftNode) (*BadgerStor
 // Workflow Operations
 
 func (s *BadgerStorage) SaveWorkflow(workflow *model.Workflow) error {
+	workflow.WorkspaceID = resolveWorkspaceID(workflow.WorkspaceID)
+
 	// Set timestamps
 	if workflow.CreatedAt.IsZero() {
 		workflow.CreatedAt = time.Now()
@@ -107,6 +109,10 @@ func (s *BadgerStorage) ListWorkflows(filters WorkflowFilters) ([]*model.Workflo
 				}
 
 				// Apply filters
+				if filters.WorkspaceID != "" && workflow.WorkspaceID != filters.WorkspaceID {
+					return nil
+				}
+
 				if filters.Active != nil && workflow.Active != *filters.Active {
 					return nil
 				}

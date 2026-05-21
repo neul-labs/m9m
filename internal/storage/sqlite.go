@@ -50,6 +50,7 @@ func (s *SQLiteStorage) initSchema() error {
 	schema := `
 		CREATE TABLE IF NOT EXISTS workflows (
 			id TEXT PRIMARY KEY,
+			workspace_id TEXT NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000',
 			name TEXT NOT NULL,
 			description TEXT,
 			nodes TEXT NOT NULL,
@@ -101,12 +102,20 @@ func (s *SQLiteStorage) initSchema() error {
 
 		CREATE INDEX IF NOT EXISTS idx_workflows_active ON workflows(active);
 		CREATE INDEX IF NOT EXISTS idx_workflows_name ON workflows(name);
+		CREATE INDEX IF NOT EXISTS idx_workflows_workspace ON workflows(workspace_id);
 		CREATE INDEX IF NOT EXISTS idx_executions_workflow_id ON executions(workflow_id);
 		CREATE INDEX IF NOT EXISTS idx_executions_status ON executions(status);
 	`
 
-	_, err := s.db.Exec(schema)
-	return err
+	if _, err := s.db.Exec(schema); err != nil {
+		return err
+	}
+
+	// Idempotent migration for deployments that pre-date workspace_id.
+	// SQLite returns "duplicate column name" when the column already
+	// exists; that error is ignored by ensureColumn so reruns are safe.
+	return ensureColumn(s.db, "workflows", "workspace_id",
+		"TEXT NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000'")
 }
 
 // Workflow operations (similar to PostgreSQL but adapted for SQLite)
@@ -115,6 +124,7 @@ func (s *SQLiteStorage) SaveWorkflow(workflow *model.Workflow) error {
 	if workflow.ID == "" {
 		workflow.ID = generateID("workflow")
 	}
+	workflow.WorkspaceID = resolveWorkspaceID(workflow.WorkspaceID)
 
 	now := time.Now()
 	if workflow.CreatedAt.IsZero() {
@@ -129,8 +139,8 @@ func (s *SQLiteStorage) SaveWorkflow(workflow *model.Workflow) error {
 
 	query := `
 		INSERT OR REPLACE INTO workflows
-		(id, name, description, nodes, connections, settings, active, tags, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		(id, workspace_id, name, description, nodes, connections, settings, active, tags, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
 
 	activeInt := 0
@@ -138,7 +148,7 @@ func (s *SQLiteStorage) SaveWorkflow(workflow *model.Workflow) error {
 		activeInt = 1
 	}
 
-	_, err := s.db.Exec(query, workflow.ID, workflow.Name, workflow.Description,
+	_, err := s.db.Exec(query, workflow.ID, workflow.WorkspaceID, workflow.Name, workflow.Description,
 		string(nodesJSON), string(connectionsJSON), string(settingsJSON), activeInt,
 		string(tagsJSON), workflow.CreatedAt, workflow.UpdatedAt)
 
@@ -147,7 +157,7 @@ func (s *SQLiteStorage) SaveWorkflow(workflow *model.Workflow) error {
 
 func (s *SQLiteStorage) GetWorkflow(id string) (*model.Workflow, error) {
 	query := `
-		SELECT id, name, description, nodes, connections, settings, active, tags, created_at, updated_at
+		SELECT id, workspace_id, name, description, nodes, connections, settings, active, tags, created_at, updated_at
 		FROM workflows WHERE id = ?
 	`
 
@@ -156,7 +166,7 @@ func (s *SQLiteStorage) GetWorkflow(id string) (*model.Workflow, error) {
 	var activeInt int
 
 	err := s.db.QueryRow(query, id).Scan(
-		&workflow.ID, &workflow.Name, &workflow.Description,
+		&workflow.ID, &workflow.WorkspaceID, &workflow.Name, &workflow.Description,
 		&nodesJSON, &connectionsJSON, &settingsJSON,
 		&activeInt, &tagsJSON, &workflow.CreatedAt, &workflow.UpdatedAt,
 	)
@@ -181,6 +191,11 @@ func (s *SQLiteStorage) GetWorkflow(id string) (*model.Workflow, error) {
 func (s *SQLiteStorage) ListWorkflows(filters WorkflowFilters) ([]*model.Workflow, int, error) {
 	var conditions []string
 	var args []interface{}
+
+	if filters.WorkspaceID != "" {
+		conditions = append(conditions, "workspace_id = ?")
+		args = append(args, filters.WorkspaceID)
+	}
 
 	if filters.Active != nil {
 		activeInt := 0
@@ -211,7 +226,7 @@ func (s *SQLiteStorage) ListWorkflows(filters WorkflowFilters) ([]*model.Workflo
 
 	// Get workflows with pagination
 	query := fmt.Sprintf(`
-		SELECT id, name, description, nodes, connections, settings, active, tags, created_at, updated_at
+		SELECT id, workspace_id, name, description, nodes, connections, settings, active, tags, created_at, updated_at
 		FROM workflows %s
 		ORDER BY created_at DESC
 		LIMIT ? OFFSET ?
@@ -232,7 +247,7 @@ func (s *SQLiteStorage) ListWorkflows(filters WorkflowFilters) ([]*model.Workflo
 		var activeInt int
 
 		err := rows.Scan(
-			&workflow.ID, &workflow.Name, &workflow.Description,
+			&workflow.ID, &workflow.WorkspaceID, &workflow.Name, &workflow.Description,
 			&nodesJSON, &connectionsJSON, &settingsJSON,
 			&activeInt, &tagsJSON, &workflow.CreatedAt, &workflow.UpdatedAt,
 		)

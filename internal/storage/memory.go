@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/neul-labs/m9m/internal/model"
@@ -46,6 +47,7 @@ func (s *MemoryStorage) SaveWorkflow(workflow *model.Workflow) error {
 	if workflow.ID == "" {
 		workflow.ID = generateID("workflow")
 	}
+	workflow.WorkspaceID = resolveWorkspaceID(workflow.WorkspaceID)
 
 	now := time.Now()
 	if workflow.CreatedAt.IsZero() {
@@ -77,6 +79,10 @@ func (s *MemoryStorage) ListWorkflows(filters WorkflowFilters) ([]*model.Workflo
 
 	for _, workflow := range s.workflows {
 		// Apply filters
+		if filters.WorkspaceID != "" && workflow.WorkspaceID != filters.WorkspaceID {
+			continue
+		}
+
 		if filters.Active != nil && workflow.Active != *filters.Active {
 			continue
 		}
@@ -521,7 +527,17 @@ func (s *MemoryStorage) Close() error {
 	return nil
 }
 
-// Helper function to generate unique IDs
+// Helper function to generate unique IDs.
+//
+// We combine a UnixNano timestamp with an atomic counter to remain unique
+// under rapid successive calls (e.g. bulk imports, tightly-looped test
+// fixtures). The previous implementation used time.Now().UnixNano() alone
+// and collided when called twice within the same nanosecond — observable
+// on macOS where time resolution is coarser than a nanosecond.
 func generateID(prefix string) string {
-	return fmt.Sprintf("%s_%d", prefix, time.Now().UnixNano())
+	n := atomic.AddUint64(&idCounter, 1)
+	return fmt.Sprintf("%s_%d_%d", prefix, time.Now().UnixNano(), n)
 }
+
+var idCounter uint64
+

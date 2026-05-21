@@ -60,11 +60,15 @@ type WorkflowStorage interface {
 
 // WorkflowFilters defines filters for listing workflows
 type WorkflowFilters struct {
-	Active *bool
-	Search string
-	Tags   []string
-	Offset int
-	Limit  int
+	// WorkspaceID, when set, restricts results to workflows owned by that
+	// workspace. Empty means "no workspace filter" — used by single-tenant
+	// callers and admin tooling that intentionally crosses tenants.
+	WorkspaceID string
+	Active      *bool
+	Search      string
+	Tags        []string
+	Offset      int
+	Limit       int
 }
 
 // ExecutionFilters defines filters for listing executions

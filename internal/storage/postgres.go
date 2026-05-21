@@ -50,6 +50,7 @@ func (s *PostgresStorage) initSchema() error {
 	schema := `
 		CREATE TABLE IF NOT EXISTS workflows (
 			id VARCHAR(255) PRIMARY KEY,
+			workspace_id VARCHAR(255) NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000',
 			name VARCHAR(255) NOT NULL,
 			description TEXT,
 			nodes JSONB NOT NULL,
@@ -101,12 +102,18 @@ func (s *PostgresStorage) initSchema() error {
 
 		CREATE INDEX IF NOT EXISTS idx_workflows_active ON workflows(active);
 		CREATE INDEX IF NOT EXISTS idx_workflows_name ON workflows(name);
+		CREATE INDEX IF NOT EXISTS idx_workflows_workspace ON workflows(workspace_id);
 		CREATE INDEX IF NOT EXISTS idx_executions_workflow_id ON executions(workflow_id);
 		CREATE INDEX IF NOT EXISTS idx_executions_status ON executions(status);
 	`
 
-	_, err := s.db.Exec(schema)
-	return err
+	if _, err := s.db.Exec(schema); err != nil {
+		return err
+	}
+
+	// Idempotent migration for pre-existing tables that lack workspace_id.
+	return ensureColumn(s.db, "workflows", "workspace_id",
+		"VARCHAR(255) NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000'")
 }
 
 // Workflow operations
@@ -115,6 +122,7 @@ func (s *PostgresStorage) SaveWorkflow(workflow *model.Workflow) error {
 	if workflow.ID == "" {
 		workflow.ID = generateID("workflow")
 	}
+	workflow.WorkspaceID = resolveWorkspaceID(workflow.WorkspaceID)
 
 	now := time.Now()
 	if workflow.CreatedAt.IsZero() {
@@ -128,9 +136,10 @@ func (s *PostgresStorage) SaveWorkflow(workflow *model.Workflow) error {
 	tagsJSON, _ := json.Marshal(workflow.Tags)
 
 	query := `
-		INSERT INTO workflows (id, name, description, nodes, connections, settings, active, tags, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+		INSERT INTO workflows (id, workspace_id, name, description, nodes, connections, settings, active, tags, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 		ON CONFLICT (id) DO UPDATE SET
+			workspace_id = EXCLUDED.workspace_id,
 			name = EXCLUDED.name,
 			description = EXCLUDED.description,
 			nodes = EXCLUDED.nodes,
@@ -141,7 +150,7 @@ func (s *PostgresStorage) SaveWorkflow(workflow *model.Workflow) error {
 			updated_at = EXCLUDED.updated_at
 	`
 
-	_, err := s.db.Exec(query, workflow.ID, workflow.Name, workflow.Description,
+	_, err := s.db.Exec(query, workflow.ID, workflow.WorkspaceID, workflow.Name, workflow.Description,
 		nodesJSON, connectionsJSON, settingsJSON, workflow.Active, tagsJSON,
 		workflow.CreatedAt, workflow.UpdatedAt)
 
@@ -150,7 +159,7 @@ func (s *PostgresStorage) SaveWorkflow(workflow *model.Workflow) error {
 
 func (s *PostgresStorage) GetWorkflow(id string) (*model.Workflow, error) {
 	query := `
-		SELECT id, name, description, nodes, connections, settings, active, tags, created_at, updated_at
+		SELECT id, workspace_id, name, description, nodes, connections, settings, active, tags, created_at, updated_at
 		FROM workflows WHERE id = $1
 	`
 
@@ -158,7 +167,7 @@ func (s *PostgresStorage) GetWorkflow(id string) (*model.Workflow, error) {
 	var nodesJSON, connectionsJSON, settingsJSON, tagsJSON []byte
 
 	err := s.db.QueryRow(query, id).Scan(
-		&workflow.ID, &workflow.Name, &workflow.Description,
+		&workflow.ID, &workflow.WorkspaceID, &workflow.Name, &workflow.Description,
 		&nodesJSON, &connectionsJSON, &settingsJSON,
 		&workflow.Active, &tagsJSON, &workflow.CreatedAt, &workflow.UpdatedAt,
 	)
@@ -182,6 +191,12 @@ func (s *PostgresStorage) ListWorkflows(filters WorkflowFilters) ([]*model.Workf
 	var conditions []string
 	var args []interface{}
 	argCount := 1
+
+	if filters.WorkspaceID != "" {
+		conditions = append(conditions, fmt.Sprintf("workspace_id = $%d", argCount))
+		args = append(args, filters.WorkspaceID)
+		argCount++
+	}
 
 	if filters.Active != nil {
 		conditions = append(conditions, fmt.Sprintf("active = $%d", argCount))
@@ -210,7 +225,7 @@ func (s *PostgresStorage) ListWorkflows(filters WorkflowFilters) ([]*model.Workf
 
 	// Get workflows with pagination
 	query := fmt.Sprintf(`
-		SELECT id, name, description, nodes, connections, settings, active, tags, created_at, updated_at
+		SELECT id, workspace_id, name, description, nodes, connections, settings, active, tags, created_at, updated_at
 		FROM workflows %s
 		ORDER BY created_at DESC
 		LIMIT $%d OFFSET $%d
@@ -230,7 +245,7 @@ func (s *PostgresStorage) ListWorkflows(filters WorkflowFilters) ([]*model.Workf
 		var nodesJSON, connectionsJSON, settingsJSON, tagsJSON []byte
 
 		err := rows.Scan(
-			&workflow.ID, &workflow.Name, &workflow.Description,
+			&workflow.ID, &workflow.WorkspaceID, &workflow.Name, &workflow.Description,
 			&nodesJSON, &connectionsJSON, &settingsJSON,
 			&workflow.Active, &tagsJSON, &workflow.CreatedAt, &workflow.UpdatedAt,
 		)

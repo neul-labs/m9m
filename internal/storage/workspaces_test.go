@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/neul-labs/m9m/internal/model"
 	"github.com/neul-labs/m9m/internal/tenancy"
 )
 
@@ -103,5 +104,57 @@ func TestMemoryStorage_SaveWorkspace_ClonesInput(t *testing.T) {
 	got, _ := s.GetWorkspace(ws.ID)
 	if got.Name != "acme" {
 		t.Errorf("storage retained alias to caller's workspace: name = %q", got.Name)
+	}
+}
+
+func TestSaveWorkflow_PopulatesWorkspaceID(t *testing.T) {
+	// SaveWorkflow with an empty WorkspaceID should be stamped with
+	// DefaultID so the NOT NULL invariant on the workspaces column holds.
+	s := NewMemoryStorage()
+	wf := &model.Workflow{Name: "wf", Nodes: nil, Connections: nil}
+	if err := s.SaveWorkflow(wf); err != nil {
+		t.Fatal(err)
+	}
+	if wf.WorkspaceID != tenancy.DefaultID {
+		t.Errorf("empty WorkspaceID was not defaulted: got %q, want %q", wf.WorkspaceID, tenancy.DefaultID)
+	}
+
+	got, err := s.GetWorkflow(wf.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.WorkspaceID != tenancy.DefaultID {
+		t.Errorf("stored WorkspaceID = %q, want %q", got.WorkspaceID, tenancy.DefaultID)
+	}
+}
+
+func TestListWorkflows_ScopedByWorkspace(t *testing.T) {
+	s := NewMemoryStorage()
+	wsA := tenancy.NewWorkspace("A")
+	wsB := tenancy.NewWorkspace("B")
+	_ = s.SaveWorkspace(wsA)
+	_ = s.SaveWorkspace(wsB)
+
+	wfA := &model.Workflow{Name: "in A", WorkspaceID: wsA.ID}
+	wfB := &model.Workflow{Name: "in B", WorkspaceID: wsB.ID}
+	if err := s.SaveWorkflow(wfA); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.SaveWorkflow(wfB); err != nil {
+		t.Fatal(err)
+	}
+
+	listA, _, err := s.ListWorkflows(WorkflowFilters{WorkspaceID: wsA.ID, Limit: 100})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(listA) != 1 || listA[0].Name != "in A" {
+		t.Errorf("workspace-A list = %v, want [in A]", listA)
+	}
+
+	// Unfiltered (admin-style) list returns both.
+	all, _, _ := s.ListWorkflows(WorkflowFilters{Limit: 100})
+	if len(all) != 2 {
+		t.Errorf("unfiltered list returned %d, want 2", len(all))
 	}
 }

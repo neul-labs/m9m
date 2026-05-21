@@ -28,6 +28,13 @@ type Workflow struct {
 	CreatedAt   time.Time              `json:"createdAt"`
 	UpdatedAt   time.Time              `json:"updatedAt"`
 	CreatedBy   string                 `json:"createdBy,omitempty"`
+
+	// WorkspaceID is the server-side tenant identity that owns this
+	// workflow. Empty on read from older payloads or single-tenant
+	// deployments; the storage layer substitutes tenancy.DefaultID
+	// in those cases. omitempty keeps the n8n-compatible JSON output
+	// unchanged for self-hosted users not using multi-tenancy.
+	WorkspaceID string `json:"workspaceId,omitempty"`
 }
 
 // Node represents an individual node in a workflow
