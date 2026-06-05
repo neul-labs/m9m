@@ -1,5 +1,5 @@
 site_name: m9m Documentation
-site_url: https://docs.neullabs.com/m9m
+site_url: https://m9m.docs.neullabs.com/
 site_description: m9m is a drop-in n8n alternative in Go — 5–10× faster, 70% lower memory, deterministic execution, zero npm dependencies. Run n8n workflows unchanged.
 site_author: Neul Labs
 repo_url: https://github.com/neul-labs/m9m
@@ -82,7 +82,7 @@ extra:
       name: m9m on GHCR
   generator: false
   tagline: The n8n alternative without the bugs — faster, more reliable workflow automation.
-  og_image: https://docs.neullabs.com/m9m/assets/og.png
+  og_image: https://m9m.docs.neullabs.com/assets/og.png
   twitter_handle: ""
 
 copyright: Copyright &copy; 2024 Neul Labs · m9m is open source under the MIT license.
@@ -97,6 +97,7 @@ nav:
     - Installation: getting-started/installation.md
     - First Workflow: getting-started/first-workflow.md
     - Core Concepts: getting-started/concepts.md
+    - Agent Usage: getting-started/agent-usage.md
   - Configuration:
     - Overview: configuration/index.md
     - Server: configuration/server.md
