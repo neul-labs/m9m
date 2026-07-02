@@ -209,3 +209,16 @@ For 40+ built-in node types: yes. Community n8n nodes (`n8n-nodes-*`) and n8n Cl
 ## License
 
 MIT — see [LICENSE](https://github.com/neul-labs/m9m/blob/main/LICENSE).
+
+## Part of the Neul Labs toolchain
+
+m9m is part of the Neul Labs orchestration toolchain:
+
+| Project | Description |
+|---------|-------------|
+| [brat](https://github.com/neul-labs/brat) | Multi-agent harness for AI coding tools — crash-safe state, parallel execution. |
+| [ringlet](https://github.com/neul-labs/ringlet) | One CLI to rule all your coding agents. |
+| [fastworker](https://github.com/neul-labs/fastworker) | Background tasks in Python with zero infrastructure — no Redis, no RabbitMQ. |
+| [conductor](https://github.com/neul-labs/conductor) | Multi-agent CLI orchestrator for AI coding agents. |
+
+Learn more at [neullabs.com](https://www.neullabs.com).

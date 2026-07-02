@@ -273,6 +273,19 @@ See the [Contributing Guide](docs/CONTRIBUTING.md). Issues and discussions live 
 
 MIT License. See [LICENSE](LICENSE).
 
+## Part of the Neul Labs toolchain
+
+m9m is part of the Neul Labs orchestration toolchain:
+
+| Project | Description |
+|---------|-------------|
+| [brat](https://github.com/neul-labs/brat) | Multi-agent harness for AI coding tools — crash-safe state, parallel execution. |
+| [ringlet](https://github.com/neul-labs/ringlet) | One CLI to rule all your coding agents. |
+| [fastworker](https://github.com/neul-labs/fastworker) | Background tasks in Python with zero infrastructure — no Redis, no RabbitMQ. |
+| [conductor](https://github.com/neul-labs/conductor) | Multi-agent CLI orchestrator for AI coding agents. |
+
+Learn more at [neullabs.com](https://www.neullabs.com).
+
 ---
 
 [Documentation](https://docs.neullabs.com/m9m) · [GitHub](https://github.com/neul-labs/m9m) · [npm](https://www.npmjs.com/package/m9m-cli) · [PyPI](https://pypi.org/project/m9m-cli/) · [Docker](https://github.com/neul-labs/m9m/pkgs/container/m9m)

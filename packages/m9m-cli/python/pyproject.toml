@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.8"
 license = { text = "MIT" }
 authors = [
-    { name = "Neul Labs", email = "team@neullabs.com" }
+    { name = "Neul Labs", email = "contact@neullabs.com" }
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
